@@ -21,7 +21,7 @@
 - [x] M2.3 Factor attribution buckets: delta/vega/rates for scenario P&L
 
 ## Milestone 3 — UI (judges remember this)
-- [ ] M3.1 Portfolio builder UI (stocks/options/bonds) with templates + guardrails
+- [x] M3.1 Portfolio builder UI (stocks/options/bonds) with templates + guardrails
 - [ ] M3.2 Risk dashboard: top 3 drivers + exposures + scenario worst-case
 - [ ] M3.3 Scenario explorer: select scenario set; recompute; show P&L table
 - [ ] M3.4 Export: HTML + JSON report downloadable, offline
