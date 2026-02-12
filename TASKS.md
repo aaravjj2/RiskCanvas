@@ -28,4 +28,4 @@
 
 ## Milestone 4 — Proof + determinism
 - [x] M4.1 Determinism check: run same fixture twice; outputs hash-identical
-- [ ] M4.2 Proof packs: /artifacts/proof/<timestamp>-<milestone>/ with MANIFEST.md + reports
+- [x] M4.2 Proof packs: /artifacts/proof/<timestamp>-<milestone>/ with MANIFEST.md + reports
