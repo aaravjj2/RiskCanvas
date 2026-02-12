@@ -1,31 +1,56 @@
-﻿# TASKS
+﻿# Week Plan (autopilot)
 
-## Milestone 0 — Scaffold + Gates (must be green before anything else)
-- [x] M0.1 Scaffold monorepo: apps/web, apps/api, packages/engine, e2e, scripts/, artifacts/
-- [x] M0.2 Web: React+TS+Vitest configured; typecheck + unit tests pass (0 failed/0 skipped)
-- [x] M0.3 API: FastAPI + Pytest configured; unit tests pass (0 failed/0 skipped)
-- [x] M0.4 E2E: Playwright configured (retries=0 workers=1, video/trace/screenshot on); tests pass; selectors are data-testid only
-- [x] M0.5 Add deterministic fixtures: 3 sample portfolios in fixtures/ (JSON)
-- [x] M0.6 Add export skeleton: JSON report file written to artifacts/ on demand (stub ok)
+## Engine + API foundations
+- [ ] M1.4 Implement stock P&L + delta exposure (API + tests)
+- [ ] M1.5 Implement portfolio aggregation: net delta, gross exposure, sector breakdown (fixtures-driven)
+- [ ] M1.6 Add API endpoint: POST /portfolio/report reads fixture-like payload and returns summary JSON (stable schema)
+- [ ] M1.7 Add API validation: pydantic models for positions, raise clean 422s, add tests
+- [ ] M1.8 Add deterministic timestamps/IDs to report output (testable; no “now” in unit tests)
+- [ ] M1.9 Move report outputs to repo-root artifacts/ and gitignore them; add tests to ensure not committed
 
-## Milestone 1 — Pricing Engine (deterministic)
-- [x] M1.1 Implement Black–Scholes price for European calls/puts
-- [x] M1.2 Implement closed-form Greeks: delta, gamma, vega, theta, rho
-- [x] M1.3 Implement fixed-coupon bond PV + duration + convexity + DV01
-- [ ] M1.4 Implement stock P&L + delta exposure
-- [ ] M1.5 Engine unit tests: put–call parity, monotonicity, bond price vs yield, invariants (0 failed/0 skipped)
+## Options surface + scenario analysis
+- [ ] M2.1 Implement implied volatility solver (Newton/bisection) for BS price; tests with known examples
+- [ ] M2.2 Implement scenario shocks for options: S shock, vol shock, rate shock; return P&L grid
+- [ ] M2.3 Add API endpoint: POST /options/scenario-grid returns grid + metadata; tests
+- [x] M2.4 Add fixtures: 2 option-heavy portfolios (mixed calls/puts, expiries), deterministic
+- [ ] M2.5 Add “risk summary” API: VaR placeholders + scenario worst-case placeholder (explicit TODOs, stable schema)
 
-## Milestone 2 — Scenario Engine
-- [ ] M2.1 Deterministic scenarios: spot ±1/5/10/20%, vol ±10/30 pts, rates +50/+100/+200 bps, curve twist
-- [ ] M2.2 Scenario P&L table + worst-case highlight
-- [ ] M2.3 Factor attribution buckets: delta/vega/rates for scenario P&L
+## VaR / CVaR (real risk)
+- [ ] M3.1 Implement returns calculation for equities: simple + log returns; tests
+- [ ] M3.2 Implement historical simulation VaR + CVaR for a portfolio of stocks (using fixture prices); tests
+- [ ] M3.3 Implement parametric (normal) VaR for stocks; tests + compare to historical
+- [ ] M3.4 Add bond price sensitivity approximation using duration/convexity to estimate P&L under yield shocks; tests
+- [ ] M3.5 Add portfolio VaR aggregation across stocks + bonds (document assumptions); tests
+- [ ] M3.6 Add API endpoint: POST /risk/var supports method=historical|parametric; tests
 
-## Milestone 3 — UI (judges remember this)
-- [ ] M3.1 Portfolio builder UI (stocks/options/bonds) with templates + guardrails
-- [ ] M3.2 Risk dashboard: top 3 drivers + exposures + scenario worst-case
-- [ ] M3.3 Scenario explorer: select scenario set; recompute; show P&L table
-- [ ] M3.4 Export: HTML + JSON report downloadable, offline
+## Monte Carlo (keeps it busy and impressive)
+- [ ] M4.1 Implement GBM path simulation for equities; seeded RNG; tests for determinism
+- [ ] M4.2 Implement Monte Carlo VaR for stocks with seeded paths; tests
+- [ ] M4.3 Extend MC to include option pricing along paths (fast approximation is ok); tests on small case
+- [ ] M4.4 Add API endpoint: POST /risk/mc-var with configurable paths/steps/seed; tests
+- [ ] M4.5 Add performance guardrails: cap paths in API + clear error messages; tests
 
-## Milestone 4 — Proof + determinism
-- [ ] M4.1 Determinism check: run same fixture twice; outputs hash-identical
-- [ ] M4.2 Proof packs: /artifacts/proof/<timestamp>-<milestone>/ with MANIFEST.md + reports
+## Web app: real UI + data-testid everywhere
+- [ ] W1 Build Portfolio page: load one fixture via button, show positions table (data-testid only)
+- [ ] W2 Build Risk Summary panel: show delta exposure, DV01, VaR placeholders; unit tests
+- [ ] W3 Add “Run Risk” button calling API /portfolio/report; mock in unit tests
+- [ ] W4 Show scenario grid results (table) for option-heavy fixture; unit tests
+- [ ] W5 Add export button that downloads JSON report; unit tests
+
+## E2E: real flow
+- [ ] E1 Playwright: load app, click “Load fixture”, verify table rows appear (data-testid only)
+- [ ] E2 Playwright: click “Run Risk”, wait for results, verify risk summary fields appear
+- [ ] E3 Playwright: click “Export JSON”, verify download happens (or mocked endpoint); no flaky waits
+
+## Quality + repo hygiene
+- [ ] Q1 Add .gitattributes to normalize line endings (fix CRLF/LF warnings)
+- [ ] Q2 Tighten gitignore for python bytecode + artifacts + test outputs; ensure repo is clean
+- [ ] Q3 Add CI workflow (GitHub Actions): run scripts/testgate.ps1 on PR/push
+- [ ] Q4 Add README: one-command setup + run instructions + demo script
+- [ ] Q5 Add “demo mode” script that runs API, runs web, generates a sample report into artifacts/
+
+## Stretch: portfolio optimization
+- [ ] O1 Implement mean-variance optimizer (basic constraints) using deterministic input; tests
+- [ ] O2 Add API endpoint: POST /optimize returns weights + expected risk/return; tests
+- [ ] O3 Add UI: “Optimize” panel for one fixture; unit tests
+- [ ] O4 Add E2E: run optimize and verify weights sum to 1
