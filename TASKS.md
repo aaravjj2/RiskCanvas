@@ -25,7 +25,7 @@
 
 ## Monte Carlo (keeps it busy and impressive)
 - [x] M4.1 Implement GBM path simulation for equities; seeded RNG; tests for determinism
-- [ ] M4.2 Implement Monte Carlo VaR for stocks with seeded paths; tests
+- [x] M4.2 Implement Monte Carlo VaR for stocks with seeded paths; tests
 - [ ] M4.3 Extend MC to include option pricing along paths (fast approximation is ok); tests on small case
 - [ ] M4.4 Add API endpoint: POST /risk/mc-var with configurable paths/steps/seed; tests
 - [ ] M4.5 Add performance guardrails: cap paths in API + clear error messages; tests

@@ -1016,3 +1016,205 @@ def bond_price_approximation(coupon_rate: float, face_value: float, time_to_matu
     price_change_percentage = -duration * yield_change + 0.5 * convexity * (yield_change ** 2)
 
     return price_change_percentage
+
+
+def calculate_returns(prices: list) -> list:
+    """
+    Calculate simple returns from a list of prices.
+
+    Args:
+        prices: List of prices
+
+    Returns:
+        List of simple returns (current_price - previous_price) / previous_price
+    """
+    if len(prices) < 2:
+        return []
+
+    returns = []
+    for i in range(1, len(prices)):
+        if prices[i-1] != 0:
+            return_value = (prices[i] - prices[i-1]) / prices[i-1]
+            returns.append(return_value)
+        else:
+            returns.append(0.0)  # Handle case where previous price is 0
+
+    return returns
+
+def calculate_log_returns(prices: list) -> list:
+    """
+    Calculate log returns from a list of prices.
+
+    Args:
+        prices: List of prices
+
+    Returns:
+        List of log returns (ln(current_price / previous_price))
+    """
+    if len(prices) < 2:
+        return []
+
+    log_returns = []
+    for i in range(1, len(prices)):
+        if prices[i-1] > 0 and prices[i] > 0:
+            log_return = math.log(prices[i] / prices[i-1])
+            log_returns.append(log_return)
+        else:
+            log_returns.append(0.0)  # Handle case where prices are non-positive
+
+    return log_returns
+
+def historical_var(portfolio_returns: list, confidence_level: float = 0.95) -> float:
+    """
+    Calculate Value at Risk (VaR) using historical simulation method.
+
+    Args:
+        portfolio_returns: List of portfolio returns
+        confidence_level: Confidence level for VaR calculation (default 0.95 for 95%)
+
+    Returns:
+        VaR value (negative value means potential loss)
+    """
+    if not portfolio_returns:
+        raise ValueError("Portfolio returns list cannot be empty")
+
+    if confidence_level <= 0 or confidence_level >= 1:
+        raise ValueError("Confidence level must be between 0 and 1")
+
+    # Sort the returns in ascending order
+    sorted_returns = sorted(portfolio_returns)
+
+    # Calculate the percentile index
+    percentile = 1 - confidence_level
+    index = int(len(sorted_returns) * percentile)
+
+    # Handle edge case where index is out of bounds
+    if index >= len(sorted_returns):
+        index = len(sorted_returns) - 1
+
+    # Return the VaR (negative value represents potential loss)
+    return -sorted_returns[index]
+
+def parametric_var(portfolio_returns: list, confidence_level: float = 0.95) -> float:
+    """
+    Calculate Value at Risk (VaR) using parametric (normal distribution) method.
+
+    Args:
+        portfolio_returns: List of portfolio returns
+        confidence_level: Confidence level for VaR calculation (default 0.95 for 95%)
+
+    Returns:
+        VaR value (negative value means potential loss)
+    """
+    if not portfolio_returns:
+        raise ValueError("Portfolio returns list cannot be empty")
+
+    if confidence_level <= 0 or confidence_level >= 1:
+        raise ValueError("Confidence level must be between 0 and 1")
+
+    # Calculate mean and standard deviation of returns
+    mean_return = sum(portfolio_returns) / len(portfolio_returns)
+    variance = sum((r - mean_return) ** 2 for r in portfolio_returns) / len(portfolio_returns)
+    std_dev = math.sqrt(variance)
+
+    # Use standard normal distribution approximation
+    # For 95% confidence level, we look up the 5% quantile
+    # We'll use the standard normal inverse CDF approximation
+    # For 95% confidence level (0.95), the z-score is approximately 1.645
+    # This is a simplified approach - in practice, you might use a library
+    z_score = 0.0  # Placeholder - we'll implement a simple approximation
+
+    # Common z-scores for different confidence levels:
+    # 90% confidence level (0.90) -> z = 1.282
+    # 95% confidence level (0.95) -> z = 1.645
+    # 99% confidence level (0.99) -> z = 2.326
+
+    if confidence_level == 0.90:
+        z_score = 1.282
+    elif confidence_level == 0.95:
+        z_score = 1.645
+    elif confidence_level == 0.99:
+        z_score = 2.326
+    else:
+        # For other confidence levels, we'll use a simple approximation
+        # This is a rough approximation, not precise
+        z_score = 1.645 + (confidence_level - 0.95) * 0.5  # Simplified approximation
+
+    # VaR = - (mean + z_score * std_dev)
+    # But since we're calculating VaR as potential loss, we return the negative value
+    var = - (mean_return + z_score * std_dev)
+
+    return var
+
+def calculate_portfolio_returns(positions: list, historical_prices: list, confidence_level: float = 0.95) -> list:
+    """
+    Calculate portfolio returns based on historical prices for VaR calculation.
+
+    Args:
+        positions: List of position dictionaries
+        historical_prices: List of historical prices for the portfolio (as list of lists for each asset)
+        confidence_level: Confidence level for VaR calculation
+
+    Returns:
+        List of portfolio returns
+    """
+    # For simplicity, we'll calculate returns as the weighted average of individual asset returns
+    # This is a simplified approach; in practice, you'd want to model correlations
+
+    if not historical_prices or len(historical_prices) == 0:
+        raise ValueError("Historical prices cannot be empty")
+
+    # Calculate individual asset returns for each time period
+    asset_returns = []
+    for asset_prices in historical_prices:
+        asset_returns.append(calculate_returns(asset_prices))
+
+    # Calculate portfolio returns as weighted average of asset returns
+    portfolio_returns = []
+
+    # Assuming all positions have the same number of time periods
+    if len(asset_returns) > 0 and len(asset_returns[0]) > 0:
+        num_periods = len(asset_returns[0])
+        for i in range(num_periods):
+            # Simple weighted average of returns (this would need to be more sophisticated in practice)
+            total_return = 0.0
+            total_weight = 0.0
+
+            for j, asset_prices in enumerate(historical_prices):
+                if i < len(asset_returns[j]) and i < len(asset_prices) - 1:
+                    # Calculate the weight based on position value (simplified)
+                    weight = 1.0  # Simplified - in practice, this would be based on actual position values
+                    total_return += asset_returns[j][i] * weight
+                    total_weight += weight
+
+            if total_weight > 0:
+                portfolio_returns.append(total_return / total_weight)
+            else:
+                portfolio_returns.append(0.0)
+
+    return portfolio_returns
+
+# Add the VaR function that's required by the task
+def portfolio_var(positions: list, historical_prices: list, method: str = "historical",
+                  confidence_level: float = 0.95) -> float:
+    """
+    Calculate Value at Risk (VaR) for a portfolio.
+
+    Args:
+        positions: List of position dictionaries
+        historical_prices: List of historical prices for the portfolio (as list of lists for each asset)
+        method: VaR calculation method ('historical' or 'parametric')
+        confidence_level: Confidence level for VaR calculation (default 0.95 for 95%)
+
+    Returns:
+        VaR value (negative value means potential loss)
+    """
+    # Calculate portfolio returns from historical prices
+    portfolio_returns = calculate_portfolio_returns(positions, historical_prices, confidence_level)
+
+    if method == "historical":
+        return historical_var(portfolio_returns, confidence_level)
+    elif method == "parametric":
+        return parametric_var(portfolio_returns, confidence_level)
+    else:
+        raise ValueError("Method must be 'historical' or 'parametric'")

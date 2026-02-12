@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime
 from typing import List, Dict, Any
-from models.pricing import portfolio_pl, portfolio_delta_exposure, portfolio_net_delta_exposure, portfolio_gross_exposure, portfolio_sector_aggregation
+from models.pricing import portfolio_pl, portfolio_delta_exposure, portfolio_net_delta_exposure, portfolio_gross_exposure, portfolio_sector_aggregation, portfolio_var
 
 app = FastAPI()
 
@@ -227,3 +227,40 @@ async def export_report():
         "message": f"Report exported successfully to {filepath}",
         "filename": filename
     }
+
+
+@app.post("/risk/var")
+async def calculate_var(portfolio_data: Dict[str, Any]):
+    """
+    Calculate Value at Risk (VaR) for a portfolio using either historical or parametric method.
+
+    Args:
+        portfolio_data: Dictionary containing portfolio information and historical prices
+            - assets: List of position dictionaries
+            - historical_prices: List of historical prices for each asset (as list of lists)
+            - method: VaR calculation method ('historical' or 'parametric') - default is 'historical'
+            - confidence_level: Confidence level for VaR calculation (default 0.95 for 95%)
+
+    Returns:
+        Dictionary with VaR calculation results
+    """
+    # Extract portfolio data
+    positions = portfolio_data.get("assets", [])
+    historical_prices = portfolio_data.get("historical_prices", [])
+    method = portfolio_data.get("method", "historical")
+    confidence_level = portfolio_data.get("confidence_level", 0.95)
+
+    # Calculate VaR
+    var = portfolio_var(positions, historical_prices, method, confidence_level)
+
+    # Create report
+    report = {
+        "portfolio_id": portfolio_data.get("id"),
+        "portfolio_name": portfolio_data.get("name"),
+        "method": method,
+        "confidence_level": confidence_level,
+        "var": var,
+        "generated_at": datetime.now().isoformat()
+    }
+
+    return report

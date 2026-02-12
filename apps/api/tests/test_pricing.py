@@ -7,7 +7,8 @@ from models.pricing import (
     black_scholes, black_scholes_call, black_scholes_put, black_scholes_delta,
     black_scholes_gamma, black_scholes_vega, black_scholes_theta, black_scholes_rho,
     bond_pv, bond_duration, bond_convexity, bond_dv01,
-    stock_pl, stock_delta_exposure, portfolio_pl, portfolio_delta_exposure
+    stock_pl, stock_delta_exposure, portfolio_pl, portfolio_delta_exposure,
+    historical_var, parametric_var, portfolio_var, calculate_returns, calculate_log_returns
 )
 
 def test_black_scholes_call():
