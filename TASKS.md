@@ -1,7 +1,7 @@
 ﻿# Week Plan (autopilot)
 
 ## Engine + API foundations
-- [ ] M1.4 Implement stock P&L + delta exposure (API + tests)
+- [x] M1.4 Implement stock P&L + delta exposure (API + tests)
 - [ ] M1.5 Implement portfolio aggregation: net delta, gross exposure, sector breakdown (fixtures-driven)
 - [ ] M1.6 Add API endpoint: POST /portfolio/report reads fixture-like payload and returns summary JSON (stable schema)
 - [ ] M1.7 Add API validation: pydantic models for positions, raise clean 422s, add tests

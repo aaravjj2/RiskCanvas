@@ -1,5 +1,14 @@
 import math
-from models.pricing import black_scholes, black_scholes_call, black_scholes_put, black_scholes_delta, black_scholes_gamma, black_scholes_vega, black_scholes_theta, black_scholes_rho, bond_pv, bond_duration, bond_convexity, bond_dv01
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from models.pricing import (
+    black_scholes, black_scholes_call, black_scholes_put, black_scholes_delta,
+    black_scholes_gamma, black_scholes_vega, black_scholes_theta, black_scholes_rho,
+    bond_pv, bond_duration, bond_convexity, bond_dv01,
+    stock_pl, stock_delta_exposure, portfolio_pl, portfolio_delta_exposure
+)
 
 def test_black_scholes_call():
     """Test Black-Scholes call option pricing with known values."""
@@ -225,6 +234,123 @@ def test_bond_dv01():
     # Test case: 5% coupon, 1000 face value, 2 years maturity, 4% yield
     dv01 = bond_dv01(0.05, 1000.0, 2.0, 0.04, 1)
     assert dv01 < 0  # DV01 should be negative
+
+
+def test_stock_pl():
+    """Test stock profit/loss calculation."""
+    # Test long position
+    pl = stock_pl(110.0, 100.0, 100.0)
+    assert pl == 1000.0  # (110 - 100) * 100 = 1000
+
+    # Test short position
+    pl = stock_pl(90.0, 100.0, 100.0)
+    assert pl == -1000.0  # (90 - 100) * 100 = -1000
+
+    # Test zero profit
+    pl = stock_pl(100.0, 100.0, 100.0)
+    assert pl == 0.0  # (100 - 100) * 100 = 0
+
+
+def test_stock_delta_exposure():
+    """Test stock delta exposure calculation."""
+    # Test long position
+    delta = stock_delta_exposure(100.0, 100.0)
+    assert delta == 100.0  # 1.0 * 100 = 100
+
+    # Test short position
+    delta = stock_delta_exposure(100.0, -100.0)
+    assert delta == -100.0  # 1.0 * -100 = -100
+
+    # Test zero quantity
+    delta = stock_delta_exposure(100.0, 0.0)
+    assert delta == 0.0  # 1.0 * 0 = 0
+
+
+def test_portfolio_pl():
+    """Test portfolio profit/loss calculation."""
+    # Test empty portfolio
+    pl = portfolio_pl([])
+    assert pl == 0.0
+
+    # Test single stock position
+    positions = [
+        {
+            'type': 'stock',
+            'current_price': 110.0,
+            'purchase_price': 100.0,
+            'quantity': 100.0
+        }
+    ]
+    pl = portfolio_pl(positions)
+    assert pl == 1000.0
+
+    # Test multiple positions
+    positions = [
+        {
+            'type': 'stock',
+            'current_price': 110.0,
+            'purchase_price': 100.0,
+            'quantity': 100.0
+        },
+        {
+            'type': 'stock',
+            'current_price': 90.0,
+            'purchase_price': 100.0,
+            'quantity': 100.0
+        }
+    ]
+    pl = portfolio_pl(positions)
+    assert pl == 0.0  # 1000 - 1000 = 0
+
+
+def test_portfolio_delta_exposure():
+    """Test portfolio delta exposure calculation."""
+    # Test empty portfolio
+    delta = portfolio_delta_exposure([])
+    assert delta == 0.0
+
+    # Test single stock position
+    positions = [
+        {
+            'type': 'stock',
+            'current_price': 100.0,
+            'quantity': 100.0
+        }
+    ]
+    delta = portfolio_delta_exposure(positions)
+    assert delta == 100.0
+
+    # Test multiple stock positions
+    positions = [
+        {
+            'type': 'stock',
+            'current_price': 100.0,
+            'quantity': 100.0
+        },
+        {
+            'type': 'stock',
+            'current_price': 100.0,
+            'quantity': -50.0
+        }
+    ]
+    delta = portfolio_delta_exposure(positions)
+    assert delta == 50.0  # 100 + (-50) = 50
+
+    # Test with option positions (no delta provided)
+    positions = [
+        {
+            'type': 'stock',
+            'current_price': 100.0,
+            'quantity': 100.0
+        },
+        {
+            'type': 'option',
+            'current_price': 10.0,
+            'quantity': 50.0
+        }
+    ]
+    delta = portfolio_delta_exposure(positions)
+    assert delta == 100.0  # Only stock positions contribute to delta
 
     # Test case with zero maturity
     dv01_zero = bond_dv01(0.05, 1000.0, 0.0, 0.04, 1)

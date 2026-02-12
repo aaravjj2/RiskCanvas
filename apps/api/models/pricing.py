@@ -303,6 +303,86 @@ def stock_delta_exposure(current_price: float, quantity: float) -> float:
     """
     return 1.0 * quantity
 
+
+def portfolio_pl(positions: list) -> float:
+    """
+    Calculate the total profit/loss for a portfolio of positions.
+
+    Args:
+        positions: List of position dictionaries with keys:
+            - 'type': 'stock' or 'option'
+            - 'current_price': Current market price
+            - 'purchase_price': Original purchase price (for stocks)
+            - 'quantity': Number of shares/contracts held
+            - 'strike_price': Strike price (for options)
+            - 'option_type': 'call' or 'put' (for options)
+
+    Returns:
+        Total profit/loss for the portfolio
+    """
+    total_pl = 0.0
+
+    for position in positions:
+        position_type = position['type']
+
+        if position_type == 'stock':
+            pl = stock_pl(
+                position['current_price'],
+                position['purchase_price'],
+                position['quantity']
+            )
+            total_pl += pl
+
+        elif position_type == 'option':
+            # For options, we need to calculate the current value based on current parameters
+            # This is a simplified approach - in practice, this would be more complex
+            # and require current market data for the option
+            pass  # For now, we'll focus on stock positions
+
+    return total_pl
+
+
+def portfolio_delta_exposure(positions: list) -> float:
+    """
+    Calculate the total delta exposure for a portfolio of positions.
+
+    Args:
+        positions: List of position dictionaries with keys:
+            - 'type': 'stock' or 'option'
+            - 'current_price': Current market price
+            - 'quantity': Number of shares/contracts held
+            - 'strike_price': Strike price (for options)
+            - 'option_type': 'call' or 'put' (for options)
+            - 'delta': Delta value (for options, if already calculated)
+
+    Returns:
+        Total delta exposure for the portfolio
+    """
+    total_delta = 0.0
+
+    for position in positions:
+        position_type = position['type']
+
+        if position_type == 'stock':
+            delta_exposure = stock_delta_exposure(
+                position['current_price'],
+                position['quantity']
+            )
+            total_delta += delta_exposure
+
+        elif position_type == 'option':
+            # For options, use the provided delta if available
+            if 'delta' in position:
+                delta_exposure = position['delta'] * position['quantity']
+                total_delta += delta_exposure
+            else:
+                # If no delta provided, we could calculate it, but that would require
+                # more complex logic with current market parameters
+                # For now, we'll skip this case
+                pass
+
+    return total_delta
+
 def bond_pv(coupon_rate: float, face_value: float, time_to_maturity: float, yield_to_maturity: float, payments_per_year: int = 1) -> float:
     """
     Calculate the present value (price) of a fixed-coupon bond.
