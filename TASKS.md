@@ -24,7 +24,7 @@
 - [x] M3.1 Portfolio builder UI (stocks/options/bonds) with templates + guardrails
 - [x] M3.2 Risk dashboard: top 3 drivers + exposures + scenario worst-case
 - [x] M3.3 Scenario explorer: select scenario set; recompute; show P&L table
-- [ ] M3.4 Export: HTML + JSON report downloadable, offline
+- [x] M3.4 Export: HTML + JSON report downloadable, offline
 
 ## Milestone 4 — Proof + determinism
 - [ ] M4.1 Determinism check: run same fixture twice; outputs hash-identical
