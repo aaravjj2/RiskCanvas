@@ -304,47 +304,6 @@ def stock_delta_exposure(current_price: float, quantity: float) -> float:
     return 1.0 * quantity
 
 
-def portfolio_pl(positions: list) -> float:
-    """
-    Calculate the total profit/loss for a portfolio of positions.
-
-    Args:
-        positions: List of position dictionaries with keys:
-            - 'type': 'stock' or 'option'
-            - 'current_price': Current market price
-            - 'purchase_price': Original purchase price (for stocks)
-            - 'quantity': Number of shares/contracts held
-            - 'strike_price': Strike price (for options)
-            - 'option_type': 'call' or 'put' (for options)
-
-    Returns:
-        Total profit/loss for the portfolio
-    """
-    total_pl = 0.0
-
-    for position in positions:
-        position_type = position.get('type', 'stock')  # Default to stock if not specified
-
-        if position_type == 'stock':
-            # Handle cases where purchase_price might not be available
-            purchase_price = position.get('purchase_price', 0.0)
-            current_price = position.get('current_price', position.get('price', 0.0))
-            quantity = position.get('quantity', 0.0)
-
-            # Only calculate if we have the necessary data
-            if purchase_price > 0 and current_price > 0:
-                pl = stock_pl(current_price, purchase_price, quantity)
-                total_pl += pl
-
-        elif position_type == 'option':
-            # For options, we need to calculate the current value based on current parameters
-            # This is a simplified approach - in practice, this would be more complex
-            # and require current market data for the option
-            pass  # For now, we'll focus on stock positions
-
-    return total_pl
-
-
 def portfolio_delta_exposure(positions: list) -> float:
     """
     Calculate the total delta exposure for a portfolio of positions.
@@ -711,3 +670,44 @@ def bond_dv01(coupon_rate: float, face_value: float, time_to_maturity: float, yi
     dv01 = -duration * pv * 0.0001
 
     return dv01
+
+
+def portfolio_pl(positions: list) -> float:
+    """
+    Calculate the total profit/loss for a portfolio of positions.
+
+    Args:
+        positions: List of position dictionaries with keys:
+            - 'type': 'stock' or 'option'
+            - 'current_price': Current market price
+            - 'purchase_price': Original purchase price (for stocks)
+            - 'quantity': Number of shares/contracts held
+            - 'strike_price': Strike price (for options)
+            - 'option_type': 'call' or 'put' (for options)
+
+    Returns:
+        Total profit/loss for the portfolio
+    """
+    total_pl = 0.0
+
+    for position in positions:
+        position_type = position.get('type', 'stock')  # Default to stock if not specified
+
+        if position_type == 'stock':
+            # Handle cases where purchase_price might not be available
+            purchase_price = position.get('purchase_price', 0.0)
+            current_price = position.get('current_price', position.get('price', 0.0))
+            quantity = position.get('quantity', 0.0)
+
+            # Only calculate if we have the necessary data
+            if purchase_price > 0 and current_price > 0:
+                pl = stock_pl(current_price, purchase_price, quantity)
+                total_pl += pl
+
+        elif position_type == 'option':
+            # For options, we need to calculate the current value based on current parameters
+            # This is a simplified approach - in practice, this would be more complex
+            # and require current market data for the option
+            pass  # For now, we'll focus on stock positions
+
+    return total_pl
