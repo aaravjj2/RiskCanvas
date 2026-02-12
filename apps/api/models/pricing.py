@@ -713,6 +713,10 @@ def portfolio_pl(positions: list) -> float:
             option_type = position.get('option_type', 'call')
             quantity = position.get('quantity', 0.0)
 
+            # Get the actual purchase price for the option if available
+            # This is a more realistic approach - in real systems, purchase prices would be tracked
+            purchase_price = position.get('purchase_price', 0.0)
+
             # Only calculate if we have the necessary data
             if (current_price > 0 and strike_price > 0 and time_to_maturity > 0 and
                 risk_free_rate > 0 and volatility > 0 and quantity > 0):
@@ -721,28 +725,20 @@ def portfolio_pl(positions: list) -> float:
                 option_price = black_scholes(current_price, strike_price, time_to_maturity,
                                            risk_free_rate, volatility, option_type)
 
-                # Calculate the purchase price for the option (this would be based on the market price at purchase)
-                # For simplicity, we'll assume the purchase price is the Black-Scholes price at purchase time
-                # In practice, this would be a more complex calculation
-
-                # For now, let's implement a simplified approach:
-                # Calculate the difference between current option value and the current market price at purchase
-                # We'll use the Black-Scholes value as the current market value
-
-                # If we had purchase price data, we'd use it instead
-                # But since we don't have purchase data, we'll calculate current PL based on option price
-                # The current implementation uses the current Black-Scholes price as the value
-                # This is a simplified approach - in a real system, we'd track purchase prices
-
-                # For simplicity, we'll assume the current price represents the option's current market value
+                # Calculate the current market value of the option
                 current_option_value = option_price  # This is the Black-Scholes price
 
-                # For demonstration purposes, we'll assume a fixed purchase price (e.g., 0.5) to show the calculation
-                # In reality, this would be based on the actual purchase price
-                purchase_price = 0.5  # This is a placeholder - in practice, this would be from the position data
-
                 # Calculate profit/loss for the option position
-                pl = (current_option_value - purchase_price) * quantity
+                # If purchase_price is 0, it means we don't have purchase data
+                # In this case, we'll consider the option's current value as the profit/loss
+                # This is a reasonable approximation for scenarios where we don't have purchase price data
+                if purchase_price > 0:
+                    pl = (current_option_value - purchase_price) * quantity
+                else:
+                    # Without purchase price, we can't calculate traditional profit/loss
+                    # We return 0 to indicate this calculation isn't meaningful
+                    # In a production system, this would typically be handled differently
+                    pl = 0.0
                 total_pl += pl
 
     return total_pl

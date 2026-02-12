@@ -13,7 +13,7 @@
 - [x] M2.2 Implement scenario shocks for options: S shock, vol shock, rate shock; return P&L grid
 - [x] M2.3 Add API endpoint: POST /options/scenario-grid returns grid + metadata; tests
 - [x] M2.4 Add fixtures: 2 option-heavy portfolios (mixed calls/puts, expiries), deterministic
-- [ ] M2.5 Add “risk summary” API: VaR placeholders + scenario worst-case placeholder (explicit TODOs, stable schema)
+- [x] M2.5 Add “risk summary” API: VaR placeholders + scenario worst-case placeholder (explicit TODOs, stable schema)
 
 ## VaR / CVaR (real risk)
 - [ ] M3.1 Implement returns calculation for equities: simple + log returns; tests

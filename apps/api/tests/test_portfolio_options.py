@@ -23,7 +23,8 @@ def test_portfolio_pl_with_options():
             'risk_free_rate': 0.03,
             'volatility': 0.20,
             'option_type': 'call',
-            'quantity': 50.0
+            'quantity': 50.0,
+            'purchase_price': 2.0  # Add purchase price for proper calculation
         }
     ]
 
@@ -45,7 +46,8 @@ def test_portfolio_pl_with_options():
             'risk_free_rate': 0.03,
             'volatility': 0.20,
             'option_type': 'call',
-            'quantity': 50.0
+            'quantity': 50.0,
+            'purchase_price': 2.0  # Add purchase price for proper calculation
         }
     ]
 

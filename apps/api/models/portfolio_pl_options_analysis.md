@@ -6,59 +6,20 @@ The `portfolio_pl` function in `apps/api/models/pricing.py` has an incomplete im
 
 ## Current Implementation Problems
 
-1. **Incorrect Purchase Price Handling**: The function uses a hardcoded `purchase_price = 0.5` instead of properly handling the case where purchase price data is available or calculating it correctly.
+1. **Incorrect Purchase Price Handling**: The function previously used a hardcoded `purchase_price = 0.5` instead of properly handling the case where purchase price data is available or calculating it correctly.
 
-2. **Inappropriate Calculation Logic**: The current implementation doesn't correctly calculate profit/loss for options, as it compares the current Black-Scholes value against an arbitrary fixed purchase price.
+2. **Inappropriate Calculation Logic**: The previous implementation didn't correctly calculate profit/loss for options, as it compared against an arbitrary fixed purchase price.
 
-3. **Incomplete Portfolio PL Calculation**: While the function attempts to process options, it doesn't properly include their contribution to the total portfolio profit/loss, leading to incomplete reporting.
+3. **Incomplete Portfolio PL Calculation**: While the function attempted to process options, it didn't properly include their contribution to the total portfolio profit/loss, leading to incomplete reporting.
 
-## Analysis of the Problem
+## Updated Analysis
 
-Looking at lines 662-748 in pricing.py:
+The current implementation now:
+1. Retrieves `purchase_price` from the position data using `position.get('purchase_price', 0.0)`
+2. If `purchase_price` is provided, calculates option PL = quantity * (Black-Scholes_price - purchase_price)
+3. If `purchase_price` is not provided (0.0), returns 0 to indicate that meaningful profit/loss calculation cannot be performed
 
-```python
-def portfolio_pl(positions: list) -> float:
-    # ... function definition ...
-    for position in positions:
-        # ... stock handling ...
-        elif position_type == 'option':
-            # Extract option parameters
-            current_price = position.get('current_price', 0.0)
-            strike_price = position.get('strike_price', 0.0)
-            time_to_maturity = position.get('time_to_maturity', 0.0)
-            risk_free_rate = position.get('risk_free_rate', 0.0)
-            volatility = position.get('volatility', 0.0)
-            option_type = position.get('option_type', 'call')
-            quantity = position.get('quantity', 0.0)
-
-            # Only calculate if we have the necessary data
-            if (current_price > 0 and strike_price > 0 and time_to_maturity > 0 and
-                risk_free_rate > 0 and volatility > 0 and quantity > 0):
-
-                # Calculate the Black-Scholes price for the current option
-                option_price = black_scholes(current_price, strike_price, time_to_maturity,
-                                           risk_free_rate, volatility, option_type)
-
-                # ... problematic hardcoded purchase price ...
-                purchase_price = 0.5  # This is wrong!
-
-                # Calculate profit/loss for the option position
-                pl = (current_option_value - purchase_price) * quantity
-                total_pl += pl
-```
-
-The issue is specifically on line 742 where `purchase_price = 0.5` is hardcoded. This approach is fundamentally flawed because:
-
-1. It doesn't use actual purchase price data from the position
-2. It assumes all options were purchased at $0.5, which is incorrect
-3. It doesn't properly handle the case where purchase price data is not available
-
-## Expected Behavior
-
-A complete implementation should:
-1. Properly calculate the current value of options using Black-Scholes or similar
-2. Either use actual purchase price data when available, or use a method that correctly accounts for the option's value at purchase
-3. Include all portfolio positions (stocks and options) in the final profit/loss calculation
+This approach is more realistic and correct than the previous hardcoded value.
 
 ## Impact
 
