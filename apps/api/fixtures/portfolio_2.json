@@ -1,0 +1,30 @@
+{
+  "id": 2,
+  "name": "Balanced Income Portfolio",
+  "description": "A diversified portfolio focused on steady income generation",
+  "assets": [
+    {
+      "symbol": "KO",
+      "name": "Coca-Cola Company",
+      "type": "stock",
+      "quantity": 20,
+      "price": 55.75
+    },
+    {
+      "symbol": "JNJ",
+      "name": "Johnson & Johnson",
+      "type": "stock",
+      "quantity": 15,
+      "price": 160.30
+    },
+    {
+      "symbol": "VZ",
+      "name": "Verizon Communications",
+      "type": "stock",
+      "quantity": 25,
+      "price": 40.10
+    }
+  ],
+  "total_value": 4528.25,
+  "created_at": "2023-03-22T14:15:00Z"
+}
