@@ -113,8 +113,8 @@ async def export_report():
     Export a JSON report of portfolio data to artifacts/ directory.
     This is a stub implementation that creates a skeleton report.
     """
-    # Ensure artifacts directory exists
-    artifacts_dir = "artifacts"
+    # Ensure artifacts directory exists at repo root
+    artifacts_dir = "../artifacts"
     os.makedirs(artifacts_dir, exist_ok=True)
 
     # Create a basic report structure (stub)

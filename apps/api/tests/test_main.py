@@ -30,7 +30,7 @@ def test_export_endpoint():
 
     # Verify the file was created
     filename = data["filename"]
-    filepath = os.path.join("artifacts", filename)
+    filepath = os.path.join("..", "artifacts", filename)
     assert os.path.exists(filepath)
 
     # Verify the content is valid JSON

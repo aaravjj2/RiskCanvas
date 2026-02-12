@@ -14,6 +14,10 @@ __pycache__/
 apps/api/artifacts/
 apps/api/artifacts/*.json
 
+# Repo root artifacts directory
+artifacts/
+artifacts/*
+
 # Tool outputs
 playwright-report/
 test-results/
