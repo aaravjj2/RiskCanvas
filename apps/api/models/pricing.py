@@ -699,6 +699,8 @@ def portfolio_pl(positions: list) -> float:
             purchase_price = position.get('purchase_price', 0.0)
             quantity = position.get('quantity', 0.0)
 
+            # Only include option purchase value if we have valid purchase price data
+            # If purchase_price is 0 or not provided, we skip this position in purchase value calculation
             if purchase_price > 0 and quantity > 0:
                 total_purchase_value += purchase_price * quantity
 

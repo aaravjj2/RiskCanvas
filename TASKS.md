@@ -17,7 +17,7 @@
 
 ## VaR / CVaR (real risk)
 - [ ] [blocked] M3.1 Implement returns calculation for equities: simple + log returns; tests  // Claude hit max turns. See artifacts/logs/20260212-132518-implement.log
-- [ ] M3.2 Implement historical simulation VaR + CVaR for a portfolio of stocks (using fixture prices); tests
+- [x] M3.2 Implement historical simulation VaR + CVaR for a portfolio of stocks (using fixture prices); tests
 - [ ] M3.3 Implement parametric (normal) VaR for stocks; tests + compare to historical
 - [ ] M3.4 Add bond price sensitivity approximation using duration/convexity to estimate P&L under yield shocks; tests
 - [ ] M3.5 Add portfolio VaR aggregation across stocks + bonds (document assumptions); tests
