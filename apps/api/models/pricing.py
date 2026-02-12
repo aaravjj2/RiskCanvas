@@ -965,3 +965,33 @@ def implied_volatility(S: float, K: float, T: float, r: float, market_price: flo
         return implied_volatility_put(market_price, S, K, T, r, max_iterations, tolerance)
     else:
         raise ValueError("option_type must be 'call' or 'put'")
+
+def bond_price_approximation(coupon_rate: float, face_value: float, time_to_maturity: float,
+                           yield_to_maturity: float, payments_per_year: int = 1,
+                           yield_change: float = 0.0001) -> float:
+    """
+    Approximate the change in bond price using duration and convexity.
+
+    This function estimates the percentage change in bond price for a given change in yield
+    using the duration and convexity approximation formula:
+    ΔP/P ≈ -Duration * Δy + 0.5 * Convexity * (Δy)^2
+
+    Args:
+        coupon_rate: Annual coupon rate (as decimal, e.g., 0.05 for 5%)
+        face_value: Face value of the bond
+        time_to_maturity: Time to maturity in years
+        yield_to_maturity: Annual yield to maturity (as decimal, e.g., 0.04 for 4%)
+        payments_per_year: Number of coupon payments per year (default is 1)
+        yield_change: Change in yield (as decimal, e.g., 0.0001 for 0.01% or 1 basis point)
+
+    Returns:
+        Approximated percentage change in bond price
+    """
+    # Calculate duration and convexity
+    duration = bond_duration(coupon_rate, face_value, time_to_maturity, yield_to_maturity, payments_per_year)
+    convexity = bond_convexity(coupon_rate, face_value, time_to_maturity, yield_to_maturity, payments_per_year)
+
+    # Calculate the percentage change in price using the duration and convexity approximation
+    price_change_percentage = -duration * yield_change + 0.5 * convexity * (yield_change ** 2)
+
+    return price_change_percentage
