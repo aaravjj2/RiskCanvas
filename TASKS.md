@@ -16,7 +16,7 @@
 - [x] M2.5 Add “risk summary” API: VaR placeholders + scenario worst-case placeholder (explicit TODOs, stable schema)
 
 ## VaR / CVaR (real risk)
-- [ ] M3.1 Implement returns calculation for equities: simple + log returns; tests
+- [ ] [blocked] M3.1 Implement returns calculation for equities: simple + log returns; tests  // Claude hit max turns. See artifacts/logs/20260212-132518-implement.log
 - [ ] M3.2 Implement historical simulation VaR + CVaR for a portfolio of stocks (using fixture prices); tests
 - [ ] M3.3 Implement parametric (normal) VaR for stocks; tests + compare to historical
 - [ ] M3.4 Add bond price sensitivity approximation using duration/convexity to estimate P&L under yield shocks; tests
