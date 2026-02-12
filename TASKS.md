@@ -4,7 +4,7 @@
 - [x] M0.1 Scaffold monorepo: apps/web, apps/api, packages/engine, e2e, scripts/, artifacts/
 - [x] M0.2 Web: React+TS+Vitest configured; typecheck + unit tests pass (0 failed/0 skipped)
 - [x] M0.3 API: FastAPI + Pytest configured; unit tests pass (0 failed/0 skipped)
-- [ ] M0.4 E2E: Playwright configured (retries=0 workers=1, video/trace/screenshot on); tests pass; selectors are data-testid only
+- [x] M0.4 E2E: Playwright configured (retries=0 workers=1, video/trace/screenshot on); tests pass; selectors are data-testid only
 - [ ] M0.5 Add deterministic fixtures: 3 sample portfolios in fixtures/ (JSON)
 - [ ] M0.6 Add export skeleton: JSON report file written to artifacts/ on demand (stub ok)
 
