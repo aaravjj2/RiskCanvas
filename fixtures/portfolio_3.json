@@ -1,0 +1,30 @@
+{
+  "id": 3,
+  "name": "Growth & Value Portfolio",
+  "description": "A mixed portfolio combining growth and value stocks",
+  "assets": [
+    {
+      "symbol": "TSLA",
+      "name": "Tesla, Inc.",
+      "type": "stock",
+      "quantity": 8,
+      "price": 250.00
+    },
+    {
+      "symbol": "BRK.B",
+      "name": "Berkshire Hathaway Inc.",
+      "type": "stock",
+      "quantity": 3,
+      "price": 300.00
+    },
+    {
+      "symbol": "SPY",
+      "name": "SPDR S&P 500 ETF Trust",
+      "type": "etf",
+      "quantity": 10,
+      "price": 400.50
+    }
+  ],
+  "total_value": 5004.00,
+  "created_at": "2023-06-10T09:45:00Z"
+}
