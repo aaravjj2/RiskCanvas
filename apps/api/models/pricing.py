@@ -19,10 +19,19 @@ def black_scholes_call(S: float, K: float, T: float, r: float, sigma: float) -> 
     Returns:
         Call option price
     """
+    # Handle edge cases where volatility or time is zero
+    # When volatility is zero the option's value is its intrinsic value
+    if sigma == 0 or T == 0:
+        return max(S - K, 0.0)
+
     d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
     d2 = d1 - sigma * math.sqrt(T)
 
-    call_price = S * math.erf(d1 / math.sqrt(2)) - K * math.exp(-r * T) * math.erf(d2 / math.sqrt(2))
+    # Standard normal CDF using erf
+    def N(x: float) -> float:
+        return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+    call_price = S * N(d1) - K * math.exp(-r * T) * N(d2)
     return call_price
 
 def black_scholes_put(S: float, K: float, T: float, r: float, sigma: float) -> float:
@@ -39,10 +48,18 @@ def black_scholes_put(S: float, K: float, T: float, r: float, sigma: float) -> f
     Returns:
         Put option price
     """
+    # Handle edge cases where volatility or time is zero
+    # When volatility is zero the option's value is its intrinsic value
+    if sigma == 0 or T == 0:
+        return max(K - S, 0.0)
+
     d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
     d2 = d1 - sigma * math.sqrt(T)
 
-    put_price = K * math.exp(-r * T) * math.erf(-d2 / math.sqrt(2)) - S * math.erf(-d1 / math.sqrt(2))
+    def N(x: float) -> float:
+        return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+    put_price = K * math.exp(-r * T) * N(-d2) - S * N(-d1)
     return put_price
 
 def black_scholes(S: float, K: float, T: float, r: float, sigma: float, option_type: str = 'call') -> float:

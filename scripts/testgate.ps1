@@ -18,7 +18,7 @@ Run-Step "Web: test"      { npm --prefix apps/web test --silent }
 
 if (Test-Path ".\apps\api") {
   if (Test-Path ".\apps\api\.venv\Scripts\python.exe") {
-    Run-Step "API: pytest" { .\apps\api\.venv\Scripts\python -m pytest -q .\apps\api }
+    Run-Step "API: pytest" { Push-Location .\apps\api; .\.venv\Scripts\python -m pytest -q; Pop-Location }
   } else {
     Write-Host "`n(skipping API pytest: apps/api/.venv not found)"
   }
