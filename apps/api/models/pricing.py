@@ -678,70 +678,32 @@ def portfolio_pl(positions: list) -> float:
     Returns:
         Total profit/loss for the portfolio
     """
-    total_pl = 0.0
+    # Calculate portfolio value using existing portfolio_value function
+    current_value = portfolio_value(positions)
+
+    # Calculate purchase value manually by summing up purchase costs
+    total_purchase_value = 0.0
 
     for position in positions:
-        position_type = position.get('type', 'stock')  # Default to stock if not specified
+        position_type = position.get('type', 'stock')
 
         if position_type == 'stock':
-            # Handle cases where purchase_price might not be available
             purchase_price = position.get('purchase_price', 0.0)
-            current_price = position.get('current_price', position.get('price', 0.0))
             quantity = position.get('quantity', 0.0)
 
-            # Only calculate if we have the necessary data
-            if purchase_price > 0 and current_price > 0:
-                pl = stock_pl(current_price, purchase_price, quantity)
-                total_pl += pl
+            if purchase_price > 0 and quantity > 0:
+                total_purchase_value += purchase_price * quantity
 
         elif position_type == 'option':
-            # For options, calculate profit/loss using Black-Scholes model
-            # We need the following data for option valuation:
-            # - current_price: Current stock price
-            # - strike_price: Strike price
-            # - time_to_maturity: Time to maturity (in years)
-            # - risk_free_rate: Risk-free interest rate
-            # - volatility: Volatility (annual standard deviation)
-            # - option_type: 'call' or 'put'
-
-            # Extract option parameters
-            current_price = position.get('current_price', 0.0)
-            strike_price = position.get('strike_price', 0.0)
-            time_to_maturity = position.get('time_to_maturity', 0.0)
-            risk_free_rate = position.get('risk_free_rate', 0.0)
-            volatility = position.get('volatility', 0.0)
-            option_type = position.get('option_type', 'call')
+            # For options, we use the purchase_price if available
+            purchase_price = position.get('purchase_price', 0.0)
             quantity = position.get('quantity', 0.0)
 
-            # Get the actual purchase price for the option if available
-            # This is a more realistic approach - in real systems, purchase prices would be tracked
-            purchase_price = position.get('purchase_price', 0.0)
+            if purchase_price > 0 and quantity > 0:
+                total_purchase_value += purchase_price * quantity
 
-            # Only calculate if we have the necessary data
-            if (current_price > 0 and strike_price > 0 and time_to_maturity > 0 and
-                risk_free_rate > 0 and volatility > 0 and quantity > 0):
-
-                # Calculate the Black-Scholes price for the current option
-                option_price = black_scholes(current_price, strike_price, time_to_maturity,
-                                           risk_free_rate, volatility, option_type)
-
-                # Calculate the current market value of the option
-                current_option_value = option_price  # This is the Black-Scholes price
-
-                # Calculate profit/loss for the option position
-                # If purchase_price is 0, it means we don't have purchase data
-                # In this case, we'll consider the option's current value as the profit/loss
-                # This is a reasonable approximation for scenarios where we don't have purchase price data
-                if purchase_price > 0:
-                    pl = (current_option_value - purchase_price) * quantity
-                else:
-                    # Without purchase price, we can't calculate traditional profit/loss
-                    # We return 0 to indicate this calculation isn't meaningful
-                    # In a production system, this would typically be handled differently
-                    pl = 0.0
-                total_pl += pl
-
-    return total_pl
+    # Return profit/loss as portfolio_value - purchase_value
+    return current_value - total_purchase_value
 
 
 def portfolio_value(positions: list) -> float:
