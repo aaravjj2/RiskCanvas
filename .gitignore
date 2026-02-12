@@ -1,0 +1,14 @@
+﻿# Node
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# Local logs (keep proof packs separately)
+artifacts/logs/
