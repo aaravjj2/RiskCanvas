@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install -g claude)",
+      "Skill(keybindings-help)"
+    ]
+  }
+}
