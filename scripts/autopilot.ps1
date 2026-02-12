@@ -25,14 +25,28 @@ function ClaudeDo([string]$prompt, [string]$tag) {
   $env:ANTHROPIC_BASE_URL="http://localhost:11434"
 
   $log = "artifacts/logs/$((Get-Date).ToString('yyyyMMdd-HHmmss'))-$tag.log"
+  Write-Host "Claude log => $log"
 
-  # Non-interactive, bounded, permission-free run (use with caution).
-  # We also block common destructive commands via disallowedTools.
-  & claude -p --model $Model --max-turns 14 --dangerously-skip-permissions `
-    --disallowedTools "Bash(rm *)" "Bash(del *)" "Bash(rmdir *)" "Bash(Remove-Item *)" `
-    $prompt 2>&1 | Tee-Object -FilePath $log
+  # IMPORTANT: Do not pipe stdin into claude on Windows (Ink raw-mode issues).
+  # Use print mode (-p/--print) with the prompt as an argument. :contentReference[oaicite:2]{index=2}
+  $args = @(
+    "-p",
+    "--model", $Model,
+    "--max-turns", "14",
+    "--dangerously-skip-permissions",
+    "--disallowedTools", "Bash(rm *)",
+    "--disallowedTools", "Bash(del *)",
+    "--disallowedTools", "Bash(rmdir *)",
+    "--disallowedTools", "Bash(Remove-Item *)",
+    "--",
+    $prompt
+  )
 
-  if ($LASTEXITCODE -ne 0) { throw "Claude run failed ($LASTEXITCODE). See $log" }
+  & claude @args 2>&1 | Tee-Object -FilePath $log
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "Claude run failed ($LASTEXITCODE). See $log"
+  }
 }
 
 # Sanity: require git remote
@@ -93,3 +107,5 @@ $($_.Exception.Message)
 
   Write-Host "`n✅ Completed and pushed: $($task.Text)"
 }
+
+

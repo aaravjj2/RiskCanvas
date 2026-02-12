@@ -1,7 +1,7 @@
 ﻿# TASKS
 
 ## Milestone 0 — Scaffold + Gates (must be green before anything else)
-- [ ] M0.1 Scaffold monorepo: apps/web, apps/api, packages/engine, e2e, scripts/, artifacts/
+- [x] M0.1 Scaffold monorepo: apps/web, apps/api, packages/engine, e2e, scripts/, artifacts/
 - [ ] M0.2 Web: React+TS+Vitest configured; typecheck + unit tests pass (0 failed/0 skipped)
 - [ ] M0.3 API: FastAPI + Pytest configured; unit tests pass (0 failed/0 skipped)
 - [ ] M0.4 E2E: Playwright configured (retries=0 workers=1, video/trace/screenshot on); tests pass; selectors are data-testid only
