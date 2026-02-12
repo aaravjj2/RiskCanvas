@@ -56,6 +56,7 @@ def black_scholes_put(S: float, K: float, T: float, r: float, sigma: float) -> f
     d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
     d2 = d1 - sigma * math.sqrt(T)
 
+    # Standard normal CDF using erf
     def N(x: float) -> float:
         return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
 
@@ -273,20 +274,6 @@ def black_scholes_rho(S: float, K: float, T: float, r: float, sigma: float, opti
         rho = -K * T * math.exp(-r * T) * N(-d2)
 
     return rho
-
-def stock_pl(current_price: float, purchase_price: float, quantity: float) -> float:
-    """
-    Calculate the profit/loss for a stock position.
-
-    Args:
-        current_price: Current market price of the stock
-        purchase_price: Original purchase price of the stock
-        quantity: Number of shares held
-
-    Returns:
-        Profit/Loss amount
-    """
-    return (current_price - purchase_price) * quantity
 
 def stock_delta_exposure(current_price: float, quantity: float) -> float:
     """
@@ -711,3 +698,205 @@ def portfolio_pl(positions: list) -> float:
             pass  # For now, we'll focus on stock positions
 
     return total_pl
+
+def implied_volatility_call(market_price: float, S: float, K: float, T: float, r: float,
+                          max_iterations: int = 100, tolerance: float = 1e-6) -> float:
+    """
+    Calculate the implied volatility for a European call option using the bisection method.
+
+    Args:
+        market_price: Observed market price of the call option
+        S: Current stock price
+        K: Strike price
+        T: Time to maturity (in years)
+        r: Risk-free interest rate (annual)
+        max_iterations: Maximum number of iterations for the solver
+        tolerance: Tolerance for convergence
+
+    Returns:
+        Implied volatility (annual standard deviation)
+
+    Raises:
+        ValueError: If the market price is too low or too high to be consistent with Black-Scholes
+    """
+    # Check for valid inputs
+    if S <= 0 or K <= 0 or T <= 0 or r < 0:
+        raise ValueError("Invalid parameters: S, K, T, and r must be positive")
+
+    if market_price < 0:
+        raise ValueError("Market price cannot be negative")
+
+    # The Black-Scholes call price is always at least max(0, S - K * exp(-r * T))
+    # If market_price is below this, there's no valid volatility
+    intrinsic_value = max(0, S - K * math.exp(-r * T))
+    if market_price < intrinsic_value:
+        raise ValueError("Market price is too low to be consistent with Black-Scholes model")
+
+    # The Black-Scholes call price is bounded above by S (when volatility approaches infinity)
+    # If market_price is above S, there's no valid volatility (this should not happen in practice)
+    if market_price > S:
+        raise ValueError("Market price is too high to be consistent with Black-Scholes model")
+
+    # Bisection method
+    # Set reasonable bounds for volatility
+    vol_min = 0.0001  # 0.01% - minimum reasonable volatility
+    vol_max = 10.0    # 1000% - maximum reasonable volatility
+
+    # Ensure bounds are correct
+    if vol_min >= vol_max:
+        raise ValueError("Invalid volatility bounds")
+
+    # Check if the bounds are reasonable
+    bs_price_min = black_scholes_call(S, K, T, r, vol_min)
+    bs_price_max = black_scholes_call(S, K, T, r, vol_max)
+
+    # If the minimum bound already gives a higher price than the market price,
+    # we need to adjust the upper bound
+    if bs_price_min > market_price:
+        vol_max = vol_min * 100  # Increase upper bound
+        bs_price_max = black_scholes_call(S, K, T, r, vol_max)
+
+        # If even this doesn't work, the price is too high
+        if bs_price_max < market_price:
+            raise ValueError("Market price is too high to be consistent with Black-Scholes model")
+
+    # Check if the maximum bound already gives a lower price than the market price,
+    # which would indicate the price is too low
+    if bs_price_max < market_price:
+        vol_min = vol_max / 100  # Decrease lower bound
+        bs_price_min = black_scholes_call(S, K, T, r, vol_min)
+
+        # If even this doesn't work, the price is too low
+        if bs_price_min > market_price:
+            raise ValueError("Market price is too low to be consistent with Black-Scholes model")
+
+    # Bisection method
+    for _ in range(max_iterations):
+        vol_mid = (vol_min + vol_max) / 2.0
+        bs_price = black_scholes_call(S, K, T, r, vol_mid)
+
+        if abs(bs_price - market_price) < tolerance:
+            return vol_mid
+
+        if bs_price < market_price:
+            vol_min = vol_mid
+        else:
+            vol_max = vol_mid
+
+    # Return the best approximation if we didn't converge to the exact tolerance
+    return (vol_min + vol_max) / 2.0
+
+def implied_volatility_put(market_price: float, S: float, K: float, T: float, r: float,
+                         max_iterations: int = 100, tolerance: float = 1e-6) -> float:
+    """
+    Calculate the implied volatility for a European put option using the bisection method.
+
+    Args:
+        market_price: Observed market price of the put option
+        S: Current stock price
+        K: Strike price
+        T: Time to maturity (in years)
+        r: Risk-free interest rate (annual)
+        max_iterations: Maximum number of iterations for the solver
+        tolerance: Tolerance for convergence
+
+    Returns:
+        Implied volatility (annual standard deviation)
+
+    Raises:
+        ValueError: If the market price is too low or too high to be consistent with Black-Scholes
+    """
+    # Check for valid inputs
+    if S <= 0 or K <= 0 or T <= 0 or r < 0:
+        raise ValueError("Invalid parameters: S, K, T, and r must be positive")
+
+    if market_price < 0:
+        raise ValueError("Market price cannot be negative")
+
+    # The Black-Scholes put price is always at least max(0, K * exp(-r * T) - S)
+    # If market_price is below this, there's no valid volatility
+    intrinsic_value = max(0, K * math.exp(-r * T) - S)
+    if market_price < intrinsic_value:
+        raise ValueError("Market price is too low to be consistent with Black-Scholes model")
+
+    # The Black-Scholes put price is bounded above by K * exp(-r * T) (when volatility approaches infinity)
+    # If market_price is above K * exp(-r * T), there's no valid volatility (this should not happen in practice)
+    if market_price > K * math.exp(-r * T):
+        raise ValueError("Market price is too high to be consistent with Black-Scholes model")
+
+    # Bisection method
+    # Set reasonable bounds for volatility
+    vol_min = 0.0001  # 0.01% - minimum reasonable volatility
+    vol_max = 10.0    # 1000% - maximum reasonable volatility
+
+    # Ensure bounds are correct
+    if vol_min >= vol_max:
+        raise ValueError("Invalid volatility bounds")
+
+    # Check if the bounds are reasonable
+    bs_price_min = black_scholes_put(S, K, T, r, vol_min)
+    bs_price_max = black_scholes_put(S, K, T, r, vol_max)
+
+    # If the minimum bound already gives a higher price than the market price,
+    # we need to adjust the upper bound
+    if bs_price_min > market_price:
+        vol_max = vol_min * 100  # Increase upper bound
+        bs_price_max = black_scholes_put(S, K, T, r, vol_max)
+
+        # If even this doesn't work, the price is too high
+        if bs_price_max < market_price:
+            raise ValueError("Market price is too high to be consistent with Black-Scholes model")
+
+    # Check if the maximum bound already gives a lower price than the market price,
+    # which would indicate the price is too low
+    if bs_price_max < market_price:
+        vol_min = vol_max / 100  # Decrease lower bound
+        bs_price_min = black_scholes_put(S, K, T, r, vol_min)
+
+        # If even this doesn't work, the price is too low
+        if bs_price_min > market_price:
+            raise ValueError("Market price is too low to be consistent with Black-Scholes model")
+
+    # Bisection method
+    for _ in range(max_iterations):
+        vol_mid = (vol_min + vol_max) / 2.0
+        bs_price = black_scholes_put(S, K, T, r, vol_mid)
+
+        if abs(bs_price - market_price) < tolerance:
+            return vol_mid
+
+        if bs_price < market_price:
+            vol_min = vol_mid
+        else:
+            vol_max = vol_mid
+
+    # Return the best approximation if we didn't converge to the exact tolerance
+    return (vol_min + vol_max) / 2.0
+
+def implied_volatility(S: float, K: float, T: float, r: float, market_price: float,
+                      option_type: str = 'call', max_iterations: int = 100, tolerance: float = 1e-6) -> float:
+    """
+    Calculate the implied volatility for a European option using the bisection method.
+
+    Args:
+        S: Current stock price
+        K: Strike price
+        T: Time to maturity (in years)
+        r: Risk-free interest rate (annual)
+        market_price: Observed market price of the option
+        option_type: 'call' or 'put'
+        max_iterations: Maximum number of iterations for the solver
+        tolerance: Tolerance for convergence
+
+    Returns:
+        Implied volatility (annual standard deviation)
+
+    Raises:
+        ValueError: If the market price is too low or too high to be consistent with Black-Scholes
+    """
+    if option_type.lower() == 'call':
+        return implied_volatility_call(market_price, S, K, T, r, max_iterations, tolerance)
+    elif option_type.lower() == 'put':
+        return implied_volatility_put(market_price, S, K, T, r, max_iterations, tolerance)
+    else:
+        raise ValueError("option_type must be 'call' or 'put'")
