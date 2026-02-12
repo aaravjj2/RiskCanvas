@@ -1,5 +1,5 @@
 import math
-from models.pricing import black_scholes, black_scholes_call, black_scholes_put
+from models.pricing import black_scholes, black_scholes_call, black_scholes_put, black_scholes_delta, black_scholes_gamma, black_scholes_vega, black_scholes_theta, black_scholes_rho
 
 def test_black_scholes_call():
     """Test Black-Scholes call option pricing with known values."""
@@ -82,3 +82,97 @@ def test_put_call_parity():
     right_side = S - K * math.exp(-r * T)
 
     assert abs(left_side - right_side) < 0.0001
+
+def test_black_scholes_delta():
+    """Test Black-Scholes delta calculation."""
+    S = 40.0
+    K = 40.0
+    T = 0.25
+    r = 0.03
+    sigma = 0.20
+
+    # Test call delta
+    call_delta = black_scholes_delta(S, K, T, r, sigma, 'call')
+    assert call_delta > 0
+    assert call_delta < 1
+
+    # Test put delta
+    put_delta = black_scholes_delta(S, K, T, r, sigma, 'put')
+    assert put_delta > -1
+    assert put_delta < 0
+
+    # Test with zero volatility
+    call_delta_zero = black_scholes_delta(40.0, 40.0, 1.0, 0.05, 0.0, 'call')
+    assert abs(call_delta_zero - 0.5) < 0.0001  # At-the-money call should be 0.5
+
+def test_black_scholes_gamma():
+    """Test Black-Scholes gamma calculation."""
+    S = 40.0
+    K = 40.0
+    T = 0.25
+    r = 0.03
+    sigma = 0.20
+
+    gamma = black_scholes_gamma(S, K, T, r, sigma)
+    assert gamma > 0  # Gamma should be positive for all options
+
+    # Test with zero volatility
+    gamma_zero = black_scholes_gamma(40.0, 40.0, 1.0, 0.05, 0.0)
+    assert abs(gamma_zero) < 0.0001  # Should be near zero
+
+def test_black_scholes_vega():
+    """Test Black-Scholes vega calculation."""
+    S = 40.0
+    K = 40.0
+    T = 0.25
+    r = 0.03
+    sigma = 0.20
+
+    vega = black_scholes_vega(S, K, T, r, sigma)
+    assert vega > 0  # Vega should be positive for all options
+
+    # Test with zero volatility
+    vega_zero = black_scholes_vega(40.0, 40.0, 1.0, 0.05, 0.0)
+    assert abs(vega_zero) < 0.0001  # Should be near zero
+
+def test_black_scholes_theta():
+    """Test Black-Scholes theta calculation."""
+    S = 40.0
+    K = 40.0
+    T = 0.25
+    r = 0.03
+    sigma = 0.20
+
+    # Test call theta
+    call_theta = black_scholes_theta(S, K, T, r, sigma, 'call')
+    # Theta should be negative for options (time decay)
+    assert call_theta < 0
+
+    # Test put theta
+    put_theta = black_scholes_theta(S, K, T, r, sigma, 'put')
+    # Theta should be negative for options (time decay)
+    assert put_theta < 0
+
+    # Test with zero volatility
+    call_theta_zero = black_scholes_theta(40.0, 40.0, 1.0, 0.05, 0.0, 'call')
+    assert abs(call_theta_zero) < 0.0001  # Should be near zero
+
+def test_black_scholes_rho():
+    """Test Black-Scholes rho calculation."""
+    S = 40.0
+    K = 40.0
+    T = 0.25
+    r = 0.03
+    sigma = 0.20
+
+    # Test call rho
+    call_rho = black_scholes_rho(S, K, T, r, sigma, 'call')
+    assert call_rho > 0  # Call rho should be positive
+
+    # Test put rho
+    put_rho = black_scholes_rho(S, K, T, r, sigma, 'put')
+    assert put_rho < 0  # Put rho should be negative
+
+    # Test with zero volatility
+    call_rho_zero = black_scholes_rho(40.0, 40.0, 1.0, 0.05, 0.0, 'call')
+    assert abs(call_rho_zero) < 0.0001  # Should be near zero
