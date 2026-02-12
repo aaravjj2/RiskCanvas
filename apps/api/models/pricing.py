@@ -1216,5 +1216,64 @@ def portfolio_var(positions: list, historical_prices: list, method: str = "histo
         return historical_var(portfolio_returns, confidence_level)
     elif method == "parametric":
         return parametric_var(portfolio_returns, confidence_level)
+    elif method == "monte_carlo":
+        return monte_carlo_var(portfolio_returns, confidence_level)
     else:
-        raise ValueError("Method must be 'historical' or 'parametric'")
+        raise ValueError("Method must be 'historical', 'parametric', or 'monte_carlo'")
+
+
+def monte_carlo_var(portfolio_returns: list, confidence_level: float = 0.95, num_paths: int = 10000, seed: int = 42) -> float:
+    """
+    Calculate Value at Risk (VaR) using Monte Carlo simulation method.
+
+    Args:
+        portfolio_returns: List of portfolio returns
+        confidence_level: Confidence level for VaR calculation (default 0.95 for 95%)
+        num_paths: Number of Monte Carlo paths to simulate (default 10000)
+        seed: Random seed for reproducibility (default 42)
+
+    Returns:
+        VaR value (negative value means potential loss)
+    """
+    import random
+
+    if not portfolio_returns:
+        raise ValueError("Portfolio returns list cannot be empty")
+
+    if confidence_level <= 0 or confidence_level >= 1:
+        raise ValueError("Confidence level must be between 0 and 1")
+
+    # Set seed for reproducibility
+    random.seed(seed)
+
+    # Calculate mean and standard deviation of returns
+    mean_return = sum(portfolio_returns) / len(portfolio_returns)
+    variance = sum((r - mean_return) ** 2 for r in portfolio_returns) / len(portfolio_returns)
+    std_dev = math.sqrt(variance)
+
+    # Generate Monte Carlo paths
+    simulated_returns = []
+
+    # For simplicity, we'll use a normal distribution approach for the simulation
+    # This is a basic Monte Carlo approach - in practice, you'd want more sophisticated
+    # path generation that includes correlations between assets
+
+    for _ in range(num_paths):
+        # Simulate a single path using the mean and std dev
+        # This assumes returns follow a normal distribution
+        simulated_return = random.gauss(mean_return, std_dev)
+        simulated_returns.append(simulated_return)
+
+    # Sort the simulated returns in ascending order
+    sorted_returns = sorted(simulated_returns)
+
+    # Calculate the percentile index for the confidence level
+    percentile = 1 - confidence_level
+    index = int(len(sorted_returns) * percentile)
+
+    # Handle edge case where index is out of bounds
+    if index >= len(sorted_returns):
+        index = len(sorted_returns) - 1
+
+    # Return the VaR (negative value represents potential loss)
+    return -sorted_returns[index]

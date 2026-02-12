@@ -7,6 +7,7 @@ from models.pricing import (
     historical_var,
     parametric_var,
     portfolio_var,
+    monte_carlo_var,
     calculate_returns,
     calculate_log_returns
 )
@@ -103,8 +104,18 @@ def test_portfolio_var_invalid_method():
     ]
 
     # Test with invalid method
-    with pytest.raises(ValueError, match="Method must be 'historical' or 'parametric'"):
+    with pytest.raises(ValueError, match="Method must be 'historical', 'parametric', or 'monte_carlo'"):
         portfolio_var(positions, historical_prices, method="invalid_method", confidence_level=0.95)
+
+
+def test_monte_carlo_var():
+    """Test the monte_carlo_var function."""
+    portfolio_returns = [-0.05, -0.02, 0.01, 0.03, 0.05, 0.08, 0.12, 0.15, 0.20, 0.25]
+    var_95 = monte_carlo_var(portfolio_returns, 0.95)
+
+    # Should return a positive VaR value (representing potential loss)
+    assert var_95 >= 0
+
 
 if __name__ == "__main__":
     # Run tests directly
@@ -115,4 +126,5 @@ if __name__ == "__main__":
     test_portfolio_var_historical()
     test_portfolio_var_parametric()
     test_portfolio_var_invalid_method()
+    test_monte_carlo_var()
     print("All tests passed!")
