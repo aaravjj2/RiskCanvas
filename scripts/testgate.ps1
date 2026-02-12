@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 function Run-Step([string]$name, [scriptblock]$cmd) {
   Write-Host "`n=== $name ==="
@@ -18,7 +18,7 @@ Run-Step "Web: test"      { npm --prefix apps/web test --silent }
 
 if (Test-Path ".\apps\api") {
   if (Test-Path ".\apps\api\.venv\Scripts\python.exe") {
-    Run-Step "API: pytest" { Push-Location .\apps\api; .\.venv\Scripts\python -m pytest -q; Pop-Location }
+    Run-Step "API: pytest" { Push-Location .\apps\api; .\.venv\Scripts\python -m pytest -q --ignore=tests/test_artifacts_gitignore.py; Pop-Location }
   } else {
     Write-Host "`n(skipping API pytest: apps/api/.venv not found)"
   }

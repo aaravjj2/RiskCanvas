@@ -9,6 +9,9 @@ def test_artifacts_directory_is_gitignored():
     """
     # Create a test file in the artifacts directory
     test_file_path = Path("../artifacts/test_file.txt")
+
+    # Ensure the directory exists
+    test_file_path.parent.mkdir(parents=True, exist_ok=True)
     test_file_path.touch()
 
     # Check if the file is tracked by git
