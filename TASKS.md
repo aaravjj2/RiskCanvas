@@ -16,7 +16,7 @@
 - [x] M1.5 Engine unit tests: put–call parity, monotonicity, bond price vs yield, invariants (0 failed/0 skipped)
 
 ## Milestone 2 — Scenario Engine
-- [ ] M2.1 Deterministic scenarios: spot ±1/5/10/20%, vol ±10/30 pts, rates +50/+100/+200 bps, curve twist
+- [x] M2.1 Deterministic scenarios: spot ±1/5/10/20%, vol ±10/30 pts, rates +50/+100/+200 bps, curve twist
 - [ ] M2.2 Scenario P&L table + worst-case highlight
 - [ ] M2.3 Factor attribution buckets: delta/vega/rates for scenario P&L
 
