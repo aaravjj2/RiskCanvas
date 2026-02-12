@@ -5,3 +5,16 @@ coverage/
 playwright-report/
 test-results/
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Generated API outputs
+apps/api/artifacts/
+apps/api/artifacts/*.json
+
+# Tool outputs
+playwright-report/
+test-results/
+coverage/
