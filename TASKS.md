@@ -9,7 +9,7 @@
 - [x] M0.6 Add export skeleton: JSON report file written to artifacts/ on demand (stub ok)
 
 ## Milestone 1 — Pricing Engine (deterministic)
-- [ ] M1.1 Implement Black–Scholes price for European calls/puts
+- [x] M1.1 Implement Black–Scholes price for European calls/puts
 - [ ] M1.2 Implement closed-form Greeks: delta, gamma, vega, theta, rho
 - [ ] M1.3 Implement fixed-coupon bond PV + duration + convexity + DV01
 - [ ] M1.4 Implement stock P&L + delta exposure
