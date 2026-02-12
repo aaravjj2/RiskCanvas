@@ -66,3 +66,32 @@ def black_scholes(S: float, K: float, T: float, r: float, sigma: float, option_t
         return black_scholes_put(S, K, T, r, sigma)
     else:
         raise ValueError("option_type must be 'call' or 'put'")
+
+def stock_pl(current_price: float, purchase_price: float, quantity: float) -> float:
+    """
+    Calculate the profit/loss for a stock position.
+
+    Args:
+        current_price: Current market price of the stock
+        purchase_price: Original purchase price of the stock
+        quantity: Number of shares held
+
+    Returns:
+        Profit/Loss amount
+    """
+    return (current_price - purchase_price) * quantity
+
+def stock_delta_exposure(current_price: float, quantity: float) -> float:
+    """
+    Calculate the delta exposure for a stock position.
+
+    For a stock, delta is 1.0 (i.e., the price changes at the same rate as the stock).
+
+    Args:
+        current_price: Current market price of the stock
+        quantity: Number of shares held
+
+    Returns:
+        Delta exposure
+    """
+    return 1.0 * quantity
