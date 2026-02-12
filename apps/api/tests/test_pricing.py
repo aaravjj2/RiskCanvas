@@ -1,5 +1,5 @@
 import math
-from models.pricing import black_scholes, black_scholes_call, black_scholes_put, black_scholes_delta, black_scholes_gamma, black_scholes_vega, black_scholes_theta, black_scholes_rho
+from models.pricing import black_scholes, black_scholes_call, black_scholes_put, black_scholes_delta, black_scholes_gamma, black_scholes_vega, black_scholes_theta, black_scholes_rho, bond_pv, bond_duration, bond_convexity, bond_dv01
 
 def test_black_scholes_call():
     """Test Black-Scholes call option pricing with known values."""
@@ -176,3 +176,60 @@ def test_black_scholes_rho():
     # Test with zero volatility
     call_rho_zero = black_scholes_rho(40.0, 40.0, 1.0, 0.05, 0.0, 'call')
     assert abs(call_rho_zero) < 0.0001  # Should be near zero
+
+def test_bond_pv():
+    """Test bond present value calculation."""
+    # Test case: 5% coupon, 1000 face value, 2 years maturity, 4% yield
+    pv = bond_pv(0.05, 1000.0, 2.0, 0.04, 1)
+    assert pv > 0
+
+    # Test case with zero coupon
+    pv_zero_coupon = bond_pv(0.0, 1000.0, 2.0, 0.04, 1)
+    assert pv_zero_coupon > 0
+    assert pv_zero_coupon < 1000.0  # Should be less than face value
+
+    # Test case with zero maturity
+    pv_zero_maturity = bond_pv(0.05, 1000.0, 0.0, 0.04, 1)
+    assert abs(pv_zero_maturity - 1000.0) < 0.0001  # Should equal face value
+
+def test_bond_duration():
+    """Test bond duration calculation."""
+    # Test case: 5% coupon, 1000 face value, 2 years maturity, 4% yield
+    duration = bond_duration(0.05, 1000.0, 2.0, 0.04, 1)
+    assert duration > 0
+
+    # Test case with zero maturity
+    duration_zero = bond_duration(0.05, 1000.0, 0.0, 0.04, 1)
+    assert abs(duration_zero) < 0.0001  # Should be zero
+
+    # Test case with zero coupon
+    duration_zero_coupon = bond_duration(0.0, 1000.0, 2.0, 0.04, 1)
+    assert duration_zero_coupon > 0
+
+def test_bond_convexity():
+    """Test bond convexity calculation."""
+    # Test case: 5% coupon, 1000 face value, 2 years maturity, 4% yield
+    convexity = bond_convexity(0.05, 1000.0, 2.0, 0.04, 1)
+    assert convexity > 0
+
+    # Test case with zero maturity
+    convexity_zero = bond_convexity(0.05, 1000.0, 0.0, 0.04, 1)
+    assert abs(convexity_zero) < 0.0001  # Should be zero
+
+    # Test case with zero coupon
+    convexity_zero_coupon = bond_convexity(0.0, 1000.0, 2.0, 0.04, 1)
+    assert convexity_zero_coupon > 0
+
+def test_bond_dv01():
+    """Test bond DV01 calculation."""
+    # Test case: 5% coupon, 1000 face value, 2 years maturity, 4% yield
+    dv01 = bond_dv01(0.05, 1000.0, 2.0, 0.04, 1)
+    assert dv01 < 0  # DV01 should be negative
+
+    # Test case with zero maturity
+    dv01_zero = bond_dv01(0.05, 1000.0, 0.0, 0.04, 1)
+    assert abs(dv01_zero) < 0.0001  # Should be zero
+
+    # Test case with zero coupon
+    dv01_zero_coupon = bond_dv01(0.0, 1000.0, 2.0, 0.04, 1)
+    assert dv01_zero_coupon < 0  # Should still be negative

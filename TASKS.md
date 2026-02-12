@@ -11,7 +11,7 @@
 ## Milestone 1 — Pricing Engine (deterministic)
 - [x] M1.1 Implement Black–Scholes price for European calls/puts
 - [x] M1.2 Implement closed-form Greeks: delta, gamma, vega, theta, rho
-- [ ] M1.3 Implement fixed-coupon bond PV + duration + convexity + DV01
+- [x] M1.3 Implement fixed-coupon bond PV + duration + convexity + DV01
 - [ ] M1.4 Implement stock P&L + delta exposure
 - [ ] M1.5 Engine unit tests: put–call parity, monotonicity, bond price vs yield, invariants (0 failed/0 skipped)
 

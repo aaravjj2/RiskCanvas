@@ -302,3 +302,166 @@ def stock_delta_exposure(current_price: float, quantity: float) -> float:
         Delta exposure
     """
     return 1.0 * quantity
+
+def bond_pv(coupon_rate: float, face_value: float, time_to_maturity: float, yield_to_maturity: float, payments_per_year: int = 1) -> float:
+    """
+    Calculate the present value (price) of a fixed-coupon bond.
+
+    Args:
+        coupon_rate: Annual coupon rate (as decimal, e.g., 0.05 for 5%)
+        face_value: Face value of the bond
+        time_to_maturity: Time to maturity in years
+        yield_to_maturity: Annual yield to maturity (as decimal, e.g., 0.04 for 4%)
+        payments_per_year: Number of coupon payments per year (default is 1)
+
+    Returns:
+        Bond price (present value)
+    """
+    # Calculate coupon payment per period
+    coupon_payment = face_value * coupon_rate / payments_per_year
+
+    # Calculate total number of periods
+    total_periods = time_to_maturity * payments_per_year
+
+    # Handle case where there are no periods
+    if total_periods == 0:
+        return face_value
+
+    # Calculate present value of coupon payments and face value
+    pv = 0.0
+
+    # Present value of coupon payments
+    for t in range(1, int(total_periods) + 1):
+        pv += coupon_payment / (1 + yield_to_maturity / payments_per_year) ** t
+
+    # Present value of face value (principal)
+    pv += face_value / (1 + yield_to_maturity / payments_per_year) ** total_periods
+
+    return pv
+
+def bond_duration(coupon_rate: float, face_value: float, time_to_maturity: float, yield_to_maturity: float, payments_per_year: int = 1) -> float:
+    """
+    Calculate the Macaulay duration of a fixed-coupon bond.
+
+    Args:
+        coupon_rate: Annual coupon rate (as decimal, e.g., 0.05 for 5%)
+        face_value: Face value of the bond
+        time_to_maturity: Time to maturity in years
+        yield_to_maturity: Annual yield to maturity (as decimal, e.g., 0.04 for 4%)
+        payments_per_year: Number of coupon payments per year (default is 1)
+
+    Returns:
+        Macaulay duration in years
+    """
+    # Calculate coupon payment per period
+    coupon_payment = face_value * coupon_rate / payments_per_year
+
+    # Calculate total number of periods
+    total_periods = time_to_maturity * payments_per_year
+
+    # Handle case where there are no periods
+    if total_periods == 0:
+        return 0.0
+
+    # Calculate present value of the bond
+    pv = bond_pv(coupon_rate, face_value, time_to_maturity, yield_to_maturity, payments_per_year)
+
+    # Handle case where present value is zero (unlikely but for safety)
+    if pv == 0:
+        return 0.0
+
+    # Calculate weighted average time of cash flows
+    weighted_time = 0.0
+
+    # Present value of coupon payments
+    for t in range(1, int(total_periods) + 1):
+        pv_coupon = coupon_payment / (1 + yield_to_maturity / payments_per_year) ** t
+        weighted_time += t * pv_coupon
+
+    # Present value of face value (principal)
+    pv_face = face_value / (1 + yield_to_maturity / payments_per_year) ** total_periods
+    weighted_time += total_periods * pv_face
+
+    duration = weighted_time / pv
+
+    # Convert to years (since t is in periods, we need to convert back)
+    duration_years = duration / payments_per_year
+
+    return duration_years
+
+def bond_convexity(coupon_rate: float, face_value: float, time_to_maturity: float, yield_to_maturity: float, payments_per_year: int = 1) -> float:
+    """
+    Calculate the convexity of a fixed-coupon bond.
+
+    Args:
+        coupon_rate: Annual coupon rate (as decimal, e.g., 0.05 for 5%)
+        face_value: Face value of the bond
+        time_to_maturity: Time to maturity in years
+        yield_to_maturity: Annual yield to maturity (as decimal, e.g., 0.04 for 4%)
+        payments_per_year: Number of coupon payments per year (default is 1)
+
+    Returns:
+        Bond convexity
+    """
+    # Calculate coupon payment per period
+    coupon_payment = face_value * coupon_rate / payments_per_year
+
+    # Calculate total number of periods
+    total_periods = time_to_maturity * payments_per_year
+
+    # Handle case where there are no periods
+    if total_periods == 0:
+        return 0.0
+
+    # Calculate present value of the bond
+    pv = bond_pv(coupon_rate, face_value, time_to_maturity, yield_to_maturity, payments_per_year)
+
+    # Handle case where present value is zero (unlikely but for safety)
+    if pv == 0:
+        return 0.0
+
+    # Calculate convexity
+    convexity = 0.0
+
+    # Present value of coupon payments
+    for t in range(1, int(total_periods) + 1):
+        pv_coupon = coupon_payment / (1 + yield_to_maturity / payments_per_year) ** t
+        convexity += t * (t + 1) * pv_coupon / (payments_per_year ** 2)
+
+    # Present value of face value (principal)
+    pv_face = face_value / (1 + yield_to_maturity / payments_per_year) ** total_periods
+    convexity += total_periods * (total_periods + 1) * pv_face / (payments_per_year ** 2)
+
+    # Normalize by present value
+    convexity = convexity / (pv * (1 + yield_to_maturity / payments_per_year) ** 2)
+
+    return convexity
+
+def bond_dv01(coupon_rate: float, face_value: float, time_to_maturity: float, yield_to_maturity: float, payments_per_year: int = 1) -> float:
+    """
+    Calculate the DV01 (dollar value of a 0.01% change in yield) of a fixed-coupon bond.
+
+    Args:
+        coupon_rate: Annual coupon rate (as decimal, e.g., 0.05 for 5%)
+        face_value: Face value of the bond
+        time_to_maturity: Time to maturity in years
+        yield_to_maturity: Annual yield to maturity (as decimal, e.g., 0.04 for 4%)
+        payments_per_year: Number of coupon payments per year (default is 1)
+
+    Returns:
+        DV01 in dollars
+    """
+    # Calculate duration and convexity
+    duration = bond_duration(coupon_rate, face_value, time_to_maturity, yield_to_maturity, payments_per_year)
+    convexity = bond_convexity(coupon_rate, face_value, time_to_maturity, yield_to_maturity, payments_per_year)
+
+    # Calculate PV
+    pv = bond_pv(coupon_rate, face_value, time_to_maturity, yield_to_maturity, payments_per_year)
+
+    # Calculate DV01 using the approximation formula:
+    # DV01 ≈ -Duration * PV * 0.0001 + 0.5 * Convexity * PV * (0.0001)^2
+    # For small changes, the convexity term is usually negligible, so we use:
+    # DV01 ≈ -Duration * PV * 0.0001
+    dv01 = -duration * pv * 0.0001
+
+    return dv01
