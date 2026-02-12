@@ -22,7 +22,7 @@
 
 ## Milestone 3 — UI (judges remember this)
 - [x] M3.1 Portfolio builder UI (stocks/options/bonds) with templates + guardrails
-- [ ] M3.2 Risk dashboard: top 3 drivers + exposures + scenario worst-case
+- [x] M3.2 Risk dashboard: top 3 drivers + exposures + scenario worst-case
 - [ ] M3.3 Scenario explorer: select scenario set; recompute; show P&L table
 - [ ] M3.4 Export: HTML + JSON report downloadable, offline
 
