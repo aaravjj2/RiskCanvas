@@ -20,7 +20,7 @@
 - [x] M3.2 Implement historical simulation VaR + CVaR for a portfolio of stocks (using fixture prices); tests
 - [x] M3.3 Implement parametric (normal) VaR for stocks; tests + compare to historical
 - [x] M3.4 Add bond price sensitivity approximation using duration/convexity to estimate P&L under yield shocks; tests
-- [ ] M3.5 Add portfolio VaR aggregation across stocks + bonds (document assumptions); tests
+- [ ] [blocked] M3.5 Add portfolio VaR aggregation across stocks + bonds (document assumptions); tests  // Claude hit max turns. See artifacts/logs/20260212-145142-implement.log
 - [ ] M3.6 Add API endpoint: POST /risk/var supports method=historical|parametric; tests
 
 ## Monte Carlo (keeps it busy and impressive)
