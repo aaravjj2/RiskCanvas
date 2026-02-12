@@ -27,5 +27,5 @@
 - [x] M3.4 Export: HTML + JSON report downloadable, offline
 
 ## Milestone 4 — Proof + determinism
-- [ ] M4.1 Determinism check: run same fixture twice; outputs hash-identical
+- [x] M4.1 Determinism check: run same fixture twice; outputs hash-identical
 - [ ] M4.2 Proof packs: /artifacts/proof/<timestamp>-<milestone>/ with MANIFEST.md + reports
