@@ -1,6 +1,7 @@
 ﻿param(
   [string]$Model = "qwen3-coder:30b",
-  [int]$MaxFixAttempts = 3
+  [int]$MaxFixAttempts = 5,
+  [int]$MaxTurns = 64
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,6 +20,13 @@ function MarkDone([int]$Index) {
   Set-Content -Encoding UTF8 ".\TASKS.md" $lines
 }
 
+function SafeCommitMsg([string]$taskLine) {
+  $msg = $taskLine -replace "^- \[ \] ",""
+  $msg = $msg -replace '[^\x20-\x7E]', ''   # strip non-ascii to avoid weird glyphs
+  if ($msg.Length -gt 72) { $msg = $msg.Substring(0,72) }
+  return "Complete: $msg"
+}
+
 function ClaudeDo([string]$prompt, [string]$tag) {
   $env:ANTHROPIC_AUTH_TOKEN="ollama"
   $env:ANTHROPIC_API_KEY=""
@@ -27,12 +35,10 @@ function ClaudeDo([string]$prompt, [string]$tag) {
   $log = "artifacts/logs/$((Get-Date).ToString('yyyyMMdd-HHmmss'))-$tag.log"
   Write-Host "Claude log => $log"
 
-  # IMPORTANT: Do not pipe stdin into claude on Windows (Ink raw-mode issues).
-  # Use print mode (-p/--print) with the prompt as an argument. :contentReference[oaicite:2]{index=2}
   $args = @(
     "-p",
     "--model", $Model,
-    "--max-turns", "14",
+    "--max-turns", "$MaxTurns",
     "--dangerously-skip-permissions",
     "--disallowedTools", "Bash(rm *)",
     "--disallowedTools", "Bash(del *)",
@@ -42,32 +48,28 @@ function ClaudeDo([string]$prompt, [string]$tag) {
     $prompt
   )
 
-  & claude @args 2>&1 | Tee-Object -FilePath $log
+  $out = (& claude @args 2>&1 | Tee-Object -FilePath $log | Out-String)
 
-  if ($LASTEXITCODE -ne 0) {
-    throw "Claude run failed ($LASTEXITCODE). See $log"
-  }
+  if ($LASTEXITCODE -ne 0) { throw "Claude failed ($LASTEXITCODE). See $log" }
+  if ($out -match "Reached max turns") { throw "Claude hit max turns. Increase -MaxTurns or tighten the task. See $log" }
 }
 
-# Sanity: require git remote
+# Require origin remote
 $remotes = & git remote
 if ($LASTEXITCODE -ne 0 -or -not ($remotes -match "origin")) {
-  throw "No git remote 'origin' set. Set it once: git remote add origin YOUR_URL"
+  throw "No git remote 'origin' set."
 }
 
 while ($true) {
   $task = NextTask
-  if ($null -eq $task) {
-    Write-Host "`n✅ No remaining tasks. Exiting."
-    exit 0
-  }
+  if ($null -eq $task) { Write-Host "`n✅ No remaining tasks. Exiting."; exit 0 }
 
   Write-Host "`n=== NEXT TASK ==="
   Write-Host $task.Text
 
   $impl = @"
 You are in C:\dev\repos\myrepo.
-Follow CLAUDE.md strictly (determinism + tests + data-testid-only).
+Follow CLAUDE.md strictly (determinism + tests + data-testid only).
 Implement ONLY this single task line:
 
 $($task.Text)
@@ -75,37 +77,44 @@ $($task.Text)
 Rules:
 - Minimal changes.
 - Add tests as needed.
-- Do NOT mark tasks complete yourself.
+- Do NOT mark tasks complete.
 - After implementing, summarize what changed and why.
 "@
 
   ClaudeDo $impl "implement"
 
-  $attempt = 0
-  while ($true) {
+  $ok = $false
+  for ($attempt=1; $attempt -le $MaxFixAttempts; $attempt++) {
     try {
-      & powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\testgate.ps1
+      & .\scripts\testgate.ps1
+      $ok = $true
       break
     } catch {
-      $attempt++
-      if ($attempt -gt $MaxFixAttempts) { throw "Testgate failed too many times. Stopping." }
+      $err = $_.Exception.Message
+      Write-Host "`nTestgate failed (attempt $attempt/$MaxFixAttempts): $err"
 
       $fix = @"
 scripts/testgate.ps1 failed. Fix ONLY what is needed to make it pass.
 Error:
-$($_.Exception.Message)
+$err
 "@
       ClaudeDo $fix "fix"
     }
   }
 
+  if (-not $ok) { throw "Gates never passed. Stopping to avoid bad commits." }
+
   MarkDone $task.Index
 
   git add -A
-  git commit -m ("Complete: " + $task.Text)
+  if (-not (git status --porcelain)) {
+    Write-Host "No changes to commit; continuing."
+    continue
+  }
+
+  $msg = SafeCommitMsg $task.Text
+  git commit -m $msg
   git push
 
-  Write-Host "`n✅ Completed and pushed: $($task.Text)"
+  Write-Host "`n✅ Completed and pushed: $msg"
 }
-
-
