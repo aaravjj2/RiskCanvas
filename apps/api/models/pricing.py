@@ -323,15 +323,18 @@ def portfolio_pl(positions: list) -> float:
     total_pl = 0.0
 
     for position in positions:
-        position_type = position['type']
+        position_type = position.get('type', 'stock')  # Default to stock if not specified
 
         if position_type == 'stock':
-            pl = stock_pl(
-                position['current_price'],
-                position['purchase_price'],
-                position['quantity']
-            )
-            total_pl += pl
+            # Handle cases where purchase_price might not be available
+            purchase_price = position.get('purchase_price', 0.0)
+            current_price = position.get('current_price', position.get('price', 0.0))
+            quantity = position.get('quantity', 0.0)
+
+            # Only calculate if we have the necessary data
+            if purchase_price > 0 and current_price > 0:
+                pl = stock_pl(current_price, purchase_price, quantity)
+                total_pl += pl
 
         elif position_type == 'option':
             # For options, we need to calculate the current value based on current parameters
@@ -361,20 +364,24 @@ def portfolio_delta_exposure(positions: list) -> float:
     total_delta = 0.0
 
     for position in positions:
-        position_type = position['type']
+        position_type = position.get('type', 'stock')  # Default to stock if not specified
 
         if position_type == 'stock':
-            delta_exposure = stock_delta_exposure(
-                position['current_price'],
-                position['quantity']
-            )
-            total_delta += delta_exposure
+            current_price = position.get('current_price', position.get('price', 0.0))
+            quantity = position.get('quantity', 0.0)
+
+            # Only calculate if we have the necessary data
+            if current_price > 0:
+                delta_exposure = stock_delta_exposure(current_price, quantity)
+                total_delta += delta_exposure
 
         elif position_type == 'option':
             # For options, use the provided delta if available
             if 'delta' in position:
-                delta_exposure = position['delta'] * position['quantity']
-                total_delta += delta_exposure
+                quantity = position.get('quantity', 0.0)
+                if quantity > 0:
+                    delta_exposure = position['delta'] * quantity
+                    total_delta += delta_exposure
             else:
                 # If no delta provided, we could calculate it, but that would require
                 # more complex logic with current market parameters
@@ -382,6 +389,165 @@ def portfolio_delta_exposure(positions: list) -> float:
                 pass
 
     return total_delta
+
+
+def portfolio_net_delta_exposure(positions: list) -> float:
+    """
+    Calculate the net delta exposure for a portfolio of positions.
+    Net delta exposure is total delta exposure minus short positions.
+
+    Args:
+        positions: List of position dictionaries with keys:
+            - 'type': 'stock' or 'option'
+            - 'current_price': Current market price
+            - 'quantity': Number of shares/contracts held
+            - 'strike_price': Strike price (for options)
+            - 'option_type': 'call' or 'put' (for options)
+            - 'delta': Delta value (for options, if already calculated)
+
+    Returns:
+        Net delta exposure for the portfolio
+    """
+    total_delta = 0.0
+    short_positions = 0.0
+
+    for position in positions:
+        position_type = position.get('type', 'stock')  # Default to stock if not specified
+        quantity = position.get('quantity', 0.0)
+
+        if position_type == 'stock':
+            current_price = position.get('current_price', position.get('price', 0.0))
+
+            # Only calculate if we have the necessary data
+            if current_price > 0:
+                delta_exposure = stock_delta_exposure(current_price, quantity)
+                if quantity > 0:
+                    total_delta += delta_exposure
+                else:
+                    short_positions += abs(delta_exposure)
+        elif position_type == 'option':
+            # For options, use the provided delta if available
+            if 'delta' in position:
+                if quantity > 0:
+                    delta_exposure = position['delta'] * quantity
+                    total_delta += delta_exposure
+                else:
+                    # For short options, add to short positions
+                    short_positions += abs(position['delta'] * quantity)
+            else:
+                # If no delta provided, we could calculate it, but that would require
+                # more complex logic with current market parameters
+                # For now, we'll skip this case
+                pass
+
+    # Net delta exposure = total delta exposure - short positions
+    return total_delta - short_positions
+
+
+def portfolio_gross_exposure(positions: list) -> float:
+    """
+    Calculate the gross exposure for a portfolio of positions.
+    Gross exposure is the sum of absolute values of all delta exposures.
+
+    Args:
+        positions: List of position dictionaries with keys:
+            - 'type': 'stock' or 'option'
+            - 'current_price': Current market price
+            - 'quantity': Number of shares/contracts held
+            - 'strike_price': Strike price (for options)
+            - 'option_type': 'call' or 'put' (for options)
+            - 'delta': Delta value (for options, if already calculated)
+
+    Returns:
+        Gross exposure for the portfolio
+    """
+    total_gross_exposure = 0.0
+
+    for position in positions:
+        position_type = position.get('type', 'stock')  # Default to stock if not specified
+
+        if position_type == 'stock':
+            current_price = position.get('current_price', position.get('price', 0.0))
+            quantity = position.get('quantity', 0.0)
+
+            # Only calculate if we have the necessary data
+            if current_price > 0:
+                delta_exposure = stock_delta_exposure(current_price, quantity)
+                total_gross_exposure += abs(delta_exposure)
+
+        elif position_type == 'option':
+            # For options, use the provided delta if available
+            if 'delta' in position:
+                quantity = position.get('quantity', 0.0)
+                delta_exposure = position['delta'] * quantity
+                total_gross_exposure += abs(delta_exposure)
+            else:
+                # If no delta provided, we could calculate it, but that would require
+                # more complex logic with current market parameters
+                # For now, we'll skip this case
+                pass
+
+    return total_gross_exposure
+
+
+def portfolio_sector_aggregation(positions: list) -> dict:
+    """
+    Aggregate portfolio positions by sector and calculate metrics per sector.
+
+    Args:
+        positions: List of position dictionaries with keys:
+            - 'type': 'stock' or 'option'
+            - 'current_price': Current market price
+            - 'quantity': Number of shares/contracts held
+            - 'sector': Sector classification (for stocks)
+            - 'strike_price': Strike price (for options)
+            - 'option_type': 'call' or 'put' (for options)
+            - 'delta': Delta value (for options, if already calculated)
+
+    Returns:
+        Dictionary with sector aggregation data
+    """
+    sector_data = {}
+
+    for position in positions:
+        position_type = position.get('type', 'stock')  # Default to stock if not specified
+
+        # For now, we'll assume sector is provided for stocks
+        # If sector is not provided, we'll use a default 'Unknown' sector
+        sector = position.get('sector', 'Unknown')
+
+        if sector not in sector_data:
+            sector_data[sector] = {
+                'total_value': 0.0,
+                'total_delta_exposure': 0.0,
+                'position_count': 0,
+                'assets': []
+            }
+
+        # Calculate value and delta exposure
+        quantity = position.get('quantity', 0.0)
+        current_price = position.get('current_price', position.get('price', 0.0))
+
+        if position_type == 'stock' and current_price > 0:
+            value = current_price * quantity
+            delta_exposure = stock_delta_exposure(current_price, quantity)
+
+            sector_data[sector]['total_value'] += value
+            sector_data[sector]['total_delta_exposure'] += delta_exposure
+            sector_data[sector]['position_count'] += 1
+            sector_data[sector]['assets'].append(position)
+        elif position_type == 'option':
+            # For options, we'll add to the sector if delta is provided
+            if 'delta' in position:
+                value = position.get('quantity', 0.0) * position.get('delta', 0.0)  # Simplified
+                delta_exposure = position['delta'] * position.get('quantity', 0.0)
+
+                sector_data[sector]['total_value'] += value
+                sector_data[sector]['total_delta_exposure'] += delta_exposure
+                sector_data[sector]['position_count'] += 1
+                sector_data[sector]['assets'].append(position)
+
+    return sector_data
 
 def bond_pv(coupon_rate: float, face_value: float, time_to_maturity: float, yield_to_maturity: float, payments_per_year: int = 1) -> float:
     """

@@ -41,3 +41,43 @@ def test_export_endpoint():
         assert "data" in report
         assert "portfolios" in report["data"]
         assert len(report["data"]["portfolios"]) == 3
+
+def test_portfolio_report_endpoint():
+    # Test the new portfolio report endpoint with sample data
+    # Using a structure similar to what's in fixtures
+    sample_portfolio = {
+        "id": 1,
+        "name": "Test Portfolio",
+        "assets": [
+            {
+                "symbol": "AAPL",
+                "name": "Apple Inc.",
+                "type": "stock",
+                "quantity": 10,
+                "price": 150.25
+            },
+            {
+                "symbol": "MSFT",
+                "name": "Microsoft Corporation",
+                "type": "stock",
+                "quantity": 5,
+                "price": 300.50
+            }
+        ],
+        "total_value": 3002.50
+    }
+
+    response = client.post("/portfolio/report", json=sample_portfolio)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "portfolio_id" in data
+    assert "portfolio_name" in data
+    assert "metrics" in data
+    assert "assets" in data
+    assert data["portfolio_id"] == 1
+    assert data["portfolio_name"] == "Test Portfolio"
+    assert "total_profit_loss" in data["metrics"]
+    assert "total_delta_exposure" in data["metrics"]
+    assert "asset_count" in data["metrics"]
+    assert data["metrics"]["asset_count"] == 2
