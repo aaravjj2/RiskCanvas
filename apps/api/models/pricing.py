@@ -699,10 +699,31 @@ def portfolio_pl(positions: list) -> float:
             purchase_price = position.get('purchase_price', 0.0)
             quantity = position.get('quantity', 0.0)
 
-            # Only include option purchase value if we have valid purchase price data
-            # If purchase_price is 0 or not provided, we skip this position in purchase value calculation
-            if purchase_price > 0 and quantity > 0:
-                total_purchase_value += purchase_price * quantity
+            # For options without explicit purchase_price, we need to calculate the Black-Scholes value
+            # as the purchase price, since that represents what the option was actually purchased for
+            if quantity > 0:
+                if purchase_price > 0:
+                    # Use the provided purchase price
+                    total_purchase_value += purchase_price * quantity
+                else:
+                    # No explicit purchase price - calculate Black-Scholes price as purchase price
+                    # Get option parameters needed for Black-Scholes
+                    current_price = position.get('current_price', 0.0)
+                    strike_price = position.get('strike_price', 0.0)
+                    time_to_maturity = position.get('time_to_maturity', 0.0)
+                    risk_free_rate = position.get('risk_free_rate', 0.0)
+                    volatility = position.get('volatility', 0.0)
+                    option_type = position.get('option_type', 'call')
+
+                    # Only calculate if we have the necessary data
+                    if (current_price > 0 and strike_price > 0 and time_to_maturity > 0 and
+                        risk_free_rate > 0 and volatility > 0):
+
+                        # Calculate the Black-Scholes price for the option at current market conditions
+                        option_price = black_scholes(current_price, strike_price, time_to_maturity,
+                                                   risk_free_rate, volatility, option_type)
+
+                        total_purchase_value += option_price * quantity
 
     # Return profit/loss as portfolio_value - purchase_value
     return current_value - total_purchase_value

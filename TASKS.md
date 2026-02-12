@@ -24,7 +24,7 @@
 - [x] M3.6 Add API endpoint: POST /risk/var supports method=historical|parametric; tests
 
 ## Monte Carlo (keeps it busy and impressive)
-- [ ] M4.1 Implement GBM path simulation for equities; seeded RNG; tests for determinism
+- [x] M4.1 Implement GBM path simulation for equities; seeded RNG; tests for determinism
 - [ ] M4.2 Implement Monte Carlo VaR for stocks with seeded paths; tests
 - [ ] M4.3 Extend MC to include option pricing along paths (fast approximation is ok); tests on small case
 - [ ] M4.4 Add API endpoint: POST /risk/mc-var with configurable paths/steps/seed; tests
