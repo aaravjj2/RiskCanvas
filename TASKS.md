@@ -45,7 +45,7 @@
 ## Quality + repo hygiene
 - [ ] [blocked] Q1 Add .gitattributes to normalize line endings (fix CRLF/LF warnings)  // Gates never passed after 5 attempts.
 - [ ] [blocked] Q2 Tighten gitignore for python bytecode + artifacts + test outputs; ensure repo is clean  // Gates never passed after 5 attempts.
-- [ ] Q3 Add CI workflow (GitHub Actions): run scripts/testgate.ps1 on PR/push
+- [ ] [blocked] Q3 Add CI workflow (GitHub Actions): run scripts/testgate.ps1 on PR/push  // Gates never passed after 5 attempts.
 - [ ] Q4 Add README: one-command setup + run instructions + demo script
 - [ ] Q5 Add “demo mode” script that runs API, runs web, generates a sample report into artifacts/
 
