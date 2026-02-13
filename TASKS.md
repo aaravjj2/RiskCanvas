@@ -43,7 +43,7 @@
 - [ ] [blocked] E3 Playwright: click “Export JSON”, verify download happens (or mocked endpoint); no flaky waits  // Claude hit max turns. See artifacts/logs/20260212-224555-implement.log
 
 ## Quality + repo hygiene
-- [ ] Q1 Add .gitattributes to normalize line endings (fix CRLF/LF warnings)
+- [ ] [blocked] Q1 Add .gitattributes to normalize line endings (fix CRLF/LF warnings)  // Gates never passed after 5 attempts.
 - [ ] Q2 Tighten gitignore for python bytecode + artifacts + test outputs; ensure repo is clean
 - [ ] Q3 Add CI workflow (GitHub Actions): run scripts/testgate.ps1 on PR/push
 - [ ] Q4 Add README: one-command setup + run instructions + demo script
