@@ -140,6 +140,33 @@ def test_portfolio_var_monte_carlo_with_params():
     assert var_custom >= 0
 
 
+def test_monte_carlo_guardrails():
+    """Test that guardrails prevent excessive paths and invalid seeds."""
+    # Create test data
+    positions = [
+        {"symbol": "AAPL", "type": "stock", "quantity": 10, "price": 150.0},
+        {"symbol": "MSFT", "type": "stock", "quantity": 5, "price": 300.0}
+    ]
+    historical_prices = [
+        [145.0, 148.0, 150.0, 149.0, 151.0],  # AAPL prices
+        [295.0, 298.0, 300.0, 299.0, 301.0]   # MSFT prices
+    ]
+
+    # Test with too many paths - should raise HTTPException
+    try:
+        portfolio_var(positions, historical_prices, "monte_carlo", 0.95, 150000, 42)
+        assert False, "Expected HTTPException for too many paths"
+    except Exception as e:
+        assert "exceeds maximum allowed" in str(e)
+
+    # Test with invalid seed - should raise HTTPException
+    try:
+        portfolio_var(positions, historical_prices, "monte_carlo", 0.95, 10000, 2**32)  # Invalid seed
+        assert False, "Expected HTTPException for invalid seed"
+    except Exception as e:
+        assert "Seed must be a non-negative integer" in str(e)
+
+
 if __name__ == "__main__":
     # Run tests directly
     test_calculate_returns()
@@ -151,4 +178,5 @@ if __name__ == "__main__":
     test_portfolio_var_invalid_method()
     test_monte_carlo_var()
     test_portfolio_var_monte_carlo_with_params()
+    test_monte_carlo_guardrails()
     print("All tests passed!")
