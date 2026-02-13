@@ -9,6 +9,14 @@ test-results/
 # Python
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.env
+.env.local
+.env.*.local
+venv/
+venv/
+virtualenv/
+.env.*
 
 # Generated API outputs
 apps/api/artifacts/
