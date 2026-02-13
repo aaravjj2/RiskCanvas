@@ -32,7 +32,7 @@
 
 ## Web app: real UI + data-testid everywhere
 - [ ] [blocked] W1 Build Portfolio page: load one fixture via button, show positions table (data-testid only)  // Gates never passed after 5 attempts.
-- [ ] W2 Build Risk Summary panel: show delta exposure, DV01, VaR placeholders; unit tests
+- [ ] [blocked] W2 Build Risk Summary panel: show delta exposure, DV01, VaR placeholders; unit tests  // Gates never passed after 5 attempts.
 - [ ] W3 Add “Run Risk” button calling API /portfolio/report; mock in unit tests
 - [ ] W4 Show scenario grid results (table) for option-heavy fixture; unit tests
 - [ ] W5 Add export button that downloads JSON report; unit tests
