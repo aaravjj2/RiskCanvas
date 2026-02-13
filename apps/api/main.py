@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import json
 import os
 from datetime import datetime
@@ -111,107 +111,40 @@ async def portfolio_aggregation_summary():
 async def export_report():
     """
     Export a JSON report of portfolio data to artifacts/ directory.
-    This is a stub implementation that creates a skeleton report.
+    This reads real portfolio data from fixtures.
     """
     # Ensure artifacts directory exists at repo root
     artifacts_dir = "../artifacts"
     os.makedirs(artifacts_dir, exist_ok=True)
 
-    # Create a basic report structure (stub)
+    # Load portfolio data from fixtures
+    portfolios = []
+    portfolio_summary = {
+        "total_portfolios": 0,
+        "total_value": 0.0,
+        "created_at": datetime.now().isoformat()
+    }
+
+    # Load each portfolio from fixtures
+    for i in range(1, 4):
+        try:
+            with open(f"fixtures/portfolio_{i}.json", "r") as f:
+                portfolio = json.load(f)
+                portfolios.append(portfolio)
+                portfolio_summary["total_value"] += portfolio.get("total_value", 0)
+        except FileNotFoundError:
+            # If fixture doesn't exist, skip it
+            continue
+
+    portfolio_summary["total_portfolios"] = len(portfolios)
+
+    # Create a report with real portfolio data
     report = {
         "exported_at": datetime.now().isoformat(),
         "report_type": "portfolio_summary",
         "data": {
-            "portfolios": [
-                {
-                    "id": 1,
-                    "name": "Tech Growth Portfolio",
-                    "description": "A portfolio focused on technology sector growth stocks",
-                    "assets": [
-                        {
-                            "symbol": "AAPL",
-                            "name": "Apple Inc.",
-                            "type": "stock",
-                            "quantity": 10,
-                            "price": 150.25
-                        },
-                        {
-                            "symbol": "MSFT",
-                            "name": "Microsoft Corporation",
-                            "type": "stock",
-                            "quantity": 5,
-                            "price": 300.50
-                        }
-                    ],
-                    "total_value": 3002.50,
-                    "created_at": "2023-01-15T10:30:00Z"
-                },
-                {
-                    "id": 2,
-                    "name": "Balanced Income Portfolio",
-                    "description": "A diversified portfolio focused on steady income generation",
-                    "assets": [
-                        {
-                            "symbol": "KO",
-                            "name": "Coca-Cola Company",
-                            "type": "stock",
-                            "quantity": 20,
-                            "price": 55.75
-                        },
-                        {
-                            "symbol": "JNJ",
-                            "name": "Johnson & Johnson",
-                            "type": "stock",
-                            "quantity": 15,
-                            "price": 160.30
-                        },
-                        {
-                            "symbol": "VZ",
-                            "name": "Verizon Communications",
-                            "type": "stock",
-                            "quantity": 25,
-                            "price": 40.10
-                        }
-                    ],
-                    "total_value": 4528.25,
-                    "created_at": "2023-03-22T14:15:00Z"
-                },
-                {
-                    "id": 3,
-                    "name": "Growth & Value Portfolio",
-                    "description": "A mixed portfolio combining growth and value stocks",
-                    "assets": [
-                        {
-                            "symbol": "TSLA",
-                            "name": "Tesla, Inc.",
-                            "type": "stock",
-                            "quantity": 8,
-                            "price": 250.00
-                        },
-                        {
-                            "symbol": "BRK.B",
-                            "name": "Berkshire Hathaway Inc.",
-                            "type": "stock",
-                            "quantity": 3,
-                            "price": 300.00
-                        },
-                        {
-                            "symbol": "SPY",
-                            "name": "SPDR S&P 500 ETF Trust",
-                            "type": "etf",
-                            "quantity": 10,
-                            "price": 400.50
-                        }
-                    ],
-                    "total_value": 5004.00,
-                    "created_at": "2023-06-10T09:45:00Z"
-                }
-            ],
-            "summary": {
-                "total_portfolios": 3,
-                "total_value": 12534.75,
-                "created_at": datetime.now().isoformat()
-            }
+            "portfolios": portfolios,
+            "summary": portfolio_summary
         }
     }
 
@@ -254,8 +187,23 @@ async def calculate_var(portfolio_data: Dict[str, Any]):
     num_paths = portfolio_data.get("num_paths", 10000)
     seed = portfolio_data.get("seed", 42)
 
-    # Calculate VaR
+    # Add performance guardrails for Monte Carlo method
     if method == "monte_carlo":
+        # Cap the number of paths to prevent performance issues
+        max_paths = 100000  # Maximum allowed paths
+        if num_paths > max_paths:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Number of paths exceeds maximum allowed ({max_paths}). Please use a lower value."
+            )
+
+        # Validate seed is within reasonable range
+        if seed < 0 or seed > 2**32 - 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Seed must be a non-negative integer within the range of 32-bit unsigned integer."
+            )
+
         var = portfolio_var(positions, historical_prices, method, confidence_level, num_paths, seed)
     else:
         var = portfolio_var(positions, historical_prices, method, confidence_level)
