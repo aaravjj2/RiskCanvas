@@ -1,0 +1,160 @@
+# Normalize line endings for text files
+# This prevents CRLF/LF warnings in git
+
+# Text files - normalize to LF line endings
+*.txt text eol=lf
+*.md text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.htm text eol=lf
+*.sql text eol=lf
+*.csv text eol=lf
+*.log text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+*.ini text eol=lf
+*.rb text eol=lf
+*.pl text eol=lf
+*.pm text eol=lf
+*.lua text eol=lf
+*.php text eol=lf
+*.java text eol=lf
+*.c text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.hpp text eol=lf
+*.go text eol=lf
+*.rs text eol=lf
+*.swift text eol=lf
+*.m text eol=lf
+*.mm text eol=lf
+*.groovy text eol=lf
+*.scala text eol=lf
+*.cs text eol=lf
+*.vb text eol=lf
+*.sql text eol=lf
+*.r text eol=lf
+*.tcl text eol=lf
+*.awk text eol=lf
+*.sed text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.fish text eol=lf
+*.ps1 text eol=lf
+*.psm1 text eol=lf
+*.psd1 text eol=lf
+*.cmd text eol=lf
+*.bat text eol=lf
+
+# Binary files - keep as-is
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.svg binary
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.rar binary
+*.7z binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.class binary
+*.jar binary
+*.war binary
+*.ear binary
+*.mov binary
+*.mp4 binary
+*.avi binary
+*.mkv binary
+*.mp3 binary
+*.wav binary
+*.flac binary
+*.ogg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.psd binary
+*.ai binary
+*.eps binary
+*.indd binary
+*.sketch binary
+*.xcf binary
+*.raw binary
+*.cr2 binary
+*.nef binary
+*.orf binary
+*.sr2 binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.mdb binary
+*.accdb binary
+*.sql binary
+*.bin binary
+*.hex binary
+*.obj binary
+*.mtl binary
+*.blend binary
+*.3ds binary
+*.dae binary
+*.gltf binary
+*.glb binary
+*.fbx binary
+*.dxf binary
+*.stp binary
+*.step binary
+*.igs binary
+*.iges binary
+*.wrl binary
+*.vrml binary
+*.3mf binary
+*.stl binary
+*.ply binary
+*.asc binary
+*.xyz binary
+*.csv binary
+*.tsv binary
+*.log binary
+*.lock binary
+*.min.js binary
+*.min.css binary
+*.map binary
+*.patch binary
+*.diff binary
+*.rej binary
+*.orig binary
+*.swp binary
+*.tmp binary
+*.bak binary
+*.old binary
+*.new binary
+*.save binary
+*.swo binary
+*.swn binary
+*.swo binary
+*.swn binary
