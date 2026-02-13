@@ -40,7 +40,7 @@
 ## E2E: real flow
 - [ ] [blocked] E1 Playwright: load app, click “Load fixture”, verify table rows appear (data-testid only)  // Gates never passed after 5 attempts.
 - [ ] [blocked] E2 Playwright: click “Run Risk”, wait for results, verify risk summary fields appear  // Gates never passed after 5 attempts.
-- [ ] E3 Playwright: click “Export JSON”, verify download happens (or mocked endpoint); no flaky waits
+- [ ] [blocked] E3 Playwright: click “Export JSON”, verify download happens (or mocked endpoint); no flaky waits  // Claude hit max turns. See artifacts/logs/20260212-224555-implement.log
 
 ## Quality + repo hygiene
 - [ ] Q1 Add .gitattributes to normalize line endings (fix CRLF/LF warnings)
