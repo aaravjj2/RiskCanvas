@@ -35,7 +35,7 @@
 - [ ] [blocked] W2 Build Risk Summary panel: show delta exposure, DV01, VaR placeholders; unit tests  // Gates never passed after 5 attempts.
 - [ ] [blocked] W3 Add “Run Risk” button calling API /portfolio/report; mock in unit tests  // Gates never passed after 5 attempts.
 - [ ] [blocked] W4 Show scenario grid results (table) for option-heavy fixture; unit tests  // Gates never passed after 5 attempts.
-- [ ] W5 Add export button that downloads JSON report; unit tests
+- [ ] [blocked] W5 Add export button that downloads JSON report; unit tests  // Gates never passed after 5 attempts.
 
 ## E2E: real flow
 - [ ] E1 Playwright: load app, click “Load fixture”, verify table rows appear (data-testid only)
