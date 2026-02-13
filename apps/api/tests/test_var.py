@@ -117,6 +117,29 @@ def test_monte_carlo_var():
     assert var_95 >= 0
 
 
+def test_portfolio_var_monte_carlo_with_params():
+    """Test portfolio_var function with Monte Carlo method and custom num_paths and seed."""
+    # Create test data
+    positions = [
+        {"symbol": "AAPL", "type": "stock", "quantity": 10, "price": 150.0},
+        {"symbol": "MSFT", "type": "stock", "quantity": 5, "price": 300.0}
+    ]
+    historical_prices = [
+        [145.0, 148.0, 150.0, 149.0, 151.0],  # AAPL prices
+        [295.0, 298.0, 300.0, 299.0, 301.0]   # MSFT prices
+    ]
+
+    # Test with default parameters
+    var_default = portfolio_var(positions, historical_prices, "monte_carlo", 0.95)
+
+    # Test with custom parameters
+    var_custom = portfolio_var(positions, historical_prices, "monte_carlo", 0.95, 5000, 12345)
+
+    # Both should return positive VaR values
+    assert var_default >= 0
+    assert var_custom >= 0
+
+
 if __name__ == "__main__":
     # Run tests directly
     test_calculate_returns()
@@ -127,4 +150,5 @@ if __name__ == "__main__":
     test_portfolio_var_parametric()
     test_portfolio_var_invalid_method()
     test_monte_carlo_var()
+    test_portfolio_var_monte_carlo_with_params()
     print("All tests passed!")

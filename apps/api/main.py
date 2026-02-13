@@ -240,6 +240,8 @@ async def calculate_var(portfolio_data: Dict[str, Any]):
             - historical_prices: List of historical prices for each asset (as list of lists)
             - method: VaR calculation method ('historical', 'parametric', or 'monte_carlo') - default is 'historical'
             - confidence_level: Confidence level for VaR calculation (default 0.95 for 95%)
+            - num_paths: Number of Monte Carlo paths to simulate (only used when method=monte_carlo) - default 10000
+            - seed: Random seed for reproducibility (only used when method=monte_carlo) - default 42
 
     Returns:
         Dictionary with VaR calculation results
@@ -249,9 +251,14 @@ async def calculate_var(portfolio_data: Dict[str, Any]):
     historical_prices = portfolio_data.get("historical_prices", [])
     method = portfolio_data.get("method", "historical")
     confidence_level = portfolio_data.get("confidence_level", 0.95)
+    num_paths = portfolio_data.get("num_paths", 10000)
+    seed = portfolio_data.get("seed", 42)
 
     # Calculate VaR
-    var = portfolio_var(positions, historical_prices, method, confidence_level)
+    if method == "monte_carlo":
+        var = portfolio_var(positions, historical_prices, method, confidence_level, num_paths, seed)
+    else:
+        var = portfolio_var(positions, historical_prices, method, confidence_level)
 
     # Create report
     report = {

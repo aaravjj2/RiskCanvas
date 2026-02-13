@@ -1196,7 +1196,7 @@ def calculate_portfolio_returns(positions: list, historical_prices: list, confid
 
 # Add the VaR function that's required by the task
 def portfolio_var(positions: list, historical_prices: list, method: str = "historical",
-                  confidence_level: float = 0.95) -> float:
+                  confidence_level: float = 0.95, num_paths: int = 10000, seed: int = 42) -> float:
     """
     Calculate Value at Risk (VaR) for a portfolio.
 
@@ -1205,6 +1205,8 @@ def portfolio_var(positions: list, historical_prices: list, method: str = "histo
         historical_prices: List of historical prices for the portfolio (as list of lists for each asset)
         method: VaR calculation method ('historical' or 'parametric')
         confidence_level: Confidence level for VaR calculation (default 0.95 for 95%)
+        num_paths: Number of Monte Carlo paths to simulate (only used when method=monte_carlo) - default 10000
+        seed: Random seed for reproducibility (only used when method=monte_carlo) - default 42
 
     Returns:
         VaR value (negative value means potential loss)
@@ -1217,7 +1219,7 @@ def portfolio_var(positions: list, historical_prices: list, method: str = "histo
     elif method == "parametric":
         return parametric_var(portfolio_returns, confidence_level)
     elif method == "monte_carlo":
-        return monte_carlo_var(portfolio_returns, confidence_level)
+        return monte_carlo_var(portfolio_returns, confidence_level, num_paths, seed)
     else:
         raise ValueError("Method must be 'historical', 'parametric', or 'monte_carlo'")
 
