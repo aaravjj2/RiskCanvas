@@ -38,7 +38,7 @@
 - [ ] [blocked] W5 Add export button that downloads JSON report; unit tests  // Gates never passed after 5 attempts.
 
 ## E2E: real flow
-- [ ] E1 Playwright: load app, click “Load fixture”, verify table rows appear (data-testid only)
+- [ ] [blocked] E1 Playwright: load app, click “Load fixture”, verify table rows appear (data-testid only)  // Gates never passed after 5 attempts.
 - [ ] E2 Playwright: click “Run Risk”, wait for results, verify risk summary fields appear
 - [ ] E3 Playwright: click “Export JSON”, verify download happens (or mocked endpoint); no flaky waits
 
