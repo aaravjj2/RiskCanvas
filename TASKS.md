@@ -28,7 +28,7 @@
 - [x] M4.2 Implement Monte Carlo VaR for stocks with seeded paths; tests
 - [x] M4.3 Extend MC to include option pricing along paths (fast approximation is ok); tests on small case
 - [x] M4.4 Add API endpoint: POST /risk/mc-var with configurable paths/steps/seed; tests
-- [ ] M4.5 Add performance guardrails: cap paths in API + clear error messages; tests
+- [ ] [blocked] M4.5 Add performance guardrails: cap paths in API + clear error messages; tests  // Gates never passed after 5 attempts.
 
 ## Web app: real UI + data-testid everywhere
 - [ ] W1 Build Portfolio page: load one fixture via button, show positions table (data-testid only)
