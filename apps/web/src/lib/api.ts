@@ -106,9 +106,9 @@ export async function deletePortfolio(portfolioId: string) {
   return apiFetch<any>(`/portfolios/${portfolioId}`, { method: 'DELETE' });
 }
 
-export async function listRuns(portfolioId?: string) {
-  const query = portfolioId ? `?portfolio_id=${portfolioId}` : '';
-  return apiFetch<any[]>(`/runs${query}`, { method: 'GET' });
+export async function listRuns(filters?: { portfolio_id?: string }) {
+  const query = filters?.portfolio_id ? `?portfolio_id=${filters.portfolio_id}` : '';
+  return apiFetch<any>(`/runs${query}`, { method: 'GET' });
 }
 
 export async function getRun(runId: string) {
@@ -133,12 +133,23 @@ export async function compareRuns(runIdA: string, runIdB: string) {
  * v1.2+ Report Bundle APIs
  */
 
+export async function listReports(filters?: { portfolio_id?: string; run_id?: string }) {
+  const params = new URLSearchParams();
+  if (filters?.portfolio_id) params.append('portfolio_id', filters.portfolio_id);
+  if (filters?.run_id) params.append('run_id', filters.run_id);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any>(`/reports${query}`, { method: 'GET' });
+}
+
 export async function buildReport(runId: string) {
   return apiFetch<any>('/reports/build', {
     method: 'POST',
     body: JSON.stringify({ run_id: runId }),
   });
 }
+
+// Alias for backwards compatibility
+export const buildReportBundle = (params: { run_id: string }) => buildReport(params.run_id);
 
 export async function getReportManifest(reportBundleId: string) {
   return apiFetch<any>(`/reports/${reportBundleId}/manifest`, { method: 'GET' });
@@ -148,21 +159,17 @@ export async function getReportManifest(reportBundleId: string) {
  * v1.3+ Hedge Studio APIs
  */
 
-export async function suggestHedges(portfolio: any, targetReductionPct: number, maxCost?: number) {
+export async function suggestHedges(params: { portfolio_id: string; target_var_reduction_pct: number; max_cost: number; instrument_types: string[] }) {
   return apiFetch<any>('/hedge/suggest', {
     method: 'POST',
-    body: JSON.stringify({
-      portfolio,
-      target_reduction_pct: targetReductionPct,
-      max_cost: maxCost,
-    }),
+    body: JSON.stringify(params),
   });
 }
 
-export async function evaluateHedge(portfolio: any, hedgeCandidate: any) {
+export async function evaluateHedge(params: { portfolio_id: string; hedge_instruments: any[] }) {
   return apiFetch<any>('/hedge/evaluate', {
     method: 'POST',
-    body: JSON.stringify({ portfolio, hedge_candidate: hedgeCandidate }),
+    body: JSON.stringify(params),
   });
 }
 
@@ -172,13 +179,13 @@ export async function evaluateHedge(portfolio: any, hedgeCandidate: any) {
 
 export async function listWorkspaces(owner?: string) {
   const params = owner ? `?owner=${encodeURIComponent(owner)}` : '';
-  return apiFetch<any[]>(`/workspaces${params}`, { method: 'GET' });
+  return apiFetch<any>(`/workspaces${params}`, { method: 'GET' });
 }
 
-export async function createWorkspace(name: string, owner: string, tags?: string[]) {
+export async function createWorkspace(params: { name: string; owner: string; tags?: string[] }) {
   return apiFetch<any>('/workspaces', {
     method: 'POST',
-    body: JSON.stringify({ name, owner, tags }),
+    body: JSON.stringify(params),
   });
 }
 
@@ -194,27 +201,24 @@ export async function deleteWorkspace(workspaceId: string) {
  * v1.4+ Audit APIs
  */
 
-export async function listAuditEvents(workspaceId?: string, actor?: string, resourceType?: string, limit?: number) {
+export async function listAuditEvents(filters?: { workspace_id?: string; actor?: string; resource_type?: string; limit?: number }) {
   const params = new URLSearchParams();
-  if (workspaceId) params.append('workspace_id', workspaceId);
-  if (actor) params.append('actor', actor);
-  if (resourceType) params.append('resource_type', resourceType);
-  if (limit) params.append('limit', limit.toString());
+  if (filters?.workspace_id) params.append('workspace_id', filters.workspace_id);
+  if (filters?.actor) params.append('actor', filters.actor);
+  if (filters?.resource_type) params.append('resource_type', filters.resource_type);
+  if (filters?.limit) params.append('limit', filters.limit.toString());
   const query = params.toString() ? `?${params.toString()}` : '';
-  return apiFetch<any[]>(`/audit${query}`, { method: 'GET' });
+  return apiFetch<any>(`/audit${query}`, { method: 'GET' });
 }
 
 /**
  * v1.5+ DevOps APIs
  */
 
-export async function generateRiskBotReport(basePortfolio: any, headPortfolio: any) {
+export async function generateRiskBotReport(params: { scope: string; include_hashes: boolean }) {
   return apiFetch<any>('/devops/risk-bot', {
     method: 'POST',
-    body: JSON.stringify({
-      base_portfolio: basePortfolio,
-      head_portfolio: headPortfolio,
-    }),
+    body: JSON.stringify(params),
   });
 }
 
@@ -227,27 +231,20 @@ export async function listMonitors(workspaceId?: string, portfolioId?: string) {
   if (workspaceId) params.append('workspace_id', workspaceId);
   if (portfolioId) params.append('portfolio_id', portfolioId);
   const query = params.toString() ? `?${params.toString()}` : '';
-  return apiFetch<any[]>(`/monitors${query}`, { method: 'GET' });
+  return apiFetch<any>(`/monitors${query}`, { method: 'GET' });
 }
 
-export async function createMonitor(
-  portfolioId: string,
-  name: string,
-  schedule: string,
-  thresholds: Record<string, number>,
-  workspaceId?: string,
-  scenarioPreset?: any
-) {
+export async function createMonitor(params: {
+  portfolio_id: string;
+  name: string;
+  schedule: string;
+  thresholds: Record<string, number>;
+  workspace_id?: string;
+  scenario_preset?: any;
+}) {
   return apiFetch<any>('/monitors', {
     method: 'POST',
-    body: JSON.stringify({
-      portfolio_id: portfolioId,
-      name,
-      schedule,
-      thresholds,
-      workspace_id: workspaceId,
-      scenario_preset: scenarioPreset,
-    }),
+    body: JSON.stringify(params),
   });
 }
 
@@ -255,22 +252,25 @@ export async function getMonitor(monitorId: string) {
   return apiFetch<any>(`/monitors/${monitorId}`, { method: 'GET' });
 }
 
-export async function runMonitorNow(monitorId: string) {
-  return apiFetch<any>(`/monitors/${monitorId}/run-now`, { method: 'POST' });
+export async function runMonitorNow(monitorId: string, params?: any) {
+  return apiFetch<any>(`/monitors/${monitorId}/run-now`, { 
+    method: 'POST',
+    body: JSON.stringify(params || {}),
+  });
 }
 
-export async function listAlerts(monitorId?: string, limit?: number) {
+export async function listAlerts(filters?: { monitor_id?: string; limit?: number }) {
   const params = new URLSearchParams();
-  if (monitorId) params.append('monitor_id', monitorId);
-  if (limit) params.append('limit', limit.toString());
+  if (filters?.monitor_id) params.append('monitor_id', filters.monitor_id);
+  if (filters?.limit) params.append('limit', filters.limit.toString());
   const query = params.toString() ? `?${params.toString()}` : '';
-  return apiFetch<any[]>(`/alerts${query}`, { method: 'GET' });
+  return apiFetch<any>(`/alerts${query}`, { method: 'GET' });
 }
 
-export async function listDriftSummaries(monitorId?: string, limit?: number) {
+export async function listDriftSummaries(filters?: { monitor_id?: string; limit?: number }) {
   const params = new URLSearchParams();
-  if (monitorId) params.append('monitor_id', monitorId);
-  if (limit) params.append('limit', limit.toString());
+  if (filters?.monitor_id) params.append('monitor_id', filters.monitor_id);
+  if (filters?.limit) params.append('limit', filters.limit.toString());
   const query = params.toString() ? `?${params.toString()}` : '';
-  return apiFetch<any[]>(`/drift-summaries${query}`, { method: 'GET' });
+  return apiFetch<any>(`/drift-summaries${query}`, { method: 'GET' });
 }
