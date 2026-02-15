@@ -1,0 +1,14 @@
+{
+  "description": "Expected deterministic hashes for RiskCanvas demo pack",
+  "generated_with": "python demo/run_demo.py --json",
+  "python_version": "3.11",
+  "engine_version": "0.1.0",
+  "overall_hash": "849c2d4f0fca6734ef7fbe2d13b0f2ed21d39b9e204ebd3f661433c0fb252c9b",
+  "values": {
+    "option_pricing_call": 2.47790187,
+    "option_pricing_put": 6.17357093,
+    "portfolio_pnl": 250.0,
+    "var_parametric": 15543.7889525,
+    "var_historical": 30000.0
+  }
+}

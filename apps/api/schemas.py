@@ -1,0 +1,187 @@
+"""
+Pydantic models for API request/response schemas
+"""
+
+from typing import List, Dict, Any, Literal, Optional
+from pydantic import BaseModel, Field
+
+
+# ===== Common Models =====
+
+
+class AssetBase(BaseModel):
+    """Base asset model"""
+    symbol: str
+    name: Optional[str] = None
+    type: Literal["stock", "option"] = "stock"
+    quantity: float
+
+
+class StockAsset(AssetBase):
+    """Stock position"""
+    type: Literal["stock"] = "stock"
+    price: float = Field(gt=0)
+    purchase_price: Optional[float] = None
+    current_price: Optional[float] = None
+
+
+class OptionAsset(AssetBase):
+    """Option position"""
+    type: Literal["option"] = "option"
+    S: float = Field(gt=0, description="Current stock price")
+    K: float = Field(gt=0, description="Strike price")
+    T: float = Field(ge=0, description="Time to maturity (years)")
+    r: float = Field(description="Risk-free rate")
+    sigma: float = Field(ge=0, description="Volatility")
+    option_type: Literal["call", "put"] = "call"
+    current_price: Optional[float] = None
+    purchase_price: Optional[float] = None
+
+
+# ===== Request Models =====
+
+
+class OptionPriceRequest(BaseModel):
+    """Request to price a single option"""
+    S: float = Field(gt=0, description="Current stock price")
+    K: float = Field(gt=0, description="Strike price")
+    T: float = Field(ge=0, description="Time to maturity (years)")
+    r: float = Field(description="Risk-free rate (annual)")
+    sigma: float = Field(ge=0, description="Volatility (annual)")
+    option_type: Literal["call", "put"] = "call"
+
+
+class Portfolio(BaseModel):
+    """Portfolio with assets"""
+    id: Optional[str] = None
+    name: Optional[str] = None
+    assets: List[Dict[str, Any]] = Field(default_factory=list)
+    total_value: Optional[float] = None
+
+
+class PortfolioAnalysisRequest(BaseModel):
+    """Request for comprehensive portfolio analysis"""
+    portfolio: Portfolio
+
+
+class VaRRequest(BaseModel):
+    """Request for VaR calculation"""
+    portfolio_value: float = Field(gt=0)
+    method: Literal["parametric", "historical"] = "parametric"
+    # Parametric VaR parameters
+    volatility: Optional[float] = Field(None, ge=0, description="Annual volatility")
+    confidence_level: float = Field(0.95, ge=0, le=1)
+    time_horizon_days: int = Field(1, gt=0)
+    # Historical VaR parameters
+    historical_returns: Optional[List[float]] = None
+
+
+class Scenario(BaseModel):
+    """Stress test scenario"""
+    name: str
+    shock_type: Literal["price", "volatility", "rate", "combined"]
+    parameters: Dict[str, float]
+
+
+class ScenarioRequest(BaseModel):
+    """Request for scenario analysis"""
+    positions: List[Dict[str, Any]]
+    scenarios: List[Scenario]
+
+
+class ReportRequest(BaseModel):
+    """Request to generate a report"""
+    portfolio: Portfolio
+    include_greeks: bool = True
+    include_var: bool = True
+    include_scenarios: bool = False
+
+
+# ===== Response Models =====
+
+
+class HealthResponse(BaseModel):
+    """Health check response"""
+    status: str
+    version: str
+
+
+class VersionResponse(BaseModel):
+    """Version information"""
+    api_version: str
+    engine_version: str
+
+
+class OptionPriceResponse(BaseModel):
+    """Option pricing response"""
+    request_id: str
+    price: float
+    greeks: Optional[Dict[str, float]] = None
+    warnings: List[str] = Field(default_factory=list)
+
+
+class GreeksResponse(BaseModel):
+    """Greeks calculation response"""
+    delta: float
+    gamma: float
+    vega: float
+    theta: float
+    rho: float
+
+
+class PortfolioMetrics(BaseModel):
+    """Portfolio-level metrics"""
+    total_pnl: float
+    total_value: float
+    asset_count: int
+    portfolio_greeks: Optional[GreeksResponse] = None
+
+
+class VaRResponse(BaseModel):
+    """VaR calculation response"""
+    request_id: str
+    method: str
+    var_value: float
+    confidence_level: float
+    time_horizon_days: Optional[int] = None
+    warnings: List[str] = Field(default_factory=list)
+
+
+class ScenarioResult(BaseModel):
+    """Single scenario result"""
+    name: str
+    shock_type: str
+    base_value: float
+    scenario_value: float
+    change: float
+    change_pct: float
+
+
+class ScenarioResponse(BaseModel):
+    """Scenario analysis response"""
+    request_id: str
+    scenarios: List[ScenarioResult]
+    warnings: List[str] = Field(default_factory=list)
+
+
+class PortfolioAnalysisResponse(BaseModel):
+    """Comprehensive portfolio analysis"""
+    request_id: str
+    portfolio_id: Optional[str] = None
+    portfolio_name: Optional[str] = None
+    version: str
+    metrics: PortfolioMetrics
+    var: Optional[VaRResponse] = None
+    warnings: List[str] = Field(default_factory=list)
+
+
+class ReportResponse(BaseModel):
+    """Report generation response"""
+    request_id: str
+    portfolio_id: Optional[str] = None
+    portfolio_name: Optional[str] = None
+    html: Optional[str] = None
+    metrics: PortfolioMetrics
+    var: Optional[VaRResponse] = None
+    scenarios: Optional[List[ScenarioResult]] = None
+    warnings: List[str] = Field(default_factory=list)

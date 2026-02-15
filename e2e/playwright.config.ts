@@ -1,7 +1,6 @@
 ﻿import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  // config is in /e2e, so tests live right here
   testDir: ".",
   testMatch: /.*\.spec\.ts/,
   retries: 0,
@@ -13,18 +12,11 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: "http://127.0.0.1:4174",
+    headless: false, // Run headed for MCP visibility
     trace: "on",
     video: "on",
-    screenshot: "only-on-failure",
-  },
-
-  webServer: {
-    // paths are relative to /e2e
-    command: "npm --prefix ../apps/web run dev -- --host 127.0.0.1 --port 4173",
-    url: "http://127.0.0.1:4173",
-    reuseExistingServer: true,
-    timeout: 120000,
+    screenshot: "on",
   },
 
   outputDir: "../test-results",

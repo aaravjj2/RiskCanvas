@@ -1,42 +1,93 @@
-#root {
-  max-width: 1280px;
+/* RiskCanvas v1.0 – design system */
+
+:root {
+  --rc-bg: #0f1117;
+  --rc-surface: #1a1d26;
+  --rc-border: #2a2d36;
+  --rc-text: #e4e6eb;
+  --rc-muted: #8b8fa3;
+  --rc-accent: #3b82f6;
+  --rc-success: #22c55e;
+  --rc-danger: #ef4444;
+  --rc-warning: #eab308;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--rc-bg);
+  color: var(--rc-text);
+  line-height: 1.6;
+}
+
+.rc-app {
+  max-width: 960px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 2rem 1.5rem;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+/* Header */
+.rc-header { margin-bottom: 2rem; }
+.rc-header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+.rc-header p { color: var(--rc-muted); margin-top: 0.25rem; }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* Actions */
+.rc-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+button {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--rc-border);
+  border-radius: 6px;
+  background: var(--rc-surface);
+  color: var(--rc-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
+button:hover { background: var(--rc-border); border-color: var(--rc-accent); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.card {
-  padding: 2em;
+/* Sections */
+.rc-section {
+  background: var(--rc-surface);
+  border: 1px solid var(--rc-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
 }
+.rc-section h2 { font-size: 1.1rem; margin-bottom: 1rem; }
 
-.read-the-docs {
-  color: #888;
+/* Metrics grid */
+.rc-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.rc-metric {
+  padding: 1rem;
+  background: var(--rc-bg);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+.rc-metric-label { font-size: 0.75rem; color: var(--rc-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.rc-metric-value { font-size: 1.25rem; font-weight: 600; margin-top: 0.25rem; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--rc-border); }
+th { font-weight: 600; color: var(--rc-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Messages */
+.rc-error { color: var(--rc-danger); margin-bottom: 1rem; }
+.rc-success { color: var(--rc-success); margin-bottom: 1rem; }
+
+/* Footer */
+.rc-footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rc-border);
+  color: var(--rc-muted);
+  font-size: 0.75rem;
 }

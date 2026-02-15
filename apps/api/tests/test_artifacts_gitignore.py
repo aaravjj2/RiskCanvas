@@ -18,8 +18,7 @@ def test_artifacts_directory_is_gitignored():
     result = subprocess.run(['git', 'ls-files', str(test_file_path)],
                            capture_output=True, text=True)
 
-    # The file should not be listed in git (i.e., it should be gitignored)
-    assert result.returncode == 1, f"File {test_file_path} should be gitignored but is tracked"
+    # git ls-files returns 0 even for ignored files; check stdout is empty
     assert result.stdout.strip() == "", f"File {test_file_path} should not be in git tracking"
 
     # Clean up
@@ -34,6 +33,5 @@ def test_report_files_not_committed():
     result = subprocess.run(['git', 'ls-files', 'artifacts/'],
                            capture_output=True, text=True)
 
-    # No files in artifacts should be tracked by git
-    assert result.returncode == 1, "artifacts/ directory should be gitignored"
+    # git ls-files returns 0 even for ignored dirs; check stdout is empty
     assert result.stdout.strip() == "", "No files in artifacts/ should be tracked"

@@ -1,0 +1,33 @@
+{
+  "id": "port_001",
+  "name": "Tech Portfolio",
+  "assets": [
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "type": "stock",
+      "quantity": 100,
+      "price": 180.50,
+      "current_price": 182.30,
+      "purchase_price": 175.00
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Alphabet Inc.",
+      "type": "stock",
+      "quantity": 50,
+      "price": 140.20,
+      "current_price": 142.50,
+      "purchase_price": 138.00
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft Corp.",
+      "type": "stock",
+      "quantity": 75,
+      "price": 380.00,
+      "current_price": 385.00,
+      "purchase_price": 370.00
+    }
+  ]
+}

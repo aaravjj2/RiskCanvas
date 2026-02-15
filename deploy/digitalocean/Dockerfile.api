@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+LABEL maintainer="RiskCanvas"
+
+WORKDIR /app
+
+# Install deps first for layer caching
+COPY apps/api/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy engine
+COPY packages/engine/ /app/engine/
+ENV PYTHONPATH="/app/engine:${PYTHONPATH}"
+
+# Copy API source
+COPY apps/api/ ./
+
+# Copy fixtures
+COPY fixtures/ /app/fixtures/
+
+EXPOSE 8090
+
+ENV DEMO_MODE=true
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090"]

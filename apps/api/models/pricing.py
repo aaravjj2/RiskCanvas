@@ -1245,6 +1245,17 @@ def monte_carlo_var(portfolio_returns: list, confidence_level: float = 0.95, num
     if confidence_level <= 0 or confidence_level >= 1:
         raise ValueError("Confidence level must be between 0 and 1")
 
+    # Performance guardrails
+    max_paths = 100000
+    if num_paths > max_paths:
+        raise ValueError(
+            f"Number of paths exceeds maximum allowed ({max_paths}). Please use a lower value."
+        )
+    if seed < 0 or seed > 2**32 - 1:
+        raise ValueError(
+            "Seed must be a non-negative integer within the range of 32-bit unsigned integer."
+        )
+
     # Set seed for reproducibility
     random.seed(seed)
 
