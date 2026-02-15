@@ -166,3 +166,111 @@ export async function evaluateHedge(portfolio: any, hedgeCandidate: any) {
   });
 }
 
+/**
+ * v1.4+ Workspace APIs
+ */
+
+export async function listWorkspaces(owner?: string) {
+  const params = owner ? `?owner=${encodeURIComponent(owner)}` : '';
+  return apiFetch<any[]>(`/workspaces${params}`, { method: 'GET' });
+}
+
+export async function createWorkspace(name: string, owner: string, tags?: string[]) {
+  return apiFetch<any>('/workspaces', {
+    method: 'POST',
+    body: JSON.stringify({ name, owner, tags }),
+  });
+}
+
+export async function getWorkspace(workspaceId: string) {
+  return apiFetch<any>(`/workspaces/${workspaceId}`, { method: 'GET' });
+}
+
+export async function deleteWorkspace(workspaceId: string) {
+  return apiFetch<any>(`/workspaces/${workspaceId}`, { method: 'DELETE' });
+}
+
+/**
+ * v1.4+ Audit APIs
+ */
+
+export async function listAuditEvents(workspaceId?: string, actor?: string, resourceType?: string, limit?: number) {
+  const params = new URLSearchParams();
+  if (workspaceId) params.append('workspace_id', workspaceId);
+  if (actor) params.append('actor', actor);
+  if (resourceType) params.append('resource_type', resourceType);
+  if (limit) params.append('limit', limit.toString());
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any[]>(`/audit${query}`, { method: 'GET' });
+}
+
+/**
+ * v1.5+ DevOps APIs
+ */
+
+export async function generateRiskBotReport(basePortfolio: any, headPortfolio: any) {
+  return apiFetch<any>('/devops/risk-bot', {
+    method: 'POST',
+    body: JSON.stringify({
+      base_portfolio: basePortfolio,
+      head_portfolio: headPortfolio,
+    }),
+  });
+}
+
+/**
+ * v1.6+ Monitoring APIs
+ */
+
+export async function listMonitors(workspaceId?: string, portfolioId?: string) {
+  const params = new URLSearchParams();
+  if (workspaceId) params.append('workspace_id', workspaceId);
+  if (portfolioId) params.append('portfolio_id', portfolioId);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any[]>(`/monitors${query}`, { method: 'GET' });
+}
+
+export async function createMonitor(
+  portfolioId: string,
+  name: string,
+  schedule: string,
+  thresholds: Record<string, number>,
+  workspaceId?: string,
+  scenarioPreset?: any
+) {
+  return apiFetch<any>('/monitors', {
+    method: 'POST',
+    body: JSON.stringify({
+      portfolio_id: portfolioId,
+      name,
+      schedule,
+      thresholds,
+      workspace_id: workspaceId,
+      scenario_preset: scenarioPreset,
+    }),
+  });
+}
+
+export async function getMonitor(monitorId: string) {
+  return apiFetch<any>(`/monitors/${monitorId}`, { method: 'GET' });
+}
+
+export async function runMonitorNow(monitorId: string) {
+  return apiFetch<any>(`/monitors/${monitorId}/run-now`, { method: 'POST' });
+}
+
+export async function listAlerts(monitorId?: string, limit?: number) {
+  const params = new URLSearchParams();
+  if (monitorId) params.append('monitor_id', monitorId);
+  if (limit) params.append('limit', limit.toString());
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any[]>(`/alerts${query}`, { method: 'GET' });
+}
+
+export async function listDriftSummaries(monitorId?: string, limit?: number) {
+  const params = new URLSearchParams();
+  if (monitorId) params.append('monitor_id', monitorId);
+  if (limit) params.append('limit', limit.toString());
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any[]>(`/drift-summaries${query}`, { method: 'GET' });
+}

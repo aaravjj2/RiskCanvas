@@ -14,6 +14,17 @@ from pathlib import Path
 import os
 
 
+# Import all models for table creation
+def _import_all_models():
+    """Import all models to ensure tables are created"""
+    try:
+        from workspaces import WorkspaceModel
+        from audit import AuditEventModel
+        from monitoring import MonitorModel, AlertModel, DriftSummaryModel
+    except ImportError:
+        pass  # Models may not exist yet during initial setup
+
+
 # ===== Deterministic ID Generation =====
 
 
@@ -99,6 +110,9 @@ class Database:
             db_dir.mkdir(exist_ok=True)
             db_path = db_dir / "riskcanvas.db"
             db_url = f"sqlite:///{db_path}"
+        
+        # Import all models before creating tables
+        _import_all_models()
         
         self.engine = create_engine(
             db_url,

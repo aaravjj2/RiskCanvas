@@ -275,3 +275,125 @@ class HedgeEvaluateRequest(BaseModel):
     hedge_candidate: Dict[str, Any]
 
 
+# ===== v1.4 Workspace, RBAC, Audit Schemas =====
+
+
+class WorkspaceCreateRequest(BaseModel):
+    """Request to create a workspace"""
+    name: str
+    owner: str
+    tags: Optional[List[str]] = None
+
+
+class WorkspaceInfo(BaseModel):
+    """Workspace information"""
+    workspace_id: str
+    name: str
+    owner: str
+    tags: List[str]
+    created_at: str
+    updated_at: str
+
+
+class AuditEventInfo(BaseModel):
+    """Audit event information"""
+    event_id: str
+    workspace_id: Optional[str]
+    actor: str
+    actor_role: str
+    action: str
+    resource_type: str
+    resource_id: Optional[str]
+    input_hash: Optional[str]
+    output_hash: Optional[str]
+    result: str
+    error_message: Optional[str]
+    sequence: int
+    created_at: str
+
+
+# ===== v1.5 DevOps / Risk-bot Schemas =====
+
+
+class RiskBotReportRequest(BaseModel):
+    """Request to generate a risk-bot report"""
+    base_ref: Optional[str] = None
+    head_ref: Optional[str] = None
+    base_portfolio: Optional[Dict[str, Any]] = None
+    head_portfolio: Optional[Dict[str, Any]] = None
+
+
+class RiskBotReportResponse(BaseModel):
+    """Risk-bot report response"""
+    report_markdown: str
+    test_gate_summary: Dict[str, Any]
+    risk_metric_diffs: Dict[str, Any]
+    determinism_hashes: Dict[str, str]
+
+
+# ===== v1.6 Monitoring, Alerts, Drift Schemas =====
+
+
+class MonitorCreateRequest(BaseModel):
+    """Request to create a monitor"""
+    portfolio_id: str
+    name: str
+    schedule: Literal["manual", "daily", "weekly"]
+    thresholds: Dict[str, float]
+    workspace_id: Optional[str] = None
+    scenario_preset: Optional[Dict[str, Any]] = None
+
+
+class MonitorInfo(BaseModel):
+    """Monitor information"""
+    monitor_id: str
+    workspace_id: Optional[str]
+    portfolio_id: str
+    name: str
+    schedule: str
+    scenario_preset: Optional[Dict[str, Any]]
+    thresholds: Dict[str, float]
+    enabled: bool
+    last_run_id: Optional[str]
+    last_run_sequence: int
+    created_at: str
+    updated_at: str
+
+
+class MonitorRunNowRequest(BaseModel):
+    """Request to run a monitor now"""
+    monitor_id: str
+
+
+class MonitorRunNowResponse(BaseModel):
+    """Response from running a monitor"""
+    monitor_id: str
+    run_id: str
+    alerts: List[Dict[str, Any]]
+    drift_summary: Optional[Dict[str, Any]]
+
+
+class AlertInfo(BaseModel):
+    """Alert information"""
+    alert_id: str
+    monitor_id: str
+    run_id: str
+    severity: str
+    rule: str
+    message: str
+    triggered_value: float
+    threshold_value: float
+    sequence: int
+    created_at: str
+
+
+class DriftSummaryInfo(BaseModel):
+    """Drift summary information"""
+    drift_id: str
+    monitor_id: str
+    previous_run_id: str
+    current_run_id: str
+    changes: Dict[str, Any]
+    drift_score: float
+    sequence: int
+    created_at: str

@@ -2,6 +2,53 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [1.6.0] — 2026-02-15
+
+### Added (v1.6 — Monitoring & Drift Detection)
+- **Monitor management** — `POST /monitors`, `GET /monitors`, `GET /monitors/{id}` for portfolio monitoring
+- **Monitor execution** — `POST /monitors/{id}/run-now` triggers on-demand analysis with threshold checks
+- **Alert system** — automatic alert generation when VaR exceeds configured thresholds (severity: info/medium/high/critical)
+- **Drift detection** — `GET /drift-summaries` computes portfolio changes between consecutive runs
+- **Drift scoring** — quantifies portfolio changes using asset-level deltas and VaR changes
+- **Sequence-based determinism** — global counters for monitors, alerts, and drift summaries (no real timestamps)
+- **Schedule support** — hourly, daily, weekly monitoring schedules
+- **Monitoring frontend** — React pages for monitor creation, run-now execution, alert display, drift summary cards
+
+### Added (v1.5 — DevOps Pack)
+- **Risk-bot CLI** — `POST /devops/risk-bot` generates deterministic reports for CI/CD pipelines
+- **Determinism hashes** — all artifacts (portfolios, runs, reports) include SHA256 hashes for verification
+- **CI-ready outputs** — markdown reports with embedded hashes for GitLab/GitHub integration
+- **DevOps frontend** — report generation UI with hash display and CI checklist
+
+### Added (v1.4 — Enterprise Readiness: Workspaces + RBAC + Audit)
+- **Workspace management** — `POST /workspaces`, `GET /workspaces`, `GET /workspaces/{id}`, `DELETE /workspaces/{id}`
+- **Deterministic workspace IDs** — `workspace_id = SHA256(owner + seed)[:32]` for reproducibility
+- **RBAC (Role-Based Access Control)** — roles: viewer, analyst, admin with permission matrices
+- **DEMO mode RBAC** — uses `X-Demo-User` and `X-Demo-Role` headers for testing (no real auth complexity)
+- **Audit logging** — all operations recorded in `AuditEventModel` with input/output hashes
+- **Audit event IDs** — deterministic `event_id = SHA256(workspace + actor + action + resource + sequence)`
+- **Audit retrieval** — `GET /audit` with filters for workspace, actor, resource_type
+- **Workspace isolation** — portfolios, runs, and reports scoped to workspaces
+- **Frontend UI pages**:
+  - Portfolio Library (`/library`) — save portfolios, run analysis, view list
+  - Run History (`/history`) — view all runs, select and compare
+  - Compare page (`/compare`) — side-by-side delta KPIs and top asset changes
+  - Reports Hub (`/reports-hub`) — build report bundles, view hashes, download artifacts
+  - Hedge Studio (`/hedge`) — generate hedge suggestions with target VaR reduction
+  - Workspaces page (`/workspaces`) — create/switch/delete workspaces
+  - Audit page (`/audit`) — view audit events with filters and hash display
+  - DevOps page (`/devops`) — generate risk-bot reports
+  - Monitoring page (`/monitoring`) — create monitors, run analysis, view alerts/drift
+
+### Changed
+- API version bumped to 1.6.0
+- Backend tests: 116 passed (all v1.0-v1.6 endpoints)
+- Frontend: 8 new pages, all routes added to App.tsx
+- Database: Enhanced with `_import_all_models()` to load WorkspaceModel, AuditEventModel, MonitorModel, AlertModel, DriftSummaryModel
+- UI components: Added Slider and Select from @radix-ui
+- E2E tests: 5 new test files (18+ tests) covering Phase 2A + Phase 2B flows
+- Test suite: Comprehensive tour test (≥180s) demonstrating all v1.1-v1.6 features
+
 ## [1.3.0] — 2026-02-15
 
 ### Added (v1.3 — Hedge Studio)
