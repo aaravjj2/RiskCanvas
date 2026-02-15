@@ -2,6 +2,39 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [1.3.0] — 2026-02-15
+
+### Added (v1.3 — Hedge Studio)
+- **Deterministic hedge suggestions** — `POST /hedge/suggest` generates ranked hedge candidates to reduce VaR
+- **Hedge evaluation** — `POST /hedge/evaluate` runs scenario analysis on hedge candidates
+- **Hedge engine** — grid search over protective puts and exposure reduction strategies
+- **Cost-effectiveness scoring** — ranks hedges by VaR reduction per dollar spent
+- **Scenario testing** — evaluates hedge performance under price shocks (-20%, -10%, 0%, +10%)
+- **Hedge Studio frontend APIs** — `suggestHedges()`, `evaluateHedge()` in api.ts
+
+### Added (v1.2 — Reporting Engine v2)
+- **Report Bundle Builder** — self-contained HTML reports with embedded SVG charts (no CDN dependencies)
+- **Deterministic chart generation** — SVG bar charts for VaR distribution and portfolio Greeks
+- **Report bundle IDs** — stable hashes based on run_id + outputs
+- **Report endpoints** — `POST /reports/build`, `GET /reports/{id}/manifest`, `GET /reports/{id}/report.html`, `GET /reports/{id}/run.json`
+- **Report manifest** — includes all hashes, file links, and metadata
+
+### Added (v1.1 — Portfolio Library + Run History)
+- **SQLite persistence** — SQLModel-based storage with deterministic IDs
+- **Portfolio CRUD** — `GET /portfolios`, `POST /portfolios`, `GET /portfolios/{id}`, `DELETE /portfolios/{id}`
+- **Run execution** — `POST /runs/execute` runs analysis and stores results with deterministic run_id
+- **Run history** — `GET /runs`, `GET /runs/{id}` with filtering by portfolio_id
+- **Run comparison** — `POST /runs/compare` computes deltas between two runs
+- **Deterministic IDs** — portfolio_id = hash(canonical_portfolio), run_id = hash(portfolio_id + params + engine_version)
+- **Canonical JSON** — sorted keys, no whitespace, consistent encoding
+- **In-memory DB for tests** — uses sqlite:///:memory: when running under pytest
+- **14 persistence tests** — full coverage of portfolio/run CRUD and determinism
+- **Frontend API extensions** — all v1.1+ endpoints added to api.ts
+
+### Changed
+- API version bumped to 1.3.0
+- Backend tests increased to 116 (from 102)
+
 ## [1.0.0] — 2025-07-19
 
 ### Added

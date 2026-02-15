@@ -185,3 +185,93 @@ class ReportResponse(BaseModel):
     var: Optional[VaRResponse] = None
     scenarios: Optional[List[ScenarioResult]] = None
     warnings: List[str] = Field(default_factory=list)
+
+
+# ===== v1.1+ Persistence Schemas =====
+
+
+class PortfolioCreateRequest(BaseModel):
+    """Request to create/update portfolio"""
+    portfolio: Dict[str, Any]
+    name: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+class PortfolioInfo(BaseModel):
+    """Portfolio metadata"""
+    portfolio_id: str
+    name: str
+    tags: Optional[List[str]] = None
+    created_at: str
+    updated_at: str
+    portfolio: Dict[str, Any]
+
+
+class RunExecuteRequest(BaseModel):
+    """Request to execute analysis run"""
+    portfolio_id: Optional[str] = None
+    portfolio: Optional[Dict[str, Any]] = None
+    params: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+
+class RunInfo(BaseModel):
+    """Run metadata and results"""
+    run_id: str
+    portfolio_id: str
+    engine_version: str
+    var_95: Optional[float] = None
+    var_99: Optional[float] = None
+    portfolio_value: Optional[float] = None
+    output_hash: Optional[str] = None
+    report_bundle_id: Optional[str] = None
+    created_at: str
+
+
+class RunCompareRequest(BaseModel):
+    """Request to compare two runs"""
+    run_id_a: str
+    run_id_b: str
+
+
+class RunCompareResponse(BaseModel):
+    """Run comparison results"""
+    run_id_a: str
+    run_id_b: str
+    deltas: Dict[str, Any]
+    top_changes: List[Dict[str, Any]]
+
+
+# ===== v1.2 Report Bundle Schemas =====
+
+
+class ReportBuildRequest(BaseModel):
+    """Request to build report bundle"""
+    run_id: str
+
+
+class ReportBundleInfo(BaseModel):
+    """Report bundle metadata"""
+    report_bundle_id: str
+    run_id: str
+    portfolio_id: str
+    manifest: Dict[str, Any]
+
+
+# ===== v1.3 Hedge Studio Schemas =====
+
+
+class HedgeSuggestRequest(BaseModel):
+    """Request to get hedge suggestions"""
+    portfolio_id: Optional[str] = None
+    portfolio: Optional[Dict[str, Any]] = None
+    target_reduction_pct: float = Field(default=20.0, ge=0, le=100)
+    max_cost: Optional[float] = None
+    allowed_instruments: Optional[List[str]] = None
+
+
+class HedgeEvaluateRequest(BaseModel):
+    """Request to evaluate a hedge"""
+    portfolio: Dict[str, Any]
+    hedge_candidate: Dict[str, Any]
+
+

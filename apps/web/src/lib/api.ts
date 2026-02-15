@@ -82,3 +82,87 @@ export async function checkHealth(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * v1.1+ Portfolio Library APIs
+ */
+
+export async function listPortfolios() {
+  return apiFetch<any[]>('/portfolios', { method: 'GET' });
+}
+
+export async function createPortfolio(portfolio: any, name?: string, tags?: string[]) {
+  return apiFetch<any>('/portfolios', {
+    method: 'POST',
+    body: JSON.stringify({ portfolio, name, tags }),
+  });
+}
+
+export async function getPortfolio(portfolioId: string) {
+  return apiFetch<any>(`/portfolios/${portfolioId}`, { method: 'GET' });
+}
+
+export async function deletePortfolio(portfolioId: string) {
+  return apiFetch<any>(`/portfolios/${portfolioId}`, { method: 'DELETE' });
+}
+
+export async function listRuns(portfolioId?: string) {
+  const query = portfolioId ? `?portfolio_id=${portfolioId}` : '';
+  return apiFetch<any[]>(`/runs${query}`, { method: 'GET' });
+}
+
+export async function getRun(runId: string) {
+  return apiFetch<any>(`/runs/${runId}`, { method: 'GET' });
+}
+
+export async function executeRun(portfolioId?: string, portfolio?: any, params?: any) {
+  return apiFetch<any>('/runs/execute', {
+    method: 'POST',
+    body: JSON.stringify({ portfolio_id: portfolioId, portfolio, params }),
+  });
+}
+
+export async function compareRuns(runIdA: string, runIdB: string) {
+  return apiFetch<any>('/runs/compare', {
+    method: 'POST',
+    body: JSON.stringify({ run_id_a: runIdA, run_id_b: runIdB }),
+  });
+}
+
+/**
+ * v1.2+ Report Bundle APIs
+ */
+
+export async function buildReport(runId: string) {
+  return apiFetch<any>('/reports/build', {
+    method: 'POST',
+    body: JSON.stringify({ run_id: runId }),
+  });
+}
+
+export async function getReportManifest(reportBundleId: string) {
+  return apiFetch<any>(`/reports/${reportBundleId}/manifest`, { method: 'GET' });
+}
+
+/**
+ * v1.3+ Hedge Studio APIs
+ */
+
+export async function suggestHedges(portfolio: any, targetReductionPct: number, maxCost?: number) {
+  return apiFetch<any>('/hedge/suggest', {
+    method: 'POST',
+    body: JSON.stringify({
+      portfolio,
+      target_reduction_pct: targetReductionPct,
+      max_cost: maxCost,
+    }),
+  });
+}
+
+export async function evaluateHedge(portfolio: any, hedgeCandidate: any) {
+  return apiFetch<any>('/hedge/evaluate', {
+    method: 'POST',
+    body: JSON.stringify({ portfolio, hedge_candidate: hedgeCandidate }),
+  });
+}
+

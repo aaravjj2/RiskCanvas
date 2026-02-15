@@ -9,7 +9,7 @@ import sys
 import uuid
 import hashlib
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Request
@@ -49,6 +49,21 @@ from models.pricing import (
 # Agent import
 from agent.orchestrator import OrchestratorAgent
 
+# Database import (v1.1+)
+from database import db, generate_portfolio_id, generate_run_id, canonicalize_json
+
+# Report bundle import (v1.2+)
+from report_bundle import (
+    generate_report_bundle_id,
+    build_report_html,
+    build_report_manifest,
+    store_report_bundle,
+    get_report_bundle
+)
+
+# Hedge engine import (v1.3+)
+from hedge_engine import generate_hedge_candidates, evaluate_hedge
+
 # Schemas
 from schemas import (
     HealthResponse,
@@ -67,11 +82,24 @@ from schemas import (
     GreeksResponse,
     ScenarioResult,
     Portfolio as PortfolioSchema,
+    # v1.1+ schemas
+    PortfolioCreateRequest,
+    PortfolioInfo,
+    RunExecuteRequest,
+    RunInfo,
+    RunCompareRequest,
+    RunCompareResponse,
+    # v1.2+ schemas
+    ReportBuildRequest,
+    ReportBundleInfo,
+    # v1.3+ schemas
+    HedgeSuggestRequest,
+    HedgeEvaluateRequest,
 )
 
 # Error taxonomy
 from errors import ErrorCode, RiskCanvasError, error_response
-
+3
 # ===== Constants =====
 
 API_VERSION = "1.0.0"
@@ -639,3 +667,388 @@ async def determinism_check():
         checks=checks,
         overall_hash=overall,
     )
+
+
+# ====================================================================
+#  v1.1  PORTFOLIO LIBRARY ENDPOINTS
+# ====================================================================
+
+
+@app.get("/portfolios", response_model=List[PortfolioInfo])
+async def list_portfolios():
+    """List all saved portfolios"""
+    portfolios = db.list_portfolios()
+    return [
+        PortfolioInfo(
+            portfolio_id=p.portfolio_id,
+            name=p.name or f"Portfolio {p.portfolio_id[:8]}",
+            tags=json.loads(p.tags) if p.tags else None,
+            created_at=p.created_at,
+            updated_at=p.updated_at,
+            portfolio=json.loads(p.canonical_data)
+        )
+        for p in portfolios
+    ]
+
+
+@app.post("/portfolios", response_model=PortfolioInfo)
+async def create_portfolio(request: PortfolioCreateRequest):
+    """Create or update portfolio with deterministic ID"""
+    portfolio_model = db.create_portfolio(
+        portfolio_data=request.portfolio,
+        name=request.name,
+        tags=request.tags
+    )
+    return PortfolioInfo(
+        portfolio_id=portfolio_model.portfolio_id,
+        name=portfolio_model.name,
+        tags=json.loads(portfolio_model.tags) if portfolio_model.tags else None,
+        created_at=portfolio_model.created_at,
+        updated_at=portfolio_model.updated_at,
+        portfolio=json.loads(portfolio_model.canonical_data)
+    )
+
+
+@app.get("/portfolios/{portfolio_id}", response_model=PortfolioInfo)
+async def get_portfolio(portfolio_id: str):
+    """Get portfolio by ID"""
+    portfolio_model = db.get_portfolio(portfolio_id)
+    if not portfolio_model:
+        raise HTTPException(status_code=404, detail=f"Portfolio {portfolio_id} not found")
+    return PortfolioInfo(
+        portfolio_id=portfolio_model.portfolio_id,
+        name=portfolio_model.name,
+        tags=json.loads(portfolio_model.tags) if portfolio_model.tags else None,
+        created_at=portfolio_model.created_at,
+        updated_at=portfolio_model.updated_at,
+        portfolio=json.loads(portfolio_model.canonical_data)
+    )
+
+
+@app.delete("/portfolios/{portfolio_id}")
+async def delete_portfolio(portfolio_id: str):
+    """Delete portfolio and associated runs"""
+    success = db.delete_portfolio(portfolio_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Portfolio {portfolio_id} not found")
+    return {"deleted": True, "portfolio_id": portfolio_id}
+
+
+# ====================================================================
+#  v1.1  RUN HISTORY ENDPOINTS
+# ====================================================================
+
+
+@app.get("/runs", response_model=List[RunInfo])
+async def list_runs(portfolio_id: Optional[str] = None):
+    """List runs, optionally filtered by portfolio_id"""
+    runs = db.list_runs(portfolio_id=portfolio_id)
+    result = []
+    for run in runs:
+        var_output = json.loads(run.var_output) if run.var_output else {}
+        pricing_output = json.loads(run.pricing_output) if run.pricing_output else {}
+        
+        result.append(RunInfo(
+            run_id=run.run_id,
+            portfolio_id=run.portfolio_id,
+            engine_version=run.engine_version,
+            var_95=var_output.get("var_95"),
+            var_99=var_output.get("var_99"),
+            portfolio_value=pricing_output.get("portfolio_value"),
+            output_hash=run.output_hash,
+            report_bundle_id=run.report_bundle_id,
+            created_at=run.created_at
+        ))
+    return result
+
+
+@app.get("/runs/{run_id}", response_model=Dict[str, Any])
+async def get_run(run_id: str):
+    """Get full run details by ID"""
+    run = db.get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+    
+    return {
+        "run_id": run.run_id,
+        "portfolio_id": run.portfolio_id,
+        "engine_version": run.engine_version,
+        "run_params": json.loads(run.run_params),
+        "outputs": {
+            "pricing": json.loads(run.pricing_output) if run.pricing_output else None,
+            "greeks": json.loads(run.greeks_output) if run.greeks_output else None,
+            "var": json.loads(run.var_output) if run.var_output else None,
+            "scenarios": json.loads(run.scenarios_output) if run.scenarios_output else None,
+        },
+        "output_hash": run.output_hash,
+        "report_bundle_id": run.report_bundle_id,
+        "created_at": run.created_at
+    }
+
+
+@app.post("/runs/execute", response_model=Dict[str, Any])
+async def execute_run(request: RunExecuteRequest):
+    """Execute analysis run and store results"""
+    # Get or create portfolio
+    if request.portfolio_id:
+        portfolio_model = db.get_portfolio(request.portfolio_id)
+        if not portfolio_model:
+            raise HTTPException(status_code=404, detail=f"Portfolio {request.portfolio_id} not found")
+        portfolio_data = json.loads(portfolio_model.canonical_data)
+    elif request.portfolio:
+        # Create portfolio on-the-fly
+        portfolio_data = request.portfolio
+        portfolio_model = db.create_portfolio(portfolio_data=portfolio_data)
+    else:
+        raise HTTPException(status_code=400, detail="Either portfolio_id or portfolio must be provided")
+    
+    portfolio_id = portfolio_model.portfolio_id
+    positions = portfolio_data.get("assets", [])
+    
+    # Execute analysis
+    total_pnl = portfolio_pnl(positions)
+    total_value = 0.0
+    for pos in positions:
+        current_price = pos.get("current_price", pos.get("price", 0))
+        quantity = pos.get("quantity", 0)
+        total_value += current_price * quantity
+    total_value = round_to_precision(total_value)
+    
+    greeks_data = portfolio_greeks(positions) if sum(1 for p in positions if p.get("type") == "option") > 0 else None
+    
+    var_95 = None
+    var_99 = None
+    if total_value > 0:
+        var_95 = var_parametric(portfolio_value=total_value, volatility=0.15, confidence_level=0.95, time_horizon_days=1)
+        var_99 = var_parametric(portfolio_value=total_value, volatility=0.15, confidence_level=0.99, time_horizon_days=1)
+    
+    outputs = {
+        "pricing": {
+            "portfolio_value": total_value,
+            "total_pnl": total_pnl,
+        },
+        "greeks": greeks_data,
+        "var": {
+            "var_95": var_95,
+            "var_99": var_99,
+        },
+        "scenarios": None
+    }
+    
+    run_model = db.create_run(
+        portfolio_id=portfolio_id,
+        run_params=request.params or {},
+        engine_version=ENGINE_VERSION,
+        outputs=outputs
+    )
+    
+    return {
+        "run_id": run_model.run_id,
+        "portfolio_id": run_model.portfolio_id,
+        "output_hash": run_model.output_hash,
+        "outputs": outputs,
+        "created_at": run_model.created_at
+    }
+
+
+@app.post("/runs/compare", response_model=RunCompareResponse)
+async def compare_runs(request: RunCompareRequest):
+    """Compare two runs and return deltas"""
+    run_a = db.get_run(request.run_id_a)
+    run_b = db.get_run(request.run_id_b)
+    
+    if not run_a:
+        raise HTTPException(status_code=404, detail=f"Run {request.run_id_a} not found")
+    if not run_b:
+        raise HTTPException(status_code=404, detail=f"Run {request.run_id_b} not found")
+    
+    # Parse outputs
+    pricing_a = json.loads(run_a.pricing_output) if run_a.pricing_output else {}
+    pricing_b = json.loads(run_b.pricing_output) if run_b.pricing_output else {}
+    var_a = json.loads(run_a.var_output) if run_a.var_output else {}
+    var_b = json.loads(run_b.var_output) if run_b.var_output else {}
+    greeks_a = json.loads(run_a.greeks_output) if run_a.greeks_output else {}
+    greeks_b = json.loads(run_b.greeks_output) if run_b.greeks_output else {}
+    
+    # Compute deltas
+    deltas = {
+        "portfolio_value": {
+            "a": pricing_a.get("portfolio_value"),
+            "b": pricing_b.get("portfolio_value"),
+            "delta": (pricing_b.get("portfolio_value", 0) - pricing_a.get("portfolio_value", 0))
+        },
+        "total_pnl": {
+            "a": pricing_a.get("total_pnl"),
+            "b": pricing_b.get("total_pnl"),
+            "delta": (pricing_b.get("total_pnl", 0) - pricing_a.get("total_pnl", 0))
+        },
+        "var_95": {
+            "a": var_a.get("var_95"),
+            "b": var_b.get("var_95"),
+            "delta": (var_b.get("var_95", 0) - var_a.get("var_95", 0))
+        },
+        "var_99": {
+            "a": var_a.get("var_99"),
+            "b": var_b.get("var_99"),
+            "delta": (var_b.get("var_99", 0) - var_a.get("var_99", 0))
+        }
+    }
+    
+    # Top changes (by magnitude)
+    top_changes = [
+        {"metric": "var_95", "delta": deltas["var_95"]["delta"], "a": deltas["var_95"]["a"], "b": deltas["var_95"]["b"]},
+        {"metric": "var_99", "delta": deltas["var_99"]["delta"], "a": deltas["var_99"]["a"], "b": deltas["var_99"]["b"]},
+        {"metric": "portfolio_value", "delta": deltas["portfolio_value"]["delta"], "a": deltas["portfolio_value"]["a"], "b": deltas["portfolio_value"]["b"]},
+    ]
+    top_changes.sort(key=lambda x: abs(x["delta"]) if x["delta"] is not None else 0, reverse=True)
+    
+    return RunCompareResponse(
+        run_id_a=request.run_id_a,
+        run_id_b=request.run_id_b,
+        deltas=deltas,
+        top_changes=top_changes[:5]
+    )
+
+
+# ====================================================================
+#  v1.2  REPORT BUNDLE ENDPOINTS
+# ====================================================================
+
+
+@app.post("/reports/build", response_model=ReportBundleInfo)
+async def build_report(request: ReportBuildRequest):
+    """Build self-contained report bundle from run"""
+    run = db.get_run(request.run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail=f"Run {request.run_id} not found")
+    
+    # Get portfolio data
+    portfolio_model = db.get_portfolio(run.portfolio_id)
+    if not portfolio_model:
+        raise HTTPException(status_code=404, detail=f"Portfolio {run.portfolio_id} not found")
+    
+    portfolio_data = json.loads(portfolio_model.canonical_data)
+    
+    # Build run data dict
+    run_data = {
+        "run_id": run.run_id,
+        "portfolio_id": run.portfolio_id,
+        "engine_version": run.engine_version,
+        "run_params": json.loads(run.run_params),
+        "outputs": {
+            "pricing": json.loads(run.pricing_output) if run.pricing_output else None,
+            "greeks": json.loads(run.greeks_output) if run.greeks_output else None,
+            "var": json.loads(run.var_output) if run.var_output else None,
+            "scenarios": json.loads(run.scenarios_output) if run.scenarios_output else None,
+        },
+        "output_hash": run.output_hash,
+        "created_at": run.created_at
+    }
+    
+    # Generate report bundle
+    report_bundle_id = generate_report_bundle_id(run.run_id, run_data["outputs"])
+    report_html = build_report_html(run_data, portfolio_data)
+    manifest = build_report_manifest(run_data, report_bundle_id)
+    
+    # Store bundle
+    bundle = {
+        "report_html": report_html,
+        "run_json": run_data["outputs"],
+        "manifest": manifest,
+        "portfolio_data": portfolio_data
+    }
+    store_report_bundle(report_bundle_id, bundle)
+    
+    # Update run with report_bundle_id
+    db.update_run_report_bundle(run.run_id, report_bundle_id)
+    
+    return ReportBundleInfo(
+        report_bundle_id=report_bundle_id,
+        run_id=run.run_id,
+        portfolio_id=run.portfolio_id,
+        manifest=manifest
+    )
+
+
+@app.get("/reports/{report_bundle_id}/manifest")
+async def get_report_manifest(report_bundle_id: str):
+    """Get report bundle manifest"""
+    bundle = get_report_bundle(report_bundle_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail=f"Report bundle {report_bundle_id} not found")
+    return bundle["manifest"]
+
+
+@app.get("/reports/{report_bundle_id}/report.html")
+async def get_report_html(report_bundle_id: str):
+    """Get self-contained HTML report"""
+    from fastapi.responses import HTMLResponse
+    
+    bundle = get_report_bundle(report_bundle_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail=f"Report bundle {report_bundle_id} not found")
+    
+    return HTMLResponse(content=bundle["report_html"])
+
+
+@app.get("/reports/{report_bundle_id}/run.json")
+async def get_report_run_json(report_bundle_id: str):
+    """Get canonical run outputs as JSON"""
+    bundle = get_report_bundle(report_bundle_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail=f"Report bundle {report_bundle_id} not found")
+    return bundle["run_json"]
+
+
+# ====================================================================
+#  v1.3  HEDGE STUDIO ENDPOINTS
+# ====================================================================
+
+
+@app.post("/hedge/suggest")
+async def suggest_hedges(request: HedgeSuggestRequest):
+    """Generate deterministic hedge suggestions"""
+    # Get portfolio
+    if request.portfolio_id:
+        portfolio_model = db.get_portfolio(request.portfolio_id)
+        if not portfolio_model:
+            raise HTTPException(status_code=404, detail=f"Portfolio {request.portfolio_id} not found")
+        portfolio_data = json.loads(portfolio_model.canonical_data)
+    elif request.portfolio:
+        portfolio_data = request.portfolio
+    else:
+        raise HTTPException(status_code=400, detail="Either portfolio_id or portfolio must be provided")
+    
+    # Generate hedge candidates
+    candidates = generate_hedge_candidates(
+        portfolio=portfolio_data,
+        target_reduction_pct=request.target_reduction_pct,
+        max_cost=request.max_cost,
+        allowed_instruments=request.allowed_instruments
+    )
+    
+    # Return top 10 candidates
+    return {
+        "portfolio_id": generate_portfolio_id(portfolio_data) if not request.portfolio_id else request.portfolio_id,
+        "target_reduction_pct": request.target_reduction_pct,
+        "max_cost": request.max_cost,
+        "candidates": candidates[:10],
+        "total_candidates": len(candidates)
+    }
+
+
+@app.post("/hedge/evaluate")
+async def evaluate_hedge_endpoint(request: HedgeEvaluateRequest):
+    """Evaluate a hedge candidate with scenario analysis"""
+    evaluation = evaluate_hedge(
+        portfolio=request.portfolio,
+        hedge_candidate=request.hedge_candidate
+    )
+    
+    return {
+        "portfolio": request.portfolio,
+        "hedge": request.hedge_candidate,
+        "evaluation": evaluation
+    }
+
+
