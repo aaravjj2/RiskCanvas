@@ -32,13 +32,24 @@ export const MOCK_DETERMINISM: DeterminismResult = {
  */
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
   try {
+    console.log(`[API] ${init?.method || 'GET'} ${path}`);
     const res = await fetch(`${API_BASE}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
       ...init,
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-demo-user': 'demo-user',
+        'x-demo-role': 'admin',
+        ...(init?.headers || {}),
+      },
     });
-    if (!res.ok) return null;
+    console.log(`[API] ${init?.method || 'GET'} ${path} => ${res.status}`);
+    if (!res.ok) {
+      console.error(`[API] ${path} failed: ${res.status} ${res.statusText}`);
+      return null;
+    }
     return (await res.json()) as T;
-  } catch {
+  } catch (error) {
+    console.error(`[API] ${path} error:`, error);
     return null;
   }
 }

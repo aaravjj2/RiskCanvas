@@ -20,7 +20,8 @@ export default function RunHistory() {
     setLoading(true);
     const result = await listRuns({});
     if (result) {
-      setRuns(result.runs || []);
+      // Backend returns array directly, not { runs: [] }
+      setRuns(Array.isArray(result) ? result : result.runs || []);
     }
     setLoading(false);
   };

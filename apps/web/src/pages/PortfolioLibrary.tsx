@@ -61,9 +61,15 @@ export default function PortfolioLibrary() {
 
   const handleRunAnalysis = async (portfolio: any) => {
     setLoading(true);
-    const result = await executeRun(portfolio.portfolio_id);
+    const result = await executeRun(
+      portfolio.portfolio_id,  // Use portfolio_id if available
+      portfolio.portfolio,     // Otherwise use portfolio data
+      {}
+    );
     if (result) {
       alert(`Analysis complete! Run ID: ${result.run_id}`);
+    } else {
+      alert('Analysis failed. Please check console.');
     }
     setLoading(false);
   };

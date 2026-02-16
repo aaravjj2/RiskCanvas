@@ -309,6 +309,21 @@ async def get_version():
     return VersionResponse(api_version=API_VERSION, engine_version=ENGINE_VERSION)
 
 
+@app.post("/test/reset")
+async def test_reset():
+    """Reset sequences for deterministic E2E tests (DEMO mode only)"""
+    if not DEMO_MODE:
+        raise HTTPException(status_code=403, detail="Test reset only available in DEMO mode")
+    
+    # Reset all sequences
+    db._audit_sequence = 0
+    db._monitor_sequence = 0
+    db._alert_sequence = 0
+    db._drift_sequence = 0
+    
+    return {"status": "ok", "message": "Test sequences reset"}
+
+
 @app.post("/price/option", response_model=OptionPriceResponse)
 async def price_option_endpoint(request: OptionPriceRequest):
     request_id = generate_request_id()
@@ -953,6 +968,40 @@ async def compare_runs(request: RunCompareRequest):
 # ====================================================================
 #  v1.2  REPORT BUNDLE ENDPOINTS
 # ====================================================================
+
+
+@app.get("/reports", response_model=List[Dict[str, Any]])
+async def list_reports(
+    portfolio_id: Optional[str] = None,
+    run_id: Optional[str] = None
+):
+    """List all report bundles with optional filters"""
+    # Get all runs that have report bundles
+    runs = db.list_runs(portfolio_id=portfolio_id)
+    
+    reports = []
+    for run in runs:
+        if run.report_bundle_id:
+            # Filter by run_id if specified
+            if run_id and run.run_id != run_id:
+                continue
+            
+            # Try to get bundle info
+            bundle = get_report_bundle(run.report_bundle_id)
+            if bundle:
+                manifest = bundle.get("manifest", {})
+                reports.append({
+                    "report_bundle_id": run.report_bundle_id,
+                    "run_id": run.run_id,
+                    "portfolio_id": run.portfolio_id,
+                    "html_hash": manifest.get("html_hash"),
+                    "json_hash": manifest.get("json_hash"),
+                    "html_url": f"/reports/{run.report_bundle_id}/report.html",
+                    "json_url": f"/reports/{run.report_bundle_id}/run.json",
+                    "created_at": run.created_at
+                })
+    
+    return reports
 
 
 @app.post("/reports/build", response_model=ReportBundleInfo)
