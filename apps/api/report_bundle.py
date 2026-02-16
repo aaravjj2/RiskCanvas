@@ -1,11 +1,12 @@
 """
-Report Bundle Builder for v1.2 - Deterministic self-contained reports
+Report Bundle Builder for v2.3 - Deterministic self-contained reports with storage
 
 Creates report bundles with:
 - Self-contained HTML (no CDN dependencies)
 - Embedded SVG charts (deterministic)
 - Canonical JSON outputs
 - Manifest with hashes
+- Storage abstraction (local or Azure Blob)
 """
 
 import json
@@ -13,6 +14,7 @@ import hashlib
 from typing import Optional, Dict, Any
 from pathlib import Path
 import os
+from storage import IStorage, get_storage_provider
 
 
 def canonicalize_json(obj: any) -> str:
@@ -229,8 +231,8 @@ def build_report_html(run_data: Dict[str, Any], portfolio_data: Dict[str, Any]) 
     return html
 
 
-def build_report_manifest(run_data: Dict[str, Any], report_bundle_id: str) -> Dict[str, Any]:
-    """Build report manifest with all hashes and metadata"""
+def build_report_manifest(run_data: Dict[str, Any], report_bundle_id: str, storage_info: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Build report manifest with all hashes, metadata, and storage info"""
     outputs = run_data.get("outputs", {})
     
     manifest = {
@@ -248,17 +250,115 @@ def build_report_manifest(run_data: Dict[str, Any], report_bundle_id: str) -> Di
                 canonicalize_json(outputs).encode('utf-8')
             ).hexdigest()
         },
+        "storage": storage_info or {},
         "files": {
-            "report.html": f"/reports/{report_bundle_id}/report.html",
-            "run.json": f"/reports/{report_bundle_id}/run.json",
-            "manifest.json": f"/reports/{report_bundle_id}/manifest"
+            "report.html": f"reports/{report_bundle_id}/report.html",
+            "run.json": f"reports/{report_bundle_id}/run.json",
+            "manifest.json": f"reports/{report_bundle_id}/manifest.json"
         }
     }
     
     return manifest
 
 
-# Storage for report bundles (in-memory for now, could use filesystem or S3)
+def store_report_bundle_to_storage(
+    report_bundle_id: str,
+    run_data: Dict[str, Any],
+    portfolio_data: Dict[str, Any],
+    storage: Optional[IStorage] = None
+) -> Dict[str, Any]:
+    """
+    Store report bundle using storage provider.
+    Returns manifest with storage info and download URLs.
+    """
+    if storage is None:
+        storage = get_storage_provider()
+    
+    # Build artifacts
+    report_html = build_report_html(run_data, portfolio_data)
+    run_json = canonicalize_json(run_data["outputs"])
+    
+    # Store files
+    html_key = f"reports/{report_bundle_id}/report.html"
+    json_key = f"reports/{report_bundle_id}/run.json"
+    manifest_key = f"reports/{report_bundle_id}/manifest.json"
+    
+    # Store HTML
+    html_result = storage.store(html_key, report_html.encode('utf-8'), "text/html")
+    
+    # Store JSON
+    json_result = storage.store(json_key, run_json.encode('utf-8'), "application/json")
+    
+    # Build manifest with storage info
+    storage_info = {
+        "provider": html_result.get("provider", "unknown"),
+        "stored_at": html_result.get("stored_at"),
+        "files": {
+            "report.html": {
+                "sha256": html_result.get("sha256"),
+                "size": len(report_html.encode('utf-8'))
+            },
+            "run.json": {
+                "sha256": json_result.get("sha256"),
+                "size": len(run_json.encode('utf-8'))
+            }
+        }
+    }
+    
+    manifest = build_report_manifest(run_data, report_bundle_id, storage_info)
+    manifest_json = canonicalize_json(manifest)
+    
+    # Store manifest
+    manifest_result = storage.store(manifest_key, manifest_json.encode('utf-8'), "application/json")
+    
+    # Add manifest hash
+    manifest["hashes"]["manifest_hash"] = manifest_result.get("sha256")
+    
+    return manifest
+
+
+def get_report_bundle_from_storage(
+    report_bundle_id: str,
+    storage: Optional[IStorage] = None
+) -> Optional[Dict[str, Any]]:
+    """Retrieve report bundle from storage."""
+    if storage is None:
+        storage = get_storage_provider()
+    
+    manifest_key = f"reports/{report_bundle_id}/manifest.json"
+    
+    try:
+        if not storage.exists(manifest_key):
+            return None
+        
+        manifest_bytes = storage.retrieve(manifest_key)
+        manifest = json.loads(manifest_bytes.decode('utf-8'))
+        return manifest
+    except Exception:
+        return None
+
+
+def get_download_urls(
+    report_bundle_id: str,
+    expires_in: int = 3600,
+    storage: Optional[IStorage] = None
+) -> Dict[str, str]:
+    """Get signed/proxy download URLs for all files in report bundle."""
+    if storage is None:
+        storage = get_storage_provider()
+    
+    files = ["report.html", "run.json", "manifest.json"]
+    urls = {}
+    
+    for filename in files:
+        key = f"reports/{report_bundle_id}/{filename}"
+        if storage.exists(key):
+            urls[filename] = storage.get_download_url(key, expires_in)
+    
+    return urls
+
+
+# Legacy in-memory storage (for backwards compatibility during migration)
 _report_bundles: Dict[str, Dict[str, Any]] = {}
 
 

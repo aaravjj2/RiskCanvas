@@ -17,6 +17,13 @@ import WorkspacesPage from '@/pages/WorkspacesPage';
 import AuditPage from '@/pages/AuditPage';
 import DevOpsPage from '@/pages/DevOpsPage';
 import MonitoringPage from '@/pages/MonitoringPage';
+// Phase 2C Pages (v1.7-v1.9)
+import GovernancePage from '@/pages/GovernancePage';
+import BondsPage from '@/pages/BondsPage';
+// Phase 3 Pages (v2.0-v2.2)
+import MicrosoftModePage from '@/pages/MicrosoftModePage';
+// Phase 4 Pages (v2.3-v2.5)
+import JobsPage from '@/pages/JobsPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -42,6 +49,13 @@ export default function App() {
             <Route path="/audit" element={<AuditPage />} />
             <Route path="/devops" element={<DevOpsPage />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
+            {/* Phase 2C Routes */}
+            <Route path="/governance" element={<GovernancePage />} />
+            <Route path="/bonds" element={<BondsPage />} />
+            {/* Phase 3 Routes */}
+            <Route path="/microsoft" element={<MicrosoftModePage />} />
+            {/* Phase 4 Routes */}
+            <Route path="/jobs" element={<JobsPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>

@@ -33,6 +33,9 @@ from src import (
     scenario_run,
     round_to_precision,
     NUMERIC_PRECISION,
+    bond_price_from_yield,
+    bond_yield_from_price,
+    bond_risk_metrics,
 )
 
 # Legacy model imports (v1 backward compat)
@@ -52,13 +55,37 @@ from agent.orchestrator import OrchestratorAgent
 # Database import (v1.1+)
 from database import db, generate_portfolio_id, generate_run_id, canonicalize_json
 
-# Report bundle import (v1.2+)
+# Report bundle import (v1.2+, v2.3+ storage)
 from report_bundle import (
     generate_report_bundle_id,
     build_report_html,
     build_report_manifest,
     store_report_bundle,
-    get_report_bundle
+    get_report_bundle,
+    store_report_bundle_to_storage,
+    get_report_bundle_from_storage,
+    get_download_urls
+)
+
+# Storage import (v2.3+)
+from storage import get_storage_provider
+
+# Jobs import (v2.4+)
+from jobs import (
+    Job,
+    JobType,
+    JobStatus,
+    generate_job_id,
+    get_job_store,
+    execute_job_inline
+)
+
+# DevOps automations import (v2.5+)
+from devops_automations import (
+    AutomationType,
+    get_gitlab_mr_bot,
+    get_monitor_reporter,
+    get_test_harness
 )
 
 # Hedge engine import (v1.3+)
@@ -73,7 +100,10 @@ from workspaces import (
 )
 
 # RBAC import (v1.4+)
-from rbac import get_demo_user_context, require_permission, require_role
+from rbac import get_demo_mode, get_user_context
+
+# Auth import (v2.0+)
+from auth_entra import validate_auth, require_permission, require_role, require_role as auth_require_role
 
 # Audit import (v1.4+)
 from audit import log_audit_event, list_audit_events
@@ -89,6 +119,34 @@ from monitoring import (
     create_drift_summary,
     list_drift_summaries
 )
+
+# Governance import (v1.7+)
+from governance import (
+    create_agent_config,
+    list_agent_configs,
+    get_agent_config,
+    activate_config,
+    run_eval_harness,
+    list_eval_reports,
+    get_eval_report,
+    reset_governance
+)
+
+# Caching import (v1.9+)
+from caching import (
+    deterministic_cache_key,
+    cache_get,
+    cache_set,
+    cache_clear,
+    cache_stats,
+    reset_caching
+)
+
+# MCP Server import (v2.2+)
+from mcp_server import mcp_router
+
+# Foundry Provider import (v2.2+)
+from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
 # Schemas
 from schemas import (
@@ -135,6 +193,22 @@ from schemas import (
     MonitorRunNowResponse,
     AlertInfo,
     DriftSummaryInfo,
+    # v1.7+ schemas
+    AgentConfigCreateRequest,
+    AgentConfigInfo,
+    ConfigActivateRequest,
+    EvalRunRequest,
+    EvalReportInfo,
+    # v1.8+ schemas
+    BondPriceRequest,
+    BondPriceResponse,
+    BondYieldRequest,
+    BondYieldResponse,
+    BondRiskRequest,
+    BondRiskResponse,
+    # v1.9+ schemas
+    CacheStatsResponse,
+    CacheClearResponse,
 )
 
 # Error taxonomy
@@ -142,9 +216,9 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "1.6.0"
+API_VERSION = "2.5.0"
 ENGINE_VERSION = "0.1.0"
-DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000
 MAX_SCENARIOS = 100
 
@@ -163,6 +237,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include MCP router (v2.2+)
+app.include_router(mcp_router)
 
 # ===== Error handlers =====
 
@@ -320,6 +397,8 @@ async def test_reset():
     db._monitor_sequence = 0
     db._alert_sequence = 0
     db._drift_sequence = 0
+    reset_governance()
+    reset_caching()
     
     return {"status": "ok", "message": "Test sequences reset"}
 
@@ -860,6 +939,36 @@ async def execute_run(request: RunExecuteRequest):
     portfolio_id = portfolio_model.portfolio_id
     positions = portfolio_data.get("assets", [])
     
+    # Generate cache key (v1.9+)
+    canonical_request = {
+        "action": "runs_execute",
+        "portfolio_id": portfolio_id,
+        "params": request.params or {}
+    }
+    cache_key = deterministic_cache_key(canonical_request, ENGINE_VERSION)
+    
+    # Check cache for outputs
+    cached_result = cache_get(cache_key)
+    if cached_result:
+        # Use cached outputs but still create a new run
+        outputs = cached_result["output"]
+        run_model = db.create_run(
+            portfolio_id=portfolio_id,
+            run_params=request.params or {},
+            engine_version=ENGINE_VERSION,
+            outputs=outputs
+        )
+        
+        return {
+            "run_id": run_model.run_id,
+            "portfolio_id": run_model.portfolio_id,
+            "output_hash": run_model.output_hash,
+            "outputs": outputs,
+            "created_at": run_model.created_at,
+            "cache_hit": True,
+            "cache_key": cache_key
+        }
+    
     # Execute analysis
     total_pnl = portfolio_pnl(positions)
     total_value = 0.0
@@ -890,6 +999,9 @@ async def execute_run(request: RunExecuteRequest):
         "scenarios": None
     }
     
+    # Cache outputs (v1.9+)
+    cache_set(cache_key, outputs, {"engine_version": ENGINE_VERSION})
+    
     run_model = db.create_run(
         portfolio_id=portfolio_id,
         run_params=request.params or {},
@@ -902,7 +1014,9 @@ async def execute_run(request: RunExecuteRequest):
         "portfolio_id": run_model.portfolio_id,
         "output_hash": run_model.output_hash,
         "outputs": outputs,
-        "created_at": run_model.created_at
+        "created_at": run_model.created_at,
+        "cache_hit": False,
+        "cache_key": cache_key
     }
 
 
@@ -1006,10 +1120,22 @@ async def list_reports(
 
 @app.post("/reports/build", response_model=ReportBundleInfo)
 async def build_report(request: ReportBuildRequest):
-    """Build self-contained report bundle from run"""
+    """Build self-contained report bundle from run (v2.3: with storage)"""
     run = db.get_run(request.run_id)
     if not run:
         raise HTTPException(status_code=404, detail=f"Run {request.run_id} not found")
+    
+    # Generate cache key (v1.9+)
+    canonical_request = {
+        "action": "reports_build",
+        "run_id": request.run_id
+    }
+    cache_key = deterministic_cache_key(canonical_request, ENGINE_VERSION)
+    
+    # Check cache
+    cached_result = cache_get(cache_key)
+    if cached_result:
+        return cached_result["output"]
     
     # Get portfolio data
     portfolio_model = db.get_portfolio(run.portfolio_id)
@@ -1034,14 +1160,16 @@ async def build_report(request: ReportBuildRequest):
         "created_at": run.created_at
     }
     
-    # Generate report bundle
+    # Generate report bundle ID
     report_bundle_id = generate_report_bundle_id(run.run_id, run_data["outputs"])
-    report_html = build_report_html(run_data, portfolio_data)
-    manifest = build_report_manifest(run_data, report_bundle_id)
     
-    # Store bundle
+    # Store to storage provider (v2.3+)
+    storage = get_storage_provider()
+    manifest = store_report_bundle_to_storage(report_bundle_id, run_data, portfolio_data, storage)
+    
+    # Also store in-memory for backwards compatibility
     bundle = {
-        "report_html": report_html,
+        "report_html": build_report_html(run_data, portfolio_data),
         "run_json": run_data["outputs"],
         "manifest": manifest,
         "portfolio_data": portfolio_data
@@ -1051,12 +1179,17 @@ async def build_report(request: ReportBuildRequest):
     # Update run with report_bundle_id
     db.update_run_report_bundle(run.run_id, report_bundle_id)
     
-    return ReportBundleInfo(
+    result = ReportBundleInfo(
         report_bundle_id=report_bundle_id,
         run_id=run.run_id,
         portfolio_id=run.portfolio_id,
         manifest=manifest
     )
+    
+    # Cache result (v1.9+)
+    cache_set(cache_key, result, {"engine_version": ENGINE_VERSION})
+    
+    return result
 
 
 @app.get("/reports/{report_bundle_id}/manifest")
@@ -1090,6 +1223,289 @@ async def get_report_run_json(report_bundle_id: str):
 
 
 # ====================================================================
+#  v2.3  STORAGE + DOWNLOAD ENDPOINTS
+# ====================================================================
+
+
+@app.get("/reports/{report_bundle_id}/downloads")
+async def get_report_downloads(report_bundle_id: str, expires_in: int = 3600):
+    """Get download URLs for all files in report bundle (v2.3+)"""
+    storage = get_storage_provider()
+    
+    # Check if report exists
+    manifest_key = f"reports/{report_bundle_id}/manifest.json"
+    if not storage.exists(manifest_key):
+        raise HTTPException(status_code=404, detail=f"Report bundle {report_bundle_id} not found")
+    
+    # Get signed/proxy URLs
+    urls = get_download_urls(report_bundle_id, expires_in, storage)
+    
+    return {
+        "report_bundle_id": report_bundle_id,
+        "expires_in": expires_in,
+        "files": urls
+    }
+
+
+@app.get("/storage/files/{key:path}")
+async def proxy_storage_file(key: str):
+    """Proxy endpoint for local storage downloads (DEMO mode only) (v2.3+)"""
+    from fastapi.responses import Response
+    
+    storage = get_storage_provider()
+    
+    # Security: only allow in DEMO mode or for local storage
+    if not get_demo_mode():
+        # In production, use signed URLs from storage provider
+        raise HTTPException(status_code=403, detail="Direct file access not allowed in production mode")
+    
+    try:
+        content = storage.retrieve(key)
+        
+        # Determine content type from extension
+        content_type = "application/octet-stream"
+        if key.endswith(".html"):
+            content_type = "text/html"
+        elif key.endswith(".json"):
+            content_type = "application/json"
+        elif key.endswith(".zip"):
+            content_type = "application/zip"
+        
+        return Response(content=content, media_type=content_type)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"File not found: {key}")
+
+
+# ====================================================================
+#  v2.4  JOB QUEUE ENDPOINTS
+# ====================================================================
+
+
+@app.post("/jobs/submit")
+async def submit_job(
+    job_type: JobType,
+    payload: Dict[str, Any],
+    workspace_id: str = "default",
+    async_mode: bool = True
+):
+    """
+    Submit job to queue (v2.4+).
+    In DEMO mode with async_mode=True, executes inline but still returns job_id.
+    """
+    job_store = get_job_store()
+    demo_mode = get_demo_mode()
+    
+    # Generate deterministic job ID
+    job_id = generate_job_id(workspace_id, job_type.value, payload, ENGINE_VERSION)
+    
+    # Check if job already exists
+    existing_job = job_store.get(job_id)
+    if existing_job:
+        return {"job_id": job_id, "status": existing_job.status.value, "exists": True}
+    
+    # Create job
+    job = Job(
+        job_id=job_id,
+        workspace_id=workspace_id,
+        job_type=job_type,
+        payload=payload,
+        status=JobStatus.QUEUED
+    )
+    
+    job_store.create(job)
+    
+    # In DEMO mode, execute inline
+    if demo_mode:
+        try:
+            job_store.update_status(job_id, JobStatus.RUNNING)
+            result = execute_job_inline(job)
+            job_store.update_status(job_id, JobStatus.SUCCEEDED, result=result)
+        except Exception as e:
+            job_store.update_status(job_id, JobStatus.FAILED, error=str(e))
+    
+    return {"job_id": job_id, "status": job.status.value}
+
+
+@app.get("/jobs/{job_id}")
+async def get_job(job_id: str):
+    """Get job status and result (v2.4+)."""
+    job_store = get_job_store()
+    job = job_store.get(job_id)
+    
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+    
+    return job.to_dict()
+
+
+@app.get("/jobs")
+async def list_jobs(
+    workspace_id: Optional[str] = None,
+    job_type: Optional[JobType] = None,
+    status: Optional[JobStatus] = None,
+    limit: int = 100
+):
+    """List jobs with optional filters (v2.4+)."""
+    job_store = get_job_store()
+    jobs = job_store.list(
+        workspace_id=workspace_id,
+        job_type=job_type,
+        status=status,
+        limit=limit
+    )
+    
+    return {"jobs": [job.to_dict() for job in jobs], "count": len(jobs)}
+
+
+@app.post("/jobs/{job_id}/cancel")
+async def cancel_job(job_id: str):
+    """Cancel queued job (v2.4+)."""
+    job_store = get_job_store()
+    job = job_store.get(job_id)
+    
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+    
+    if job.status not in [JobStatus.QUEUED, JobStatus.RUNNING]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot cancel job in status {job.status.value}"
+        )
+    
+    job_store.update_status(job_id, JobStatus.CANCELLED)
+    
+    return {"job_id": job_id, "status": JobStatus.CANCELLED.value}
+
+
+# ====================================================================
+#  v2.5 DEVOPS AUTOMATIONS
+# ====================================================================
+
+
+@app.post("/devops/gitlab/analyze-mr")
+async def analyze_gitlab_mr(diff_text: str):
+    """
+    Analyze GitLab MR diff and generate review comments.
+    
+    In DEMO mode: Uses offline analysis only.
+    In production: Can post to actual GitLab MR.
+    """
+    demo_mode = get_demo_mode()
+    bot = get_gitlab_mr_bot(demo_mode=demo_mode)
+    
+    analysis = bot.analyze_changes(diff_text)
+    
+    return {
+        "analysis": analysis,
+        "demo_mode": demo_mode
+    }
+
+
+@app.post("/devops/gitlab/post-comment")
+async def post_gitlab_comment(
+    project_id: str,
+    mr_iid: int,
+    comment_body: str
+):
+    """
+    Post a comment to a GitLab MR.
+    
+    In DEMO mode: Stores comment locally.
+    In production: Posts to actual GitLab API.
+    """
+    demo_mode = get_demo_mode()
+    bot = get_gitlab_mr_bot(demo_mode=demo_mode)
+    
+    result = bot.post_mr_comment(project_id, mr_iid, comment_body)
+    
+    return result
+
+
+@app.get("/devops/gitlab/comments")
+async def get_gitlab_comments():
+    """
+    Get all offline GitLab comments (DEMO mode only).
+    """
+    demo_mode = get_demo_mode()
+    if not demo_mode:
+        raise HTTPException(
+            status_code=400,
+            detail="This endpoint is only available in DEMO mode"
+        )
+    
+    bot = get_gitlab_mr_bot(demo_mode=True)
+    comments = bot.get_offline_comments()
+    
+    return {"comments": comments, "count": len(comments)}
+
+
+@app.post("/devops/monitor/generate-report")
+async def generate_monitoring_report(
+    include_health: bool = True,
+    include_coverage: bool = True
+):
+    """
+    Generate a monitoring report with health checks and coverage stats.
+    """
+    demo_mode = get_demo_mode()
+    reporter = get_monitor_reporter(demo_mode=demo_mode)
+    
+    report = reporter.generate_report(
+        include_health=include_health,
+        include_coverage=include_coverage
+    )
+    
+    return report
+
+
+@app.get("/devops/monitor/reports")
+async def get_monitoring_reports(limit: int = 10):
+    """
+    Get recent monitoring reports.
+    """
+    demo_mode = get_demo_mode()
+    reporter = get_monitor_reporter(demo_mode=demo_mode)
+    
+    reports = reporter.get_reports(limit=limit)
+    
+    return {"reports": reports, "count": len(reports)}
+
+
+@app.post("/devops/test-harness/run-scenario")
+async def run_test_scenario(
+    scenario_type: str,
+    diff_text: Optional[str] = None
+):
+    """
+    Run an offline test scenario for DevOps automations.
+    
+    Scenario types:
+    - mr_review: Simulate MR review with diff analysis
+    - monitoring_cycle: Simulate monitoring health checks
+    """
+    harness = get_test_harness()
+    
+    kwargs = {}
+    if diff_text:
+        kwargs["diff_text"] = diff_text
+    
+    result = harness.run_scenario(scenario_type, **kwargs)
+    
+    return result
+
+
+@app.get("/devops/test-harness/scenarios")
+async def get_test_scenarios():
+    """
+    Get all executed test scenarios.
+    """
+    harness = get_test_harness()
+    scenarios = harness.get_scenarios()
+    
+    return {"scenarios": scenarios, "count": len(scenarios)}
+
+
+# ====================================================================
 #  v1.3  HEDGE STUDIO ENDPOINTS
 # ====================================================================
 
@@ -1103,10 +1519,27 @@ async def suggest_hedges(request: HedgeSuggestRequest):
         if not portfolio_model:
             raise HTTPException(status_code=404, detail=f"Portfolio {request.portfolio_id} not found")
         portfolio_data = json.loads(portfolio_model.canonical_data)
+        portfolio_id = request.portfolio_id
     elif request.portfolio:
         portfolio_data = request.portfolio
+        portfolio_id = generate_portfolio_id(portfolio_data)
     else:
         raise HTTPException(status_code=400, detail="Either portfolio_id or portfolio must be provided")
+    
+    # Generate cache key (v1.9+)
+    canonical_request = {
+        "action": "hedge_suggest",
+        "portfolio_id": portfolio_id,
+        "target_reduction_pct": request.target_reduction_pct,
+        "max_cost": request.max_cost,
+        "allowed_instruments": request.allowed_instruments or []
+    }
+    cache_key = deterministic_cache_key(canonical_request, ENGINE_VERSION)
+    
+    # Check cache
+    cached_result = cache_get(cache_key)
+    if cached_result:
+        return cached_result["output"]
     
     # Generate hedge candidates
     candidates = generate_hedge_candidates(
@@ -1117,13 +1550,18 @@ async def suggest_hedges(request: HedgeSuggestRequest):
     )
     
     # Return top 10 candidates
-    return {
-        "portfolio_id": generate_portfolio_id(portfolio_data) if not request.portfolio_id else request.portfolio_id,
+    result = {
+        "portfolio_id": portfolio_id,
         "target_reduction_pct": request.target_reduction_pct,
         "max_cost": request.max_cost,
         "candidates": candidates[:10],
         "total_candidates": len(candidates)
     }
+    
+    # Cache result (v1.9+)
+    cache_set(cache_key, result, {"engine_version": ENGINE_VERSION})
+    
+    return result
 
 
 @app.post("/hedge/evaluate")
@@ -1149,7 +1587,7 @@ async def evaluate_hedge_endpoint(request: HedgeEvaluateRequest):
 @app.post("/workspaces", response_model=WorkspaceInfo)
 async def create_workspace_endpoint(
     request: WorkspaceCreateRequest,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """Create a workspace (requires analyst role)"""
     require_role(user_context, "analyst")
@@ -1178,7 +1616,7 @@ async def create_workspace_endpoint(
 @app.get("/workspaces", response_model=List[WorkspaceInfo])
 async def list_workspaces_endpoint(
     owner: Optional[str] = None,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """List workspaces (requires read permission)"""
     require_permission(user_context, "read")
@@ -1190,7 +1628,7 @@ async def list_workspaces_endpoint(
 @app.get("/workspaces/{workspace_id}", response_model=WorkspaceInfo)
 async def get_workspace_endpoint(
     workspace_id: str,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """Get workspace by ID (requires read permission)"""
     require_permission(user_context, "read")
@@ -1204,7 +1642,7 @@ async def get_workspace_endpoint(
 @app.delete("/workspaces/{workspace_id}")
 async def delete_workspace_endpoint(
     workspace_id: str,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """Delete workspace (requires admin role)"""
     require_role(user_context, "admin")
@@ -1238,7 +1676,7 @@ async def list_audit_events_endpoint(
     actor: Optional[str] = None,
     resource_type: Optional[str] = None,
     limit: int = 100,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """List audit events (requires read permission)"""
     require_permission(user_context, "read")
@@ -1286,7 +1724,7 @@ async def generate_risk_bot_report(request: RiskBotReportRequest):
 @app.post("/monitors", response_model=MonitorInfo)
 async def create_monitor_endpoint(
     request: MonitorCreateRequest,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """Create a risk monitor (requires analyst role)"""
     require_role(user_context, "analyst")
@@ -1319,7 +1757,7 @@ async def create_monitor_endpoint(
 async def list_monitors_endpoint(
     workspace_id: Optional[str] = None,
     portfolio_id: Optional[str] = None,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """List monitors (requires read permission)"""
     require_permission(user_context, "read")
@@ -1331,7 +1769,7 @@ async def list_monitors_endpoint(
 @app.get("/monitors/{monitor_id}", response_model=MonitorInfo)
 async def get_monitor_endpoint(
     monitor_id: str,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """Get monitor by ID (requires read permission)"""
     require_permission(user_context, "read")
@@ -1345,7 +1783,7 @@ async def get_monitor_endpoint(
 @app.post("/monitors/{monitor_id}/run-now", response_model=MonitorRunNowResponse)
 async def run_monitor_now(
     monitor_id: str,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """Run a monitor immediately (requires execute permission)"""
     require_permission(user_context, "execute")
@@ -1438,7 +1876,7 @@ async def run_monitor_now(
 async def list_alerts_endpoint(
     monitor_id: Optional[str] = None,
     limit: int = 100,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """List alerts (requires read permission)"""
     require_permission(user_context, "read")
@@ -1451,10 +1889,207 @@ async def list_alerts_endpoint(
 async def list_drift_summaries_endpoint(
     monitor_id: Optional[str] = None,
     limit: int = 50,
-    user_context: dict = Depends(get_demo_user_context)
+    user_context: dict = Depends(validate_auth)
 ):
     """List drift summaries (requires read permission)"""
     require_permission(user_context, "read")
     
     drifts = list_drift_summaries(monitor_id=monitor_id, limit=limit)
     return drifts
+
+
+# ====================================================================
+#  v1.7  GOVERNANCE ENDPOINTS
+# ====================================================================
+
+
+@app.post("/governance/configs", response_model=AgentConfigInfo)
+async def create_agent_config_endpoint(
+    request: AgentConfigCreateRequest,
+    user_context: dict = Depends(validate_auth)
+):
+    """Create an agent configuration (requires write permission)"""
+    require_permission(user_context, "write")
+    
+    config = create_agent_config(
+        name=request.name,
+        model=request.model,
+        provider=request.provider,
+        system_prompt=request.system_prompt,
+        tool_policies=request.tool_policies,
+        thresholds=request.thresholds,
+        tags=request.tags
+    )
+    
+    return config
+
+
+@app.get("/governance/configs", response_model=List[AgentConfigInfo])
+async def list_agent_configs_endpoint(
+    status: Optional[str] = None,
+    user_context: dict = Depends(validate_auth)
+):
+    """List agent configurations (requires read permission)"""
+    require_permission(user_context, "read")
+    
+    configs = list_agent_configs(status=status)
+    return configs
+
+
+@app.get("/governance/configs/{config_id}", response_model=AgentConfigInfo)
+async def get_agent_config_endpoint(
+    config_id: str,
+    user_context: dict = Depends(validate_auth)
+):
+    """Get a specific agent configuration (requires read permission)"""
+    require_permission(user_context, "read")
+    
+    config = get_agent_config(config_id)
+    if not config:
+        raise HTTPException(status_code=404, detail=f"Config {config_id} not found")
+    
+    return config
+
+
+@app.post("/governance/configs/activate", response_model=AgentConfigInfo)
+async def activate_config_endpoint(
+    request: ConfigActivateRequest,
+    user_context: dict = Depends(validate_auth)
+):
+    """Activate a configuration (requires write permission)"""
+    require_permission(user_context, "write")
+    
+    try:
+        config = activate_config(request.config_id)
+        return config
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/governance/evals/run", response_model=EvalReportInfo)
+async def run_eval_harness_endpoint(
+    request: EvalRunRequest,
+    user_context: dict = Depends(validate_auth)
+):
+    """Run eval harness on a configuration (requires execute permission)"""
+    require_permission(user_context, "execute")
+    
+    try:
+        report = run_eval_harness(request.config_id)
+        return report
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/governance/evals", response_model=List[EvalReportInfo])
+async def list_eval_reports_endpoint(
+    config_id: Optional[str] = None,
+    user_context: dict = Depends(validate_auth)
+):
+    """List eval reports (requires read permission)"""
+    require_permission(user_context, "read")
+    
+    reports = list_eval_reports(config_id=config_id)
+    return reports
+
+
+@app.get("/governance/evals/{report_id}", response_model=EvalReportInfo)
+async def get_eval_report_endpoint(
+    report_id: str,
+    user_context: dict = Depends(validate_auth)
+):
+    """Get a specific eval report (requires read permission)"""
+    require_permission(user_context, "read")
+    
+    report = get_eval_report(report_id)
+    if not report:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    
+    return report
+
+
+# === v1.8 Bonds Endpoints ===
+
+
+@app.post("/bonds/price", response_model=BondPriceResponse)
+async def calculate_bond_price(
+    request: BondPriceRequest,
+    user_context: dict = Depends(validate_auth)
+):
+    """Calculate bond price from yield (requires read permission)"""
+    require_permission(user_context, "read")
+    
+    price = bond_price_from_yield(
+        face_value=request.face_value,
+        coupon_rate=request.coupon_rate,
+        years_to_maturity=request.years_to_maturity,
+        yield_to_maturity=request.yield_to_maturity,
+        periods_per_year=request.periods_per_year
+    )
+    
+    return BondPriceResponse(price=price)
+
+
+@app.post("/bonds/yield", response_model=BondYieldResponse)
+async def calculate_bond_yield(
+    request: BondYieldRequest,
+    user_context: dict = Depends(validate_auth)
+):
+    """Calculate yield from bond price (requires read permission)"""
+    require_permission(user_context, "read")
+    
+    ytm = bond_yield_from_price(
+        face_value=request.face_value,
+        coupon_rate=request.coupon_rate,
+        years_to_maturity=request.years_to_maturity,
+        price=request.price,
+        periods_per_year=request.periods_per_year
+    )
+    
+    return BondYieldResponse(yield_to_maturity=ytm)
+
+
+@app.post("/bonds/risk", response_model=BondRiskResponse)
+async def calculate_bond_risk(
+    request: BondRiskRequest,
+    user_context: dict = Depends(validate_auth)
+):
+    """Calculate bond risk metrics (requires read permission)"""
+    require_permission(user_context, "read")
+    
+    metrics = bond_risk_metrics(
+        face_value=request.face_value,
+        coupon_rate=request.coupon_rate,
+        years_to_maturity=request.years_to_maturity,
+        yield_to_maturity=request.yield_to_maturity,
+        periods_per_year=request.periods_per_year
+    )
+    
+    return BondRiskResponse(**metrics)
+
+
+# === v1.9 Caching Endpoints (DEMO mode only) ===
+
+
+@app.get("/cache/stats", response_model=CacheStatsResponse)
+async def get_cache_stats(user_context: dict = Depends(validate_auth)):
+    """Get cache statistics (DEMO mode only, requires read permission)"""
+    if not user_context.get("demo_mode", False):
+        raise HTTPException(status_code=403, detail="Cache endpoints only available in DEMO mode")
+    
+    require_permission(user_context, "read")
+    
+    stats = cache_stats()
+    return CacheStatsResponse(**stats)
+
+
+@app.post("/cache/clear", response_model=CacheClearResponse)
+async def clear_cache(user_context: dict = Depends(validate_auth)):
+    """Clear cache (DEMO mode only, requires write permission)"""
+    if not user_context.get("demo_mode", False):
+        raise HTTPException(status_code=403, detail="Cache endpoints only available in DEMO mode")
+    
+    require_permission(user_context, "write")
+    
+    cleared = cache_clear()
+    return CacheClearResponse(cleared=cleared)

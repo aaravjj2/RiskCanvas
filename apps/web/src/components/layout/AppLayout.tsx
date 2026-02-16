@@ -5,17 +5,25 @@ import {
   Zap, 
   Bot, 
   FileText, 
-  Settings as SettingsIcon 
+  Settings as SettingsIcon,
+  History,
+  Library,
+  Briefcase as Jobs,
+  Wrench
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { path: "/portfolio", icon: Briefcase, label: "Portfolio" },
-  { path: "/scenarios", icon: Zap, label: "Scenarios" },
-  { path: "/agent", icon: Bot, label: "Agent" },
-  { path: "/reports", icon: FileText, label: "Reports" },
-  { path: "/settings", icon: SettingsIcon, label: "Settings" },
+  { path: "/", icon: LayoutDashboard, label: "Dashboard", testid: "dashboard" },
+  { path: "/portfolio", icon: Briefcase, label: "Portfolio", testid: "portfolio" },
+  { path: "/scenarios", icon: Zap, label: "Scenarios", testid: "scenarios" },
+  { path: "/agent", icon: Bot, label: "Agent", testid: "agent" },
+  { path: "/reports", icon: FileText, label: "Reports", testid: "reports" },
+  { path: "/history", icon: History, label: "Run History", testid: "history" },
+  { path: "/library", icon: Library, label: "Library", testid: "library" },
+  { path: "/jobs", icon: Jobs, label: "Jobs", testid: "jobs" },
+  { path: "/devops", icon: Wrench, label: "DevOps", testid: "devops" },
+  { path: "/settings", icon: SettingsIcon, label: "Settings", testid: "settings" },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -31,7 +39,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1">v1.0.0</p>
+            <p className="text-xs text-muted-foreground mt-1">v2.5.0</p>
           </div>
 
           {/* Navigation */}
@@ -44,7 +52,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <li key={item.path}>
                     <Link
                       to={item.path}
-                      data-testid={`nav-${item.label.toLowerCase()}`}
+                      data-testid={`nav-${item.testid}`}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                         isActive

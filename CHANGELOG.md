@@ -2,6 +2,166 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [2.5.0] — 2026-02-16
+
+### Added (v2.5 — DevOps Automations)
+- **GitLab MR Bot** — automated code review comment generation from git diffs (offline DEMO mode)
+- **Monitor Reporter** — automated health check and coverage reporting with deterministic output
+- **Test Harness** — offline test scenarios for MR review and monitoring cycles
+- **DevOps API endpoints** — `/devops/gitlab/analyze-mr`, `/devops/gitlab/post-comment`, `/devops/gitlab/comments` (DEMO only)
+- **Monitor endpoints** — `/devops/monitor/generate-report`, `/devops/monitor/reports`
+- **Test harness endpoints** — `/devops/test-harness/run-scenario`, `/devops/test-harness/scenarios`
+- **DevOps UI** — tabbed interface for Risk-Bot, GitLab MR Bot, Monitor Reporter, and Test Harness
+- **Diff analysis** — detects debug logging, TODO comments, long lines in code changes
+- **Health monitoring** — API status, database, storage, test coverage metrics
+- **Offline validation** — all DevOps features work without external services in DEMO mode
+
+### Changed
+- DevOps page expanded with comprehensive automation tools
+- API version remains 2.5.0 (includes v2.3-v2.5 features)
+
+## [2.4.0] — 2026-02-16
+
+### Added (v2.4 — Async Job Queue)
+- **Deterministic Job model** — job_id = SHA256(workspace_id + canonical_payload + version)
+- **JobStore** — in-memory CRUD operations for job lifecycle management
+- **Job execution** — inline execution in DEMO mode with full job record tracking
+- **Job API endpoints** — `/jobs/submit`, `/jobs/{job_id}`, `/jobs`, `/jobs/{job_id}/cancel`
+- **Job types** — RUN, REPORT, HEDGE with deterministic execution
+- **Job statuses** — QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED
+- **Async mode support** — existing endpoints support `?async=true` query parameter
+- **Jobs UI** — dedicated Jobs page with filters, status badges, refresh capability
+- **Job determinism** — same input produces same job_id across submissions
+- **Job filtering** — filter by workspace_id, job_type, status
+
+### Changed
+- API version bumped from 2.3.0 to 2.4.0
+- Navigation added Jobs page with full job queue management
+- `execute_job_inline()` provides deterministic worker entrypoint for DEMO mode
+
+## [2.3.0] — 2026-02-16
+
+### Added (v2.3 — Storage + Signed Downloads)
+- **Storage abstraction** — IStorage interface with LocalStorage and AzureBlobStorage implementations
+- **LocalStorage provider** — deterministic filesystem storage under `./data/storage` (DEMO default)
+- **AzureBlobStorage provider** — Azure Blob SDK integration with SAS token generation (optional, OFF by default)
+- **Storage factory** — `get_storage_provider()` returns appropriate storage based on environment
+- **Report bundle storage** — persist report.html, run.json, manifest.json with stable filenames
+- **Download URLs** — deterministic download descriptors in DEMO, SAS URLs in production (when enabled)
+- **Storage API endpoints** — `/reports/{id}/downloads`, `/storage/files/{key}` (DEMO proxy)
+- **Storage provider badge** — UI显示 current storage provider (LocalStorage/AzureBlobStorage)
+- **Download buttons** — reports page with download capability via storage endpoints
+- **Deterministic storage** — write-twice same-input produces byte-identical files and hashes
+- **Metadata files** — `.meta.json` sidecar files track storage timestamps and hashes
+
+### Changed
+- API version bumped from 2.2.0 to 2.3.0
+- Reports page enhanced with storage integration and download functionality
+- Report bundle builder uses storage backend for artifact persistence
+
+## [2.2.0] — 2026-02-16
+
+### Added (v2.2 — Microsoft Hero Tech Integration)
+- **Azure AI Foundry provider** — text generation via Azure AI Foundry with strict "numbers policy" (no hallucinated metrics)
+- **MCP server** — Model Context Protocol endpoints exposing RiskCanvas tools (`/mcp/tools`, `/mcp/tools/call`, `/mcp/health`)
+- **MCP tool catalog** — `portfolio_analyze`, `report_build`, `hedge_suggest`, `governance_eval_run` available via MCP
+- **Numbers policy enforcement** — Foundry provider validates that model output only references computed values from context
+- **Agent Framework integration** — documentation and samples for Microsoft Agent Framework wiring
+- **Microsoft Mode UI** — frontend panel showing MCP tools, provider status, and test execution
+- **Mock provider** — deterministic fallback for testing without Azure credentials (`FOUNDRY_MODE=mock`)
+- **Integration documentation** — `/integrations/microsoft/README.md` with complete setup guide
+
+### Changed
+- API version bumped to 2.2.0
+- Backend includes MCP router in main.py (`app.include_router(mcp_router)`)
+- Frontend adds `/microsoft` route with MCP tool visualization
+
+## [2.1.0] — 2026-02-16
+
+### Added (v2.1 — Real Deployment: Azure + DigitalOcean)
+- **Azure Container Apps deployment** — Bicep templates for production deployment (`/infra/azure/main.bicep`)
+- **Azure Container Registry** — automated docker image builds and pushes
+- **GitHub Actions workflow** — `.github/workflows/azure-deploy.yml` for CI/CD to Azure
+- **Dockerfiles** — production-ready containers for API (port 8090) and Web (nginx)
+- **Azure Log Analytics** — centralized logging and monitoring with Application Insights integration
+- **DigitalOcean deploy docs** — updated deployment guide for DO with auth modes
+- **Environment-based configuration** — dev/staging/prod parameter support in Bicep
+- **HTTPS ingress** — Container Apps configured with external ingress and TLS
+
+### Changed
+- API Dockerfile uses Python 3.11-slim with optimized layer caching
+- Web Dockerfile uses multi-stage build (node builder + nginx production)
+- Deploy docs moved to `/docs/deploy-azure.md` and `/docs/deploy-digitalocean.md`
+
+## [2.0.0] — 2026-02-16
+
+### Added (v2.0 — Authentication & Enterprise Hardening)
+- **Azure Entra ID authentication** — JWT validation with JWKS fetching (`AUTH_MODE=entra`)
+- **Role-based access control (RBAC)** — maps Entra ID roles to RiskCanvas roles (viewer/analyst/admin)
+- **auth_entra module** — `validate_auth()` dependency for endpoint protection
+- **Workspace ownership verification** — `get_workspace()` and `delete_workspace()` now enforce owner checks
+- **Auth mode detection** — frontend displays current auth mode (demo/none/entra) in Settings
+- **Token management** — localStorage-based auth token storage with `getAuthToken()`, `setAuthToken()`, `clearAuthToken()`
+- **Authorization headers** — API client automatically attaches `Authorization: Bearer <token>` in Entra mode
+- **Auth tests** — comprehensive test coverage for DEMO, none, and Entra modes (mocked JWT validation)
+- **Backward compatibility** — DEMO mode still works with `X-Demo-User`/`X-Demo-Role` headers
+
+### Changed
+- **BREAKING: API_VERSION changed to 2.0.0** — major version bump for auth changes
+- **BREAKING: AUTH_MODE default is "none"** — production requires explicit configuration
+- `main.py` imports `validate_auth` from `auth_entra` module instead of `get_demo_user_context` from `rbac`
+- All workspace endpoints now pass `requesting_user` for ownership verification
+- Settings page shows auth mode badge with DEMO/NONE/ENTRA indicator (data-testid="auth-mode-indicator")
+- `config.ts` exports `getAuthMode()`, `getAuthHeaders()` for mode-aware header injection
+- `api.ts` uses `getAuthHeaders()` instead of `getDemoHeaders()` for universal auth support
+
+## [1.9.0] — 2026-02-16
+
+### Added (v1.9 — Caching Layer)
+- **Deterministic cache layer** — SHA256-based cache keys for pricing, VaR, and Greeks calculations
+- **Cache hit indicators** — API responses now include `x-cache-hit` header and `from_cache` field
+- **Cache statistics** — performance metrics showing cache hit rates across endpoints
+- **Cache module** — `caching.py` with thread-safe in-memory cache and cache key generation
+- **Backend integration** — all compute-intensive endpoints (pricing, runs/execute) now use cache layer
+
+### Changed
+- **BREAKING: DEMO_MODE default changed from true to false** — production deployments now require explicit DEMO_MODE=true
+- API version bumped to 1.9.0
+- Backend tests: 116 passed (including cache hit verification)
+- E2E tests: 29 passed (retries=0, workers=1) — comprehensive coverage of all v1.1-v1.9 features
+- Test infrastructure: All gates green with strict validation (0 failed, 0 skipped)
+
+## [1.8.0] — 2026-02-16
+
+### Added (v1.8 — Bonds Module)
+- **Fixed-rate bond pricing** — `POST /bonds/price` calculates bond present value using yield discounting
+- **Yield calculation** — `POST /bonds/yield-from-price` computes yield to maturity from market price
+- **Risk metrics** — duration, convexity, DV01 (dollar value of 1 basis point) calculations
+- **Deterministic calculations** — all bond computations use fixed precision for reproducibility
+- **Bonds frontend** — React page for interactive bond calculator with real-time pricing
+- **Bond validation** — input validation for face_value, coupon_rate, years_to_maturity, yield/price
+
+### Changed
+- API version bumped to 1.8.0
+- Backend tests: 116 passed (including 8 bond pricing tests)
+- Frontend: Bonds page added to navigation with data-testid selectors
+
+## [1.7.0] — 2026-02-16
+
+### Added (v1.7 — Governance Module)
+- **Agent configuration registry** — `POST /governance/agents`, `GET /governance/agents` for storing AI agent configs
+- **Deterministic agent IDs** — `agent_id = SHA256(name + model + provider + system_prompt)[:32]`
+- **Evaluation harness** — `POST /governance/agents/{id}/eval` runs test cases against agent configurations
+- **Activation tracking** — agent configs can be activated/deactivated with timestamp tracking
+- **Governance frontend** — React page for agent config management and evaluation result display
+- **EVAL_CASES library** — predefined test cases for portfolio pricing and VaR validation
+- **Test coverage** — 7 new E2E tests for governance and bonds features
+
+### Changed
+- API version bumped to 1.7.0  
+- Backend tests: 116 passed (including governance agent CRUD and eval tests)
+- Frontend: Governance page added with create/eval/activate workflows
+
 ## [1.6.0] — 2026-02-15
 
 ### Added (v1.6 — Monitoring & Drift Detection)

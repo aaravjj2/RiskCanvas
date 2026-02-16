@@ -1,4 +1,5 @@
 import type { AnalysisResult, Asset, DeterminismResult } from './types';
+import { getAuthHeaders } from './config';
 
 // API base URL - update based on environment
 const API_BASE = 'http://localhost:8090';
@@ -28,20 +29,42 @@ export const MOCK_DETERMINISM: DeterminismResult = {
 };
 
 /**
- * Generic API fetch wrapper with error handling
+ * Fetch with timeout using AbortController
+ */
+async function fetchWithTimeout(url: string, init?: RequestInit, timeoutMs: number = 10000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${timeoutMs}ms`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Generic API fetch wrapper with error handling and timeout
  */
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
   try {
     console.log(`[API] ${init?.method || 'GET'} ${path}`);
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetchWithTimeout(`${API_BASE}${path}`, {
       ...init,
       headers: { 
         'Content-Type': 'application/json',
-        'x-demo-user': 'demo-user',
-        'x-demo-role': 'admin',
+        ...getAuthHeaders(), // Add auth/demo headers based on mode
         ...(init?.headers || {}),
       },
-    });
+    }, 15000); // 15 second timeout
     console.log(`[API] ${init?.method || 'GET'} ${path} => ${res.status}`);
     if (!res.ok) {
       console.error(`[API] ${path} failed: ${res.status} ${res.statusText}`);
@@ -170,10 +193,15 @@ export async function getReportManifest(reportBundleId: string) {
  * v1.3+ Hedge Studio APIs
  */
 
-export async function suggestHedges(params: { portfolio_id: string; target_var_reduction_pct: number; max_cost: number; instrument_types: string[] }) {
+export async function suggestHedges(params: { portfolio_id: string; target_reduction_pct: number; max_cost: number; allowed_instruments?: string[] }) {
   return apiFetch<any>('/hedge/suggest', {
     method: 'POST',
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      portfolio_id: params.portfolio_id,
+      target_reduction_pct: params.target_reduction_pct,
+      max_cost: params.max_cost,
+      allowed_instruments: params.allowed_instruments || ['put_option', 'call_option'],
+    }),
   });
 }
 
@@ -284,4 +312,207 @@ export async function listDriftSummaries(filters?: { monitor_id?: string; limit?
   if (filters?.limit) params.append('limit', filters.limit.toString());
   const query = params.toString() ? `?${params.toString()}` : '';
   return apiFetch<any>(`/drift-summaries${query}`, { method: 'GET' });
+}
+
+// === v1.7 Governance ===
+
+export async function createAgentConfig(params: {
+  name: string;
+  model: string;
+  provider: string;
+  system_prompt: string;
+  tool_policies: Record<string, any>;
+  thresholds: Record<string, any>;
+  tags?: string[];
+}) {
+  return apiFetch<any>('/governance/configs', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function listAgentConfigs() {
+  return apiFetch<any>('/governance/configs', { method: 'GET' });
+}
+
+export async function getAgentConfig(configId: string) {
+  return apiFetch<any>(`/governance/configs/${configId}`, { method: 'GET' });
+}
+
+export async function activateAgentConfig(params: { config_id: string }) {
+  return apiFetch<any>('/governance/configs/activate', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function runEvalHarness(params: { config_id: string }) {
+  return apiFetch<any>('/governance/evals/run', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function listEvalReports(filters?: { config_id?: string }) {
+  const params = new URLSearchParams();
+  if (filters?.config_id) params.append('config_id', filters.config_id);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any>(`/governance/evals${query}`, { method: 'GET' });
+}
+
+export async function getEvalReport(reportId: string) {
+  return apiFetch<any>(`/governance/evals/${reportId}`, { method: 'GET' });
+}
+
+// === v1.8 Bonds ===
+
+export async function calculateBondPrice(params: {
+  face_value: number;
+  coupon_rate: number;
+  years_to_maturity: number;
+  yield_to_maturity: number;
+  periods_per_year?: number;
+}) {
+  return apiFetch<any>('/bonds/price', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function calculateBondYield(params: {
+  face_value: number;
+  coupon_rate: number;
+  years_to_maturity: number;
+  price: number;
+  periods_per_year?: number;
+}) {
+  return apiFetch<any>('/bonds/yield', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function calculateBondRiskMetrics(params: {
+  face_value: number;
+  coupon_rate: number;
+  years_to_maturity: number;
+  yield_to_maturity: number;
+  periods_per_year?: number;
+}) {
+  return apiFetch<any>('/bonds/risk', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+// === v1.9 Caching ===
+
+export async function getCacheStats() {
+  return apiFetch<any>('/cache/stats', { method: 'GET' });
+}
+
+export async function clearCache() {
+  return apiFetch<any>('/cache/clear', { method: 'POST' });
+}
+
+// ===v2.3 Storage ===
+
+export async function getReportDownloadUrls(reportBundleId: string) {
+  return apiFetch<any>(`/reports/${reportBundleId}/downloads`, { method: 'GET' });
+}
+
+export async function getStorageFile(key: string) {
+  return apiFetch<any>(`/storage/files/${encodeURIComponent(key)}`, { method: 'GET' });
+}
+
+// === v2.4 Job Queue ===
+
+export async function submitJob(params: {
+  job_type: 'run' | 'report' | 'hedge';
+  payload: Record<string, any>;
+  workspace_id?: string;
+  async_mode?: boolean;
+}){
+  return apiFetch<any>('/jobs/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+export async function getJob(jobId: string) {
+  return apiFetch<any>(`/jobs/${jobId}`, { method: 'GET' });
+}
+
+export async function listJobs(filters?: {
+  workspace_id?: string;
+  job_type?: string;
+  status?: string;
+}) {
+  const params = new URLSearchParams();
+  if (filters?.workspace_id) params.append('workspace_id', filters.workspace_id);
+  if (filters?.job_type) params.append('job_type', filters.job_type);
+  if (filters?.status) params.append('status', filters.status);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any>(`/jobs${query}`, { method: 'GET' });
+}
+
+export async function cancelJob(jobId: string) {
+  return apiFetch<any>(`/jobs/${jobId}/cancel`, { method: 'POST' });
+}
+
+// === v2.5 DevOps Automations ===
+
+export async function analyzeGitLabMR(diffText: string) {
+  return apiFetch<any>('/devops/gitlab/analyze-mr', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ diff_text: diffText }),
+  });
+}
+
+export async function postGitLabComment(params: {
+  project_id: string;
+  mr_iid: number;
+  comment_body: string;
+}) {
+  return apiFetch<any>('/devops/gitlab/post-comment', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function getGitLabComments() {
+  return apiFetch<any>('/devops/gitlab/comments', { method: 'GET' });
+}
+
+export async function generateMonitoringReport(params?: {
+  include_health?: boolean;
+  include_coverage?: boolean;
+}) {
+  return apiFetch<any>('/devops/monitor/generate-report', {
+    method: 'POST',
+    body: JSON.stringify(params || {}),
+  });
+}
+
+export async function getMonitoringReports(limit?: number) {
+  const params = new URLSearchParams();
+  if (limit) params.append('limit', limit.toString());
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<any>(`/devops/monitor/reports${query}`, { method: 'GET' });
+}
+
+export async function runTestScenario(params: {
+  scenario_type: 'mr_review' | 'monitoring_cycle';
+  diff_text?: string;
+}) {
+  return apiFetch<any>('/devops/test-harness/run-scenario', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function getTestScenarios() {
+  return apiFetch<any>('/devops/test-harness/scenarios', { method: 'GET' });
 }
