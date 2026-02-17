@@ -1383,13 +1383,14 @@ async def cancel_job(job_id: str):
 
 
 @app.post("/devops/gitlab/analyze-mr")
-async def analyze_gitlab_mr(diff_text: str):
+async def analyze_gitlab_mr(request: Dict[str, Any]):
     """
     Analyze GitLab MR diff and generate review comments.
     
     In DEMO mode: Uses offline analysis only.
     In production: Can post to actual GitLab MR.
     """
+    diff_text = request.get("diff_text", "")
     demo_mode = get_demo_mode()
     bot = get_gitlab_mr_bot(demo_mode=demo_mode)
     
@@ -1472,10 +1473,7 @@ async def get_monitoring_reports(limit: int = 10):
 
 
 @app.post("/devops/test-harness/run-scenario")
-async def run_test_scenario(
-    scenario_type: str,
-    diff_text: Optional[str] = None
-):
+async def run_test_scenario(request: Dict[str, Any]):
     """
     Run an offline test scenario for DevOps automations.
     
@@ -1483,6 +1481,9 @@ async def run_test_scenario(
     - mr_review: Simulate MR review with diff analysis
     - monitoring_cycle: Simulate monitoring health checks
     """
+    scenario_type = request.get("scenario_type", "")
+    diff_text = request.get("diff_text")
+    
     harness = get_test_harness()
     
     kwargs = {}

@@ -93,14 +93,14 @@ export default function DevOpsPage() {
 
       <Tabs defaultValue="risk-bot" className="w-full">
         <TabsList>
-          <TabsTrigger value="risk-bot">Risk-Bot Report</TabsTrigger>
-          <TabsTrigger value="gitlab">GitLab MR Bot</TabsTrigger>
-          <TabsTrigger value="monitoring">Monitor Reporter</TabsTrigger>
-          <TabsTrigger value="test-harness">Test Harness</TabsTrigger>
+          <TabsTrigger value="risk-bot" data-testid="devops-tab-riskbot">Risk-Bot Report</TabsTrigger>
+          <TabsTrigger value="gitlab" data-testid="devops-tab-gitlab">GitLab MR Bot</TabsTrigger>
+          <TabsTrigger value="monitoring" data-testid="devops-tab-monitor">Monitor Reporter</TabsTrigger>
+          <TabsTrigger value="test-harness" data-testid="devops-tab-harness">Test Harness</TabsTrigger>
         </TabsList>
 
         {/* Risk-Bot Report Tab */}
-        <TabsContent value="risk-bot">
+        <TabsContent value="risk-bot" data-testid="devops-panel-riskbot">
           <Card className="p-4 mb-6">
             <h2 className="text-lg font-semibold mb-4">Risk-Bot CLI Report</h2>
             <p className="text-sm text-gray-600 mb-4">
@@ -119,17 +119,19 @@ export default function DevOpsPage() {
             <Card className="p-4" data-testid="riskbot-report-section">
               <h2 className="text-lg font-semibold mb-4">Latest Report</h2>
               <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Report ID</p>
-                  <code className="text-xs bg-gray-100 p-2 rounded blockoverlflow-x-auto">
-                    {report.report_id}
-                  </code>
-                </div>
-                {report.summary && (
+                {report.report_markdown && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Summary</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Report</p>
                     <pre className="text-xs bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap">
-                      {report.summary}
+                      {report.report_markdown}
+                    </pre>
+                  </div>
+                )}
+                {report.test_gate_summary && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Test Gate</p>
+                    <pre className="text-xs bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+                      {JSON.stringify(report.test_gate_summary, null, 2)}
                     </pre>
                   </div>
                 )}
@@ -139,7 +141,7 @@ export default function DevOpsPage() {
         </TabsContent>
 
         {/* GitLab MR Bot Tab */}
-        <TabsContent value="gitlab">
+        <TabsContent value="gitlab" data-testid="devops-panel-gitlab">
           <Card className="p-4 mb-6">
             <h2 className="text-lg font-semibold mb-4">GitLab MR Bot</h2>
             <p className="text-sm text-gray-600 mb-4">
@@ -205,7 +207,7 @@ export default function DevOpsPage() {
         </TabsContent>
 
         {/* Monitor Reporter Tab */}
-        <TabsContent value="monitoring">
+        <TabsContent value="monitoring" data-testid="devops-panel-monitor">
           <Card className="p-4 mb-6">
             <h2 className="text-lg font-semibold mb-4">Monitor Reporter</h2>
             <p className="text-sm text-gray-600 mb-4">
@@ -271,7 +273,7 @@ export default function DevOpsPage() {
         </TabsContent>
 
         {/* Test Harness Tab */}
-        <TabsContent value="test-harness">
+        <TabsContent value="test-harness" data-testid="devops-panel-harness">
           <Card className="p-4 mb-6">
             <h2 className="text-lg font-semibold mb-4">Offline Test Harness</h2>
             <p className="text-sm text-gray-600 mb-4">
