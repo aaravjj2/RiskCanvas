@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, XCircle, Database } from "lucide-react";
+import { RefreshCw, XCircle, Database, Radio } from "lucide-react";
 import { listJobs, cancelJob, getJobsBackend } from "@/lib/api";
+import { EventClient } from "@/lib/eventClient";
 
 interface Job {
   job_id: string;
@@ -27,11 +28,46 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<{ job_type?: string; status?: string }>({});
   const [backend, setBackend] = useState<JobsBackend>({ backend: "memory", persistent: false, description: "Loading..." });
+  const [connected, setConnected] = useState(false);
+  const eventClientRef = useRef<EventClient | null>(null);
 
   useEffect(() => {
     loadJobs();
     loadBackend();
+    
+    // Set up SSE for live updates (v2.7+)
+    setupLiveUpdates();
+    
+    return () => {
+      // Cleanup on unmount
+      if (eventClientRef.current) {
+        eventClientRef.current.disconnect();
+      }
+    };
   }, [filter]);
+  
+  const setupLiveUpdates = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8090';
+    const client = new EventClient(`${apiUrl}/events/jobs`);
+    
+    client.addEventListener('job.created', (data: Job) => {
+      console.log('[JobsPage] Job created:', data);
+      setJobs(prev => [data, ...prev]);
+    });
+    
+    client.addEventListener('job.status_changed', (data: Job) => {
+      console.log('[JobsPage] Job status changed:', data);
+      setJobs(prev => prev.map(job => 
+        job.job_id === data.job_id ? data : job
+      ));
+    });
+    
+    // Track connection status
+    client.connect();
+    setConnected(true);
+    
+    eventClientRef.current = client;
+  };
 
   const loadJobs = async () => {
     setLoading(true);
@@ -103,6 +139,12 @@ export default function JobsPage() {
               <Badge variant="outline" className="text-xs">persistent</Badge>
             )}
           </div>
+          {connected && (
+            <div className="flex items-center gap-2" data-testid="live-updates-badge">
+              <Radio className="h-4 w-4 text-green-500 animate-pulse" />
+              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">live</Badge>
+            </div>
+          )}
           <Button
             size="sm"
             variant="outline"

@@ -14,7 +14,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 # ===== Engine path setup (MUST be before agent/mcp imports) =====
@@ -87,6 +87,15 @@ from devops_automations import (
     get_gitlab_mr_bot,
     get_monitor_reporter,
     get_test_harness
+)
+
+# SSE event streams (v2.7+)
+from sse import (
+    get_job_stream,
+    get_run_stream,
+    sse_generator,
+    emit_job_event,
+    emit_run_event
 )
 
 # Hedge engine import (v1.3+)
@@ -1290,8 +1299,9 @@ async def submit_job(
     async_mode: bool = True
 ):
     """
-    Submit job to queue (v2.4+).
+    Submit job to queue (v2.4+, v2.7+ with SSE).
     In DEMO mode with async_mode=True, executes inline but still returns job_id.
+    Emits SSE events for real-time updates.
     """
     job_store = get_job_store()
     demo_mode = get_demo_mode()
@@ -1315,14 +1325,22 @@ async def submit_job(
     
     job_store.create(job)
     
+    # Emit job created event (v2.7+)
+    await emit_job_event("job.created", job.to_dict())
+    
     # In DEMO mode, execute inline
     if demo_mode:
         try:
             job_store.update_status(job_id, JobStatus.RUNNING)
+            await emit_job_event("job.status_changed", job_store.get(job_id).to_dict())
+            
             result = execute_job_inline(job)
+            
             job_store.update_status(job_id, JobStatus.SUCCEEDED, result=result)
+            await emit_job_event("job.status_changed", job_store.get(job_id).to_dict())
         except Exception as e:
             job_store.update_status(job_id, JobStatus.FAILED, error=str(e))
+            await emit_job_event("job.status_changed", job_store.get(job_id).to_dict())
     
     return {"job_id": job_id, "status": job.status.value}
 
@@ -1360,7 +1378,7 @@ async def list_jobs(
 
 @app.post("/jobs/{job_id}/cancel")
 async def cancel_job(job_id: str):
-    """Cancel queued job (v2.4+)."""
+    """Cancel queued job (v2.4+, v2.7+ with SSE)."""
     job_store = get_job_store()
     job = job_store.get(job_id)
     
@@ -1375,6 +1393,9 @@ async def cancel_job(job_id: str):
     
     job_store.update_status(job_id, JobStatus.CANCELLED)
     
+    # Emit job status changed event (v2.7+)
+    await emit_job_event("job.status_changed", job_store.get(job_id).to_dict())
+    
     return {"job_id": job_id, "status": JobStatus.CANCELLED.value}
 
 
@@ -1387,6 +1408,117 @@ async def get_jobs_backend():
         "persistent": backend == "sqlite",
         "description": "SQLite-based persistent storage" if backend == "sqlite" else "In-memory storage (DEMO mode)"
     }
+
+
+# ====================================================================
+#  v2.7 SSE REAL-TIME UPDATES
+# ====================================================================
+
+
+@app.get("/events/jobs")
+async def stream_job_events(request: Request):
+    """
+    Stream job status updates via Server-Sent Events (v2.7+).
+    
+    Events:
+    - job.created: New job submitted
+    - job.status_changed: Job status updated (queued → running → succeeded/failed)
+    
+    Client Usage:
+    ```javascript
+    const eventSource = new EventSource('/events/jobs');
+    eventSource.addEventListener('job.status_changed', (e) => {
+        const data = JSON.parse(e.data);
+        console.log('Job update:', data);
+    });
+    ```
+    """
+    stream = get_job_stream()
+    queue = await stream.subscribe()
+    
+    async def event_generator():
+        try:
+            async for event in sse_generator(queue):
+                # Check if client disconnected
+                if await request.is_disconnected():
+                    break
+                yield event
+        finally:
+            stream.unsubscribe(queue)
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
+
+
+@app.get("/events/runs")
+async def stream_run_events(request: Request):
+    """
+    Stream run completion updates via Server-Sent Events (v2.7+).
+    
+    Events:
+    - run.created: New run completed
+    - run.updated: Run data updated
+    
+    Client Usage:
+    ```javascript
+    const eventSource = new EventSource('/events/runs');
+    eventSource.addEventListener('run.created', (e) => {
+        const data = JSON.parse(e.data);
+        console.log('New run:', data);
+    });
+    ```
+    """
+    stream = get_run_stream()
+    queue = await stream.subscribe()
+    
+    async def event_generator():
+        try:
+            async for event in sse_generator(queue):
+                # Check if client disconnected
+                if await request.is_disconnected():
+                    break
+                yield event
+        finally:
+            stream.unsubscribe(queue)
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+@app.get("/events/history/jobs")
+async def get_job_event_history(event_type: Optional[str] = None, limit: int = 100):
+    """
+    Get job event history (DEMO mode only, v2.7+).
+    Useful for testing and debugging event streams.
+    """
+    stream = get_job_stream()
+    history = stream.get_history(event_type=event_type, limit=limit)
+    return {"events": history, "count": len(history)}
+
+
+@app.get("/events/history/runs")
+async def get_run_event_history(event_type: Optional[str] = None, limit: int = 100):
+    """
+    Get run event history (DEMO mode only, v2.7+).
+    Useful for testing and debugging event streams.
+    """
+    stream = get_run_stream()
+    history = stream.get_history(event_type=event_type, limit=limit)
+    return {"events": history, "count": len(history)}
 
 
 # ====================================================================

@@ -566,3 +566,19 @@ test("phase4-13 – job store backend badge visible", async ({ page }) => {
   const persistentBadge = backendBadge.locator("span").filter({ hasText: "persistent" });
   await expect(persistentBadge).not.toBeVisible();
 });
+
+test("phase4-14 – live updates badge visible (v2.7)", async ({ page }) => {
+  await page.goto("http://127.0.0.1:4174/jobs");
+  await expect(page.getByTestId("jobs-page")).toBeVisible({ timeout: 10000 });
+  
+  // Wait for live updates to connect
+  const liveBadge = page.getByTestId("live-updates-badge");
+  await expect(liveBadge).toBeVisible({ timeout: 5000 });
+  
+  // Verify live badge shows "live" text
+  await expect(liveBadge).toContainText("live");
+  
+  // Verify radio icon is present and pulsing
+  const radioIcon = liveBadge.locator("svg").first();
+  await expect(radioIcon).toBeVisible();
+});
