@@ -2,6 +2,21 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [2.5.1] — 2026-02-17
+
+### Fixed (v2.5.1 — Media Gate Hotfix)
+- **phase4-media test** — fixed API endpoint parameter mismatches and improved deterministic waits
+- **Monitor endpoint** — `/devops/monitor/generate-report` now accepts JSON body instead of query parameters (consistent with other DevOps endpoints)
+- **waitForResponse pattern** — set up response promises before button clicks to reliably catch API responses
+- **networkidle waits** — added deterministic `waitForLoadState("networkidle")` to ensure pages fully load before proceeding
+- **Test timeout** — increased playwright test timeout from 30s to 240s to accommodate media capture tests
+- **Screenshot generation** — phase4-media now reliably generates >= 25 screenshots (30 checkpoints)
+
+### Changed
+- API version bumped from 2.5.0 to 2.5.1
+- Frontend version bumped from 2.5.0 to 2.5.1
+- All 13 Phase 4 E2E tests passing (0 failed, 0 skipped, retries=0)
+
 ## [2.5.0] — 2026-02-16
 
 ### Added (v2.5 — DevOps Automations)

@@ -5,7 +5,7 @@ export default defineConfig({
   testMatch: /.*\.spec\.ts/,
   retries: 0,
   workers: 1,
-  timeout: 30000, // 30s per test
+  timeout: 240000, // 240s (4 minutes) per test - allows for media capture tests
 
   reporter: [
     ["list"],

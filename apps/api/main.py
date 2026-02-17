@@ -216,7 +216,7 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "2.5.0"
+API_VERSION = "2.5.1"
 ENGINE_VERSION = "0.1.0"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000
@@ -1441,13 +1441,13 @@ async def get_gitlab_comments():
 
 
 @app.post("/devops/monitor/generate-report")
-async def generate_monitoring_report(
-    include_health: bool = True,
-    include_coverage: bool = True
-):
+async def generate_monitoring_report(request: Dict[str, Any]):
     """
     Generate a monitoring report with health checks and coverage stats.
     """
+    include_health = request.get("include_health", True)
+    include_coverage = request.get("include_coverage", True)
+    
     demo_mode = get_demo_mode()
     reporter = get_monitor_reporter(demo_mode=demo_mode)
     

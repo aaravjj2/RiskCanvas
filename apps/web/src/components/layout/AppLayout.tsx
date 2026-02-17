@@ -39,7 +39,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1">v2.5.0</p>
+            <p className="text-xs text-muted-foreground mt-1">v2.5.1</p>
           </div>
 
           {/* Navigation */}
