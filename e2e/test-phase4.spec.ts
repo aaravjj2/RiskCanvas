@@ -550,3 +550,19 @@ test("phase4-media – continuous tour of v2.3→v2.5 features", async ({ page }
   // Video duration will be naturally extended by networkidle waits and interactions
   // Playwright automatically records video when configured
 });
+
+test("phase4-13 – job store backend badge visible", async ({ page }) => {
+  await page.goto("http://127.0.0.1:4174/jobs");
+  await expect(page.getByTestId("jobs-page")).toBeVisible({ timeout: 10000 });
+  
+  // Verify backend badge is visible
+  const backendBadge = page.getByTestId("job-store-backend-badge");
+  await expect(backendBadge).toBeVisible();
+  
+  // Verify backend shows "memory" (default for DEMO mode)
+  await expect(backendBadge).toContainText("memory");
+  
+  // Persistent badge should NOT be visible for memory backend
+  const persistentBadge = backendBadge.locator("span").filter({ hasText: "persistent" });
+  await expect(persistentBadge).not.toBeVisible();
+});

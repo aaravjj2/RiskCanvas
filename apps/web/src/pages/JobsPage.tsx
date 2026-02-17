@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, XCircle } from "lucide-react";
-import { listJobs, cancelJob } from "@/lib/api";
+import { RefreshCw, XCircle, Database } from "lucide-react";
+import { listJobs, cancelJob, getJobsBackend } from "@/lib/api";
 
 interface Job {
   job_id: string;
@@ -16,13 +16,21 @@ interface Job {
   error?: string;
 }
 
+interface JobsBackend {
+  backend: string;
+  persistent: boolean;
+  description: string;
+}
+
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<{ job_type?: string; status?: string }>({});
+  const [backend, setBackend] = useState<JobsBackend>({ backend: "memory", persistent: false, description: "Loading..." });
 
   useEffect(() => {
     loadJobs();
+    loadBackend();
   }, [filter]);
 
   const loadJobs = async () => {
@@ -32,6 +40,13 @@ export default function JobsPage() {
       setJobs(result.jobs);
     }
     setLoading(false);
+  };
+
+  const loadBackend = async () => {
+    const result = await getJobsBackend();
+    if (result) {
+      setBackend(result);
+    }
   };
 
   const handleRefresh = () => {
@@ -80,16 +95,25 @@ export default function JobsPage() {
           <h1 className="text-3xl font-bold">Job Queue</h1>
           <p className="text-gray-600">Async job management and execution tracking</p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={loading}
-          data-testid="refresh-jobs-btn"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2" data-testid="job-store-backend-badge">
+            <Database className="h-4 w-4 text-gray-500" />
+            <span className="text-sm text-gray-600">{backend.backend}</span>
+            {backend.persistent && (
+              <Badge variant="outline" className="text-xs">persistent</Badge>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={loading}
+            data-testid="refresh-jobs-btn"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

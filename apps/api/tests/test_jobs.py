@@ -1,14 +1,19 @@
 """
 Tests for job queue system (v2.4+).
+v2.6: Added tests for SQLite persistence.
 """
 import pytest
 import hashlib
 import json
+import tempfile
+import os
+from pathlib import Path
 from jobs import (
     Job,
     JobType,
     JobStatus,
     JobStore,
+    JobStoreSQLite,
     generate_job_id,
     canonicalize_job_input,
     execute_job_inline
@@ -258,3 +263,186 @@ class TestJobExecution:
         
         job.status = JobStatus.SUCCEEDED
         assert job.status == JobStatus.SUCCEEDED
+
+
+class TestJobStoreSQLite:
+    """Test JobStoreSQLite persistence (v2.6+)."""
+    
+    def setup_method(self):
+        """Create temporary SQLite database."""
+        self.temp_dir = tempfile.mkdtemp()
+        self.db_path = Path(self.temp_dir) / "test_jobs.db"
+        self.db_url = f"sqlite:///{self.db_path}"
+        self.store = JobStoreSQLite(self.db_url)
+    
+    def teardown_method(self):
+        """Clean up temporary database."""
+        import shutil
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+    
+    def test_create_and_get(self):
+        """Test creating and retrieving jobs from SQLite."""
+        job = Job(
+            job_id="job_sqlite_1",
+            workspace_id="ws_1",
+            job_type=JobType.RUN,
+            payload={"test": "data"}
+        )
+        
+        created = self.store.create(job)
+        assert created.job_id == job.job_id
+        assert created.payload == {"test": "data"}
+        
+        retrieved = self.store.get("job_sqlite_1")
+        assert retrieved is not None
+        assert retrieved.job_id == "job_sqlite_1"
+        assert retrieved.workspace_id == "ws_1"
+        assert retrieved.job_type == JobType.RUN
+        assert retrieved.payload == {"test": "data"}
+        
+        not_found = self.store.get("nonexistent")
+        assert not_found is None
+    
+    def test_persistence_across_instances(self):
+        """Test that jobs persist across store instances."""
+        job = Job(
+            job_id="job_persist",
+            workspace_id="ws_1",
+            job_type=JobType.REPORT,
+            payload={"portfolio_id": "port_123"}
+        )
+        
+        # Create job with first instance
+        self.store.create(job)
+        
+        # Create new store instance with same database
+        new_store = JobStoreSQLite(self.db_url)
+        
+        # Should retrieve job from database
+        retrieved = new_store.get("job_persist")
+        assert retrieved is not None
+        assert retrieved.job_id == "job_persist"
+        assert retrieved.job_type == JobType.REPORT
+        assert retrieved.payload == {"portfolio_id": "port_123"}
+    
+    def test_list_with_filters(self):
+        """Test listing jobs with filters from SQLite."""
+        jobs = [
+            Job("job_1", "ws_1", JobType.RUN, {}, status=JobStatus.SUCCEEDED),
+            Job("job_2", "ws_1", JobType.REPORT, {}, status=JobStatus.QUEUED),
+            Job("job_3", "ws_2", JobType.RUN, {}, status=JobStatus.SUCCEEDED),
+            Job("job_4", "ws_1", JobType.HEDGE, {}, status=JobStatus.FAILED),
+        ]
+        
+        for job in jobs:
+            self.store.create(job)
+        
+        # List all
+        all_jobs = self.store.list()
+        assert len(all_jobs) == 4
+        
+        # Filter by workspace
+        ws1_jobs = self.store.list(workspace_id="ws_1")
+        assert len(ws1_jobs) == 3
+        
+        # Filter by type
+        run_jobs = self.store.list(job_type=JobType.RUN)
+        assert len(run_jobs) == 2
+        
+        # Filter by status
+        succeeded_jobs = self.store.list(status=JobStatus.SUCCEEDED)
+        assert len(succeeded_jobs) == 2
+        
+        # Combined filters
+        ws1_run_jobs = self.store.list(workspace_id="ws_1", job_type=JobType.RUN)
+        assert len(ws1_run_jobs) == 1
+        assert ws1_run_jobs[0].job_id == "job_1"
+    
+    def test_update_status(self):
+        """Test updating job status in SQLite."""
+        job = Job("job_update_sql", "ws_1", JobType.RUN, {})
+        self.store.create(job)
+        
+        # Update to running
+        updated = self.store.update_status("job_update_sql", JobStatus.RUNNING)
+        assert updated.status == JobStatus.RUNNING
+        assert updated.started_at is not None
+        
+        # Verify persistence
+        retrieved = self.store.get("job_update_sql")
+        assert retrieved.status == JobStatus.RUNNING
+        assert retrieved.started_at is not None
+        
+        # Update to succeeded with result
+        result = {"output": "test_output", "value": 42}
+        updated = self.store.update_status("job_update_sql", JobStatus.SUCCEEDED, result=result)
+        assert updated.status == JobStatus.SUCCEEDED
+        assert updated.result == result
+        assert updated.completed_at is not None
+        
+        # Verify result persistence
+        retrieved = self.store.get("job_update_sql")
+        assert retrieved.result == result
+    
+    def test_delete(self):
+        """Test deleting jobs from SQLite."""
+        job = Job("job_delete_sql", "ws_1", JobType.RUN, {})
+        self.store.create(job)
+        
+        assert self.store.get("job_delete_sql") is not None
+        
+        deleted = self.store.delete("job_delete_sql")
+        assert deleted is True
+        assert self.store.get("job_delete_sql") is None
+        
+        # Delete non-existent
+        deleted_again = self.store.delete("job_delete_sql")
+        assert deleted_again is False
+    
+    def test_clear(self):
+        """Test clearing all jobs from SQLite."""
+        jobs = [
+            Job("job_clear_1", "ws_1", JobType.RUN, {}),
+            Job("job_clear_2", "ws_1", JobType.REPORT, {}),
+            Job("job_clear_3", "ws_2", JobType.HEDGE, {}),
+        ]
+        
+        for job in jobs:
+            self.store.create(job)
+        
+        assert len(self.store.list()) == 3
+        
+        self.store.clear()
+        
+        assert len(self.store.list()) == 0
+    
+    def test_complex_payload_persistence(self):
+        """Test persistence of complex nested payloads."""
+        complex_payload = {
+            "portfolio_id": "port_123",
+            "params": {
+                "confidence": 0.95,
+                "scenarios": ["base", "stress", "recovery"],
+                "nested": {
+                    "level": 2,
+                    "values": [1, 2, 3]
+                }
+            }
+        }
+        
+        job = Job(
+            job_id="job_complex",
+            workspace_id="ws_1",
+            job_type=JobType.RUN,
+            payload=complex_payload
+        )
+        
+        self.store.create(job)
+        
+        # Create new store instance
+        new_store = JobStoreSQLite(self.db_url)
+        retrieved = new_store.get("job_complex")
+        
+        assert retrieved is not None
+        assert retrieved.payload == complex_payload
+        assert retrieved.payload["params"]["nested"]["values"] == [1, 2, 3]

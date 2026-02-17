@@ -77,6 +77,7 @@ from jobs import (
     JobStatus,
     generate_job_id,
     get_job_store,
+    get_job_store_backend,
     execute_job_inline
 )
 
@@ -1375,6 +1376,17 @@ async def cancel_job(job_id: str):
     job_store.update_status(job_id, JobStatus.CANCELLED)
     
     return {"job_id": job_id, "status": JobStatus.CANCELLED.value}
+
+
+@app.get("/jobs/config/backend")
+async def get_jobs_backend():
+    """Get current job store backend configuration (v2.6+)."""
+    backend = get_job_store_backend()
+    return {
+        "backend": backend,
+        "persistent": backend == "sqlite",
+        "description": "SQLite-based persistent storage" if backend == "sqlite" else "In-memory storage (DEMO mode)"
+    }
 
 
 # ====================================================================

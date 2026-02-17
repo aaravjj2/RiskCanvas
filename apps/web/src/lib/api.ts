@@ -461,6 +461,10 @@ export async function cancelJob(jobId: string) {
   return apiFetch<any>(`/jobs/${jobId}/cancel`, { method: 'POST' });
 }
 
+export async function getJobsBackend() {
+  return apiFetch<any>('/jobs/config/backend', { method: 'GET' });
+}
+
 // === v2.5 DevOps Automations ===
 
 export async function analyzeGitLabMR(diffText: string) {
