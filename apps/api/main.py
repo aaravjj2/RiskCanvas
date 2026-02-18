@@ -155,6 +155,15 @@ from caching import (
 # MCP Server import (v2.2+)
 from mcp_server import mcp_router
 
+# Platform health router (v2.9+)
+from platform_health import platform_router
+
+# Multi-agent orchestration (v3.0+)
+from multi_agent_orchestrator import multi_agent_router
+
+# DevOps policy gate (v3.1+)
+from devops_policy import policy_router
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -226,7 +235,7 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "2.8.0"
+API_VERSION = "3.2.0"
 ENGINE_VERSION = "0.1.0"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000
@@ -250,6 +259,15 @@ app.add_middleware(
 
 # Include MCP router (v2.2+)
 app.include_router(mcp_router)
+
+# Platform health (v2.9+)
+app.include_router(platform_router)
+
+# Multi-agent orchestration (v3.0+)
+app.include_router(multi_agent_router)
+
+# DevOps policy gate (v3.1+)
+app.include_router(policy_router)
 
 # ===== Error handlers =====
 

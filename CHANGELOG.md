@@ -2,7 +2,67 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
-## [2.8.0] — 2026-02-18
+## [3.2.0] – 2026-02-18
+
+### Added (v3.2 – Submission Pack + Judge Demo)
+- **phase6-judge-demo.spec.ts** — full Wave 6 tour E2E spec, 26 screenshots, covers all 10+ stops
+- **playwright.judge.config.ts** — `slowMo: 4000` judge demo config for TOUR.webm ≥ 180s
+- **scripts/submission/build_submission.ps1** — generates SUBMISSION.md, ARCHITECTURE.mmd, DEMO_SCRIPT.md, LINKS.md in timestamped zip
+- **scripts/proof/run_wave6.ps1** — full proof runner: pytest → vitest → tsc → vite build with summary report
+- **.env.example** — comprehensive environment template at repo root
+
+### Changed
+- API version bumped to 3.2.0
+- Frontend version badge updated to v3.2.0
+
+## [3.1.0] – 2026-02-18
+
+### Added (v3.1 – DevOps Policy Gate)
+- **apps/api/devops_policy.py** — `policy_router` with deterministic policy evaluation engine
+  - `POST /devops/policy/evaluate` — scan diff for blockers (secrets, TODO, bare except, wildcards)
+  - `POST /devops/policy/export` — generate MR comment markdown + reliability report + policy JSON
+  - `GET /devops/policy/rules` — list all active policy rules
+- **apps/api/tests/test_devops_policy.py** — 36 pytest tests across 3 test classes (TestPolicyEvaluate, TestPolicyExport, TestPolicyRules)
+- **Policy Gate tab** in `DevOpsPage.tsx` — diff input, evaluate button, result badge, reasons list, markdown export preview
+  - data-testids: `devops-tab-policy`, `devops-panel-policy`, `policy-evaluate-btn`, `policy-result-badge`, `policy-reasons-list`, `export-markdown-btn`, `export-json-btn`
+- **e2e/test-devops-policy.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- DevOpsPage imports Badge component for policy decision display
+
+## [3.0.0] – 2026-02-18
+
+### Added (v3.0 – Multi-Agent Orchestration)
+- **apps/api/multi_agent_orchestrator.py** — REST router wrapping existing IntakeAgent→RiskAgent→ReportAgent→SREAgent pipeline
+  - `GET /orchestrator/plan` — 4-step agent execution plan with agents[] and flow[]
+  - `POST /orchestrator/run` — execute full pipeline, returns audit_log + sre_checks + decision
+  - `GET /orchestrator/agents` — list registered agents with name/role
+- **apps/api/tests/test_multi_agent_orchestrator.py** — 15 pytest tests across 3 test classes
+- **MicrosoftModePage** upgraded to 3-step wizard:
+  - Step 1: Provider Status (`wizard-step-1`, `provider-status-card`)
+  - Step 2: MCP Tools list + test call (`wizard-step-2`, `mcp-tools-list`, `mcp-test-call-button`)
+  - Step 3: Multi-Agent Run + audit log + SRE checks (`wizard-step-3`, `multi-agent-run-btn`, `audit-log-table`, `sre-checks-list`)
+- **SREAgent stub** — post-execution reliability checks (portfolio_value_positive, pnl_within_bounds, var_computed, audit_log_complete)
+- **e2e/test-microsoft-wizard.spec.ts** — 10 Playwright E2E tests
+
+## [2.9.0] – 2026-02-18
+
+### Added (v2.9 – Platform Health & Readiness)
+- **apps/api/platform_health.py** — `platform_router` with offline infra validation
+  - `GET /platform/health/details` — expanded health with services, demo_mode, port
+  - `GET /platform/readiness` — k8s-style readiness probe (checks api/engine/storage)
+  - `GET /platform/liveness` — k8s-style liveness probe
+  - `GET /platform/infra/validate` — offline infra invariant checks (port consistency, required files, .env.example)
+- **apps/web/src/pages/PlatformPage.tsx** — platform health dashboard
+  - data-testids: `platform-page`, `platform-health-card`, `platform-readiness-card`, `platform-liveness-card`, `platform-infra-card`, `platform-port-badge`, `platform-refresh-btn`
+  - Real-time service status cards with latency, StatusDot indicators
+- **apps/api/tests/test_platform_health.py** — 25 pytest tests across 5 test classes
+- **e2e/test-platform.spec.ts** — 8 Playwright E2E tests
+- **nav-platform** item added to AppLayout sidebar (Activity icon)
+- **/platform route** added to App.tsx
+
+## [2.8.0] – 2026-02-18
+
 
 ### Added (v2.8 — Proof Automation + Media Capture)
 - **phase5-media tour** — single continuous E2E tour covering all 10 feature stops (Dashboard, Reports, Jobs, DevOps x4, Governance, Bonds, Microsoft Mode)
