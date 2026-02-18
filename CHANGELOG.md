@@ -2,6 +2,60 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [4.0.0] – 2026-02-20
+
+### Added (v4.0 – SRE Playbooks + Judge Demo + Proof/Submission Pack)
+- **apps/api/sre_playbook.py** — `sre_router` (POST /sre/playbook/generate); deterministic triage→mitigate→follow-up playbooks; all facts cited by hash
+- **apps/web/src/pages/SREPlaybooksPage.tsx** — incident parameter form + steps timeline + export MD; `data-testid`: `sre-page`, `sre-generate`, `sre-playbook-ready`, `sre-export-md`, `sre-steps-list`
+- **apps/web/src/components/layout/AppLayout.tsx** — `nav-sre` with ShieldCheck icon; version badge `v4.0.0`
+- **apps/api/tests/test_sre_playbook.py** — 12 tests (empty inputs, P0 escalation, hash stability, all 3 phases)
+- **e2e/test-sre-playbooks.spec.ts** — 8 Playwright E2E tests
+- **e2e/phase10-judge-demo.spec.ts** — 28-screenshot full Wave 9+10 tour (≥25 required)
+- **e2e/playwright.w9w10.judge.config.ts** — `slowMo: 4000` judge config for ≥180s TOUR.webm
+
+### Changed
+- API version bumped to 4.0.0
+- Frontend version badge updated to v4.0.0
+
+---
+
+## [3.9.0] – 2026-02-20
+
+### Added (v3.9 – DevOps Pro: MR Review + Pipeline Analyzer + Artifacts)
+- **apps/api/devops_pro.py** — `devops_pro_router` (POST /devops/mr/review-bundle, /devops/pipeline/analyze, /devops/artifacts/build); deterministic ZIP artifact packs with manifest hash
+- **apps/web/src/pages/DevOpsPage.tsx** — 3 new tabs: MR Review, Pipeline Analyzer, Artifacts; `data-testid`: `devops-mr-generate`, `devops-mr-ready`, `devops-pipe-analyze`, `devops-pipe-ready`, `devops-artifacts-build`, `devops-artifacts-ready`, `devops-download-pack`
+- **apps/api/tests/test_devops_pro.py** — 20 tests (clean diff, secret diff blocks, TODO warns, OOM detection, artifact pack determinism)
+- **e2e/test-devops-pro.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- DevOps page headline updated to v3.9+
+
+---
+
+## [3.8.0] – 2026-02-20
+
+### Added (v3.8 – Eval Harness v2 + Scorecard)
+- **apps/api/eval_harness_v2.py** — `eval_router` (GET /governance/evals/suites, POST /governance/evals/run-suite, GET /governance/evals/results/{run_id}, /scorecard/{run_id}/md, /scorecard/{run_id}/json); 3 built-in suites (governance_policy_suite, rates_curve_suite, stress_library_suite); deterministic run_id (sha256[:32])
+- **apps/web/src/pages/GovernancePage.tsx** — "Suites" tab with load + run + scorecard table + export MD; `data-testid`: `eval-suites-list`, `eval-run-btn-{suite_id}`, `eval-scorecard-ready`, `eval-export-md`
+- **apps/api/tests/test_eval_harness_v2.py** — 16 tests (suite list, run_id determinism, scorecard hash stability)
+- **apps/web/src/lib/api.ts** — `listEvalSuites`, `runEvalSuite`, `getEvalResult`, `getScorecardMd`
+
+---
+
+## [3.7.0] – 2026-02-20
+
+### Added (v3.7 – PolicyEngine v2 + Narrative Validator)
+- **apps/api/policy_engine.py** — `governance_v2_router` (POST /governance/policy/evaluate, /apply, /governance/narrative/validate); tool allowlists by mode; call budgets; secret/PII redaction; "no hallucinated numbers" narrative validator
+- **apps/web/src/pages/GovernancePage.tsx** — "Policy v2" tab + "Narrative" tab; `data-testid`: `gov-policy-ready`, `gov-validate-btn`, `gov-validate-result`, `gov-narrative-badge`
+- **apps/api/tests/test_policy_engine.py** — 25 tests (allow/block, budget exceeded, secret in prompt, narrative valid/invalid, redaction determinism)
+- **apps/web/src/lib/api.ts** — `evaluatePolicy`, `applyPolicy`, `validateNarrative`
+- **e2e/test-governance-policy.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- API version bumped to 3.7.0 (then to 4.0.0 as final)
+
+---
+
 ## [3.6.0] – 2026-02-19
 
 ### Added (v3.6 – Phase 8 Judge Demo + Proof Pack)

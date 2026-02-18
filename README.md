@@ -1,11 +1,11 @@
 # RiskCanvas
 
 **Deterministic Risk Analytics Platform**  
-**v2.8.0**
+**v4.0.0**
 
-[![Version](https://img.shields.io/badge/Version-2.8.0-blue)](CHANGELOG.md)
-[![Tests](https://img.shields.io/badge/Tests-Passing-success)](#test-gates)
-[![Wave5](https://img.shields.io/badge/Wave5-ACCEPTED-brightgreen)](#wave-5-proof-automation)
+[![Version](https://img.shields.io/badge/Version-4.0.0-blue)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-422%20passing-success)](#test-gates)
+[![Wave9-10](https://img.shields.io/badge/Wave9--10-v4.0.0-brightgreen)](#wave-9-10-trust--governance--devops-pro--sre)
 
 ---
 
@@ -202,6 +202,48 @@ Full architecture: [docs/architecture.md](docs/architecture.md)
 - Architecture diagram (Mermaid)
 - Demo flow documentation
 
+---
+
+## Wave 9+10: Trust & Governance / DevOps Pro / SRE (v3.7–v4.0)
+
+### ✅ PolicyEngine v2 (v3.7.0)
+- Tool allowlists by mode (DEMO:8, LOCAL:10, PROD:12)
+- Per-mode call budgets and response byte caps
+- Narrative validator with tolerance thresholds
+- Secret redaction with deterministic reasons list
+- **Endpoints**: `POST /governance/policy/evaluate`, `/apply`, `/narrative/validate`
+
+### ✅ Eval Harness v2 (v3.8.0)
+- 3 built-in eval suites: `governance_policy`, `rates_curve`, `stress_library`
+- Deterministic `run_id` (SHA256[:32] of suite + inputs)
+- Scorecard export: JSON with `scorecard_hash` + Markdown via `PlainTextResponse`
+- **Endpoints**: `GET /governance/evals/suites`, `POST /run-suite`, `GET /results/{run_id}`, `GET /scorecard/{run_id}/md`
+
+### ✅ DevOps Pro (v3.9.0)
+- **MR Review Bundle**: static-analysis diff review, decision (APPROVE/BLOCK/WARN), findings with severity
+- **Pipeline Failure Analyzer**: log parsing → categorized findings with remediations
+- **Artifact Pack Builder**: zip of review_md + pipeline_json output, base64-encoded
+- **Endpoints**: `POST /devops/mr/review-bundle`, `/pipeline/analyze`, `/artifacts/build`
+
+### ✅ SRE Playbooks (v4.0.0)
+- Deterministic triage → mitigate → follow_up phase generation
+- P0/P1/P2/P3 priority escalation driven by policy gate + pipeline fatals + degraded services
+- `playbook_hash` + `inputs_hash` for audit trail
+- **Endpoint**: `POST /sre/playbook/generate`
+- **Frontend**: `/sre` page with incident params, steps timeline, Markdown export
+
+### Judge Demo (v4.0)
+
+The `e2e/phase10-judge-demo.spec.ts` mega-test produces **28 labelled screenshots** and a `TOUR.webm ≥ 180 s`.
+
+```powershell
+# Run the Wave 9+10 judge demo (requires backend + vite preview running)
+cd e2e
+npx playwright test --config playwright.w9w10.judge.config.ts phase10-judge-demo.spec.ts
+```
+
+Config: `e2e/playwright.w9w10.judge.config.ts` — `slowMo: 4000`, `video: "on"`, `timeout: 600000`
+
 ## Test Gates
 
 All tests pass with **0 failures, 0 skips, retries=0**:
@@ -209,22 +251,24 @@ All tests pass with **0 failures, 0 skips, retries=0**:
 ```powershell
 # TypeScript compilation
 cd apps/web
-npm run typecheck  # 0 errors
+npx tsc --noEmit  # 0 errors
 
 # React unit tests (Vitest)
-npm run test  # 10/10 passed, 0 failed, 0 skipped
+npx vitest run  # 10/10 passed, 0 failed, 0 skipped
 
-# Backend API tests
+# Backend API tests (v4.0.0 — 422 passing)
 cd ../api
-pytest -q  # 116/116 passed, 0 failed, 0 skipped
+$env:DEMO_MODE="true"
+$env:PYTHONPATH="c:\RiskCanvas\RiskCanvas\packages\engine"
+pytest tests/ -q  # 422 passed, 0 failed, 2 warnings
 
 # Engine tests
 cd ../../packages/engine
-pytest tests/ -q  # 60/60 passed, 0 failed, 0 skipped
+pytest tests/ -q  # 109 passed, 0 failed, 0 skipped
 
 # E2E tests (Playwright)
 cd ../../e2e
-npx playwright test --config=playwright.config.ts  # 29/29 passed, 0 failed, 0 skipped, retries=0, workers=1
+npx playwright test --config=playwright.config.ts  # retries=0, workers=1
 ```
 
 **E2E Testing Configuration**:
@@ -495,8 +539,12 @@ Tools:
 | v0.6 | Multi-agent orchestration | ✅ Complete |
 | v0.7 | Azure deployment + auth + observability | ✅ Complete |
 | v0.8 | Submission polish + E2E tests | ✅ Complete |
+| v3.7.0 | PolicyEngine v2 + narrative validator | ✅ Complete |
+| v3.8.0 | Eval Harness v2 + scorecard + suites UI | ✅ Complete |
+| v3.9.0 | DevOps Pro: MR review + pipeline + artifacts | ✅ Complete |
+| v4.0.0 | SRE Playbooks + judge demo + proof pack | ✅ Complete |
 
-**Phase 0: COMPLETE** ✅
+**Wave 9+10: COMPLETE** ✅ — 422 backend tests, 10 Vitest, 0 TypeScript errors, vite build OK
 
 ## License
 
@@ -509,4 +557,4 @@ Built for Microsoft AI Dev Days Hackathon
 ---
 
 **RiskCanvas** - Deterministic Risk Analytics with AI Orchestration  
-*v0.8 - Phase 0 Complete*
+*v4.0.0 - Wave 9+10 Complete*

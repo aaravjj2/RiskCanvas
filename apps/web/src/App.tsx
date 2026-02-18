@@ -29,6 +29,8 @@ import PlatformPage from '@/pages/PlatformPage';
 // Wave 7+8 Pages (v3.3-v3.6)
 import RatesPage from '@/pages/RatesPage';
 import StressPage from '@/pages/StressPage';
+// Wave 9+10 Pages (v3.7-v4.0)
+import SREPlaybooksPage from '@/pages/SREPlaybooksPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -66,6 +68,8 @@ export default function App() {
             {/* Wave 7+8 Routes */}
             <Route path="/rates" element={<RatesPage />} />
             <Route path="/stress" element={<StressPage />} />
+            {/* Wave 9+10 Routes */}
+            <Route path="/sre" element={<SREPlaybooksPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>

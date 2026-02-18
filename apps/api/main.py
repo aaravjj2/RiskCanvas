@@ -174,6 +174,18 @@ from rates_curve import rates_router
 # Stress library + Compare (v3.5+)
 from stress_library import stress_router, compare_router
 
+# Policy Engine v2 (v3.7+)
+from policy_engine import governance_v2_router
+
+# Eval Harness v2 (v3.8+)
+from eval_harness_v2 import eval_router
+
+# DevOps Pro (v3.9+)
+from devops_pro import devops_pro_router
+
+# SRE Playbook (v4.0+)
+from sre_playbook import sre_router
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -245,7 +257,7 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "3.6.0"
+API_VERSION = "4.0.0"
 ENGINE_VERSION = "0.1.0"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000
@@ -289,6 +301,18 @@ app.include_router(rates_router)
 # Stress library + Compare (v3.5+)
 app.include_router(stress_router)
 app.include_router(compare_router)
+
+# Policy Engine v2 (v3.7+)
+app.include_router(governance_v2_router)
+
+# Eval Harness v2 (v3.8+)
+app.include_router(eval_router)
+
+# DevOps Pro (v3.9+)
+app.include_router(devops_pro_router)
+
+# SRE Playbook (v4.0+)
+app.include_router(sre_router)
 
 # ===== Error handlers =====
 
