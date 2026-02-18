@@ -520,3 +520,80 @@ export async function runTestScenario(params: {
 export async function getTestScenarios() {
   return apiFetch<any>('/devops/test-harness/scenarios', { method: 'GET' });
 }
+
+// === v3.3 AuditV2 + Provenance ===
+
+export async function getAuditV2Events(params?: { workspace_id?: string; limit?: number; since_event_id?: number }) {
+  const q = new URLSearchParams();
+  if (params?.workspace_id) q.append('workspace_id', params.workspace_id);
+  if (params?.limit) q.append('limit', String(params.limit));
+  if (params?.since_event_id != null) q.append('since_event_id', String(params.since_event_id));
+  const qs = q.toString() ? `?${q.toString()}` : '';
+  return apiFetch<any>(`/audit/v2/events${qs}`, { method: 'GET' });
+}
+
+export async function verifyAuditV2Chain() {
+  return apiFetch<any>('/audit/v2/verify', { method: 'GET' });
+}
+
+export async function resetAuditV2() {
+  return apiFetch<any>('/audit/v2/reset', { method: 'POST' });
+}
+
+export async function getProvenance(kind: string, resourceId: string) {
+  return apiFetch<any>(`/provenance/${kind}/${resourceId}`, { method: 'GET' });
+}
+
+// === v3.4 Rates Curve ===
+
+export async function getRatesFixture() {
+  return apiFetch<any>('/rates/fixtures/simple', { method: 'GET' });
+}
+
+export async function bootstrapRatesCurve(instruments: any[]) {
+  return apiFetch<any>('/rates/curve/bootstrap', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ instruments }),
+  });
+}
+
+export async function priceBondWithCurve(params: {
+  face_value: number;
+  coupon_rate: number;
+  years_to_maturity: number;
+  periods_per_year: number;
+  discount_factors: any[];
+}) {
+  return apiFetch<any>('/rates/bond/price-curve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+// === v3.5 Stress Library + Compare ===
+
+export async function listStressPresets() {
+  return apiFetch<any>('/stress/presets', { method: 'GET' });
+}
+
+export async function getStressPreset(presetId: string) {
+  return apiFetch<any>(`/stress/presets/${presetId}`, { method: 'GET' });
+}
+
+export async function applyStressPreset(presetId: string, portfolio: any) {
+  return apiFetch<any>('/stress/apply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ preset_id: presetId, portfolio }),
+  });
+}
+
+export async function compareRunsV2(runA: any, runB: any) {
+  return apiFetch<any>('/compare/runs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run_a: runA, run_b: runB }),
+  });
+}

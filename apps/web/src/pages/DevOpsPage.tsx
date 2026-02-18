@@ -11,6 +11,7 @@ import {
   getMonitoringReports,
   runTestScenario
 } from '@/lib/api';
+import { ProvenanceDrawer } from '@/components/ProvenanceDrawer';
 
 export default function DevOpsPage() {
   const [report, setReport] = useState<any | null>(null);
@@ -400,6 +401,11 @@ export default function DevOpsPage() {
                     </li>
                   ))}
                 </ul>
+              )}
+              {policyResult.run_id && (
+                <div className="mt-3">
+                  <ProvenanceDrawer kind="policy" resourceId={policyResult.run_id} label="Policy Provenance" />
+                </div>
               )}
             </Card>
           )}

@@ -19,6 +19,21 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+# AuditV2 integration (v3.3+) — imported lazily to avoid circular deps
+def _emit_audit_safe(run_id: str, decision: str) -> None:
+    try:
+        from audit_v2 import emit_audit_v2
+        from provenance import record_provenance
+        emit_audit_v2(
+            actor="demo_user",
+            action="policy.evaluate",
+            resource_type="policy",
+            resource_id=run_id,
+            payload={"decision": decision},
+        )
+    except Exception:
+        pass  # never break policy endpoint due to audit failure
+
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
 policy_router = APIRouter(prefix="/devops/policy", tags=["devops-policy"])
@@ -219,7 +234,9 @@ async def evaluate_policy_gate(request: PolicyGateRequest):
     Run policy gate evaluation on a diff/metadata.
     Fully offline and deterministic.
     """
-    return _evaluate_diff(request.diff_text, request.risk_delta, request.coverage_delta)
+    result = _evaluate_diff(request.diff_text, request.risk_delta, request.coverage_delta)
+    _emit_audit_safe(result.run_id, result.decision)
+    return result
 
 
 @policy_router.post("/export", response_model=PolicyExportResponse)

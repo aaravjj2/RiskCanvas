@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { listRuns, compareRuns } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
+import { ProvenanceDrawer } from '@/components/ProvenanceDrawer';
 
 export default function RunHistory() {
   const [runs, setRuns] = useState<any[]>([]);
@@ -94,6 +95,7 @@ export default function RunHistory() {
                   <th className="text-right p-2">VaR 99%</th>
                   <th className="text-center p-2">Deterministic</th>
                   <th className="text-center p-2">Sequence</th>
+                  <th className="text-center p-2">Provenance</th>
                 </tr>
               </thead>
               <tbody>
@@ -144,6 +146,9 @@ export default function RunHistory() {
                       </td>
                       <td className="text-center p-2 font-mono text-xs">
                         #{run.sequence || 0}
+                      </td>
+                      <td className="text-center p-2" onClick={(e) => e.stopPropagation()}>
+                        <ProvenanceDrawer kind="run" resourceId={run.run_id} />
                       </td>
                     </tr>
                   );

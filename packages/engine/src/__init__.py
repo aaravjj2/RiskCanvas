@@ -15,6 +15,15 @@ from .bonds import (
     bond_convexity,
     bond_risk_metrics,
 )
+from .rates import (
+    bootstrap_rates_curve,
+    bond_price_from_curve,
+)
+from .stress import (
+    list_presets as stress_list_presets,
+    get_preset as stress_get_preset,
+    apply_preset as stress_apply_preset,
+)
 
 __version__ = "0.1.0"
 
@@ -39,4 +48,11 @@ __all__ = [
     "bond_duration",
     "bond_convexity",
     "bond_risk_metrics",
+    # v3.4+ rates curve
+    "bootstrap_rates_curve",
+    "bond_price_from_curve",
+    # v3.5+ stress library
+    "stress_list_presets",
+    "stress_get_preset",
+    "stress_apply_preset",
 ]

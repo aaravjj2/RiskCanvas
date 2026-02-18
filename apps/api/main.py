@@ -164,6 +164,16 @@ from multi_agent_orchestrator import multi_agent_router
 # DevOps policy gate (v3.1+)
 from devops_policy import policy_router
 
+# AuditV2 + Provenance (v3.3+)
+from audit_v2 import audit_v2_router, emit_audit_v2, get_chain_head
+from provenance import provenance_router, record_provenance
+
+# Rates curve (v3.4+)
+from rates_curve import rates_router
+
+# Stress library + Compare (v3.5+)
+from stress_library import stress_router, compare_router
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -235,7 +245,7 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "3.2.0"
+API_VERSION = "3.6.0"
 ENGINE_VERSION = "0.1.0"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000
@@ -268,6 +278,17 @@ app.include_router(multi_agent_router)
 
 # DevOps policy gate (v3.1+)
 app.include_router(policy_router)
+
+# AuditV2 + Provenance (v3.3+)
+app.include_router(audit_v2_router)
+app.include_router(provenance_router)
+
+# Rates curve (v3.4+)
+app.include_router(rates_router)
+
+# Stress library + Compare (v3.5+)
+app.include_router(stress_router)
+app.include_router(compare_router)
 
 # ===== Error handlers =====
 
@@ -986,7 +1007,20 @@ async def execute_run(request: RunExecuteRequest):
             engine_version=ENGINE_VERSION,
             outputs=outputs
         )
-        
+        # Emit audit for cache-hit run (v3.3+)
+        emit_audit_v2(
+            actor="demo_user",
+            action="runs.execute",
+            resource_type="run",
+            resource_id=run_model.run_id,
+            payload={"portfolio_id": portfolio_id, "cache_hit": True},
+        )
+        record_provenance(
+            kind="run",
+            resource_id=run_model.run_id,
+            input_payload={"portfolio_id": portfolio_id, "params": request.params or {}},
+            output_payload=outputs,
+        )
         return {
             "run_id": run_model.run_id,
             "portfolio_id": run_model.portfolio_id,
@@ -994,7 +1028,8 @@ async def execute_run(request: RunExecuteRequest):
             "outputs": outputs,
             "created_at": run_model.created_at,
             "cache_hit": True,
-            "cache_key": cache_key
+            "cache_key": cache_key,
+            "audit_chain_head": get_chain_head(),
         }
     
     # Execute analysis
@@ -1036,7 +1071,22 @@ async def execute_run(request: RunExecuteRequest):
         engine_version=ENGINE_VERSION,
         outputs=outputs
     )
-    
+
+    # Emit audit v2 event + provenance record (v3.3+)
+    emit_audit_v2(
+        actor="demo_user",
+        action="runs.execute",
+        resource_type="run",
+        resource_id=run_model.run_id,
+        payload={"portfolio_id": portfolio_id, "engine": ENGINE_VERSION},
+    )
+    record_provenance(
+        kind="run",
+        resource_id=run_model.run_id,
+        input_payload={"portfolio_id": portfolio_id, "params": request.params or {}},
+        output_payload=outputs,
+    )
+
     return {
         "run_id": run_model.run_id,
         "portfolio_id": run_model.portfolio_id,
@@ -1044,7 +1094,8 @@ async def execute_run(request: RunExecuteRequest):
         "outputs": outputs,
         "created_at": run_model.created_at,
         "cache_hit": False,
-        "cache_key": cache_key
+        "cache_key": cache_key,
+        "audit_chain_head": get_chain_head(),
     }
 
 
