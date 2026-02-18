@@ -597,3 +597,95 @@ export async function compareRunsV2(runA: any, runB: any) {
     body: JSON.stringify({ run_a: runA, run_b: runB }),
   });
 }
+
+// === v3.7 Policy Engine v2 ===
+
+export async function evaluatePolicy(runConfig: any, mode = 'DEMO') {
+  return apiFetch<any>('/governance/policy/evaluate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run_config: runConfig, mode }),
+  });
+}
+
+export async function applyPolicy(runConfig: any, mode = 'DEMO') {
+  return apiFetch<any>('/governance/policy/apply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run_config: runConfig, mode }),
+  });
+}
+
+export async function validateNarrative(narrative: string, computedResults: any, tolerance = 0.01) {
+  return apiFetch<any>('/governance/narrative/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ narrative, computed_results: computedResults, tolerance }),
+  });
+}
+
+// === v3.8 Eval Harness v2 ===
+
+export async function listEvalSuites() {
+  return apiFetch<any>('/governance/evals/suites', { method: 'GET' });
+}
+
+export async function runEvalSuite(suiteId: string) {
+  return apiFetch<any>('/governance/evals/run-suite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ suite_id: suiteId }),
+  });
+}
+
+export async function getEvalResult(runId: string) {
+  return apiFetch<any>(`/governance/evals/results/${runId}`, { method: 'GET' });
+}
+
+export async function getScorecardMd(runId: string) {
+  return fetch(`${API_BASE}/governance/evals/scorecard/${runId}/md`).then(r => r.text());
+}
+
+// === v3.9 DevOps Pro ===
+
+export async function generateMRReviewBundle(diff: string, baseRef = 'main', headRef = 'feature') {
+  return apiFetch<any>('/devops/mr/review-bundle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ diff, base_ref: baseRef, head_ref: headRef }),
+  });
+}
+
+export async function analyzePipelineLog(log: string) {
+  return apiFetch<any>('/devops/pipeline/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ log }),
+  });
+}
+
+export async function buildArtifactPack(reviewMd?: string, pipelineJson?: string) {
+  return apiFetch<any>('/devops/artifacts/build', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ review_md: reviewMd, pipeline_json: pipelineJson }),
+  });
+}
+
+// === v4.0 SRE Playbooks ===
+
+export async function generateSREPlaybook(params?: {
+  policyGateResult?: any;
+  pipelineAnalysis?: any;
+  platformHealth?: any;
+}) {
+  const body: any = {};
+  if (params?.policyGateResult) body.policy_gate_result = params.policyGateResult;
+  if (params?.pipelineAnalysis) body.pipeline_analysis = params.pipelineAnalysis;
+  if (params?.platformHealth) body.platform_health = params.platformHealth;
+  return apiFetch<any>('/sre/playbook/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
