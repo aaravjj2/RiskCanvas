@@ -1,0 +1,11 @@
+{
+  "description": "Simple deposit + swap curve fixture for demo (v3.4+)",
+  "instruments": [
+    {"type": "deposit", "tenor": 0.25, "rate": 0.04},
+    {"type": "deposit", "tenor": 0.5,  "rate": 0.042},
+    {"type": "deposit", "tenor": 1.0,  "rate": 0.045},
+    {"type": "swap",    "tenor": 2.0,  "rate": 0.048, "periods_per_year": 2},
+    {"type": "swap",    "tenor": 5.0,  "rate": 0.052, "periods_per_year": 2},
+    {"type": "swap",    "tenor": 10.0, "rate": 0.055, "periods_per_year": 2}
+  ]
+}

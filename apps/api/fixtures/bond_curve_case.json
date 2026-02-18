@@ -1,0 +1,11 @@
+{
+  "description": "Bond priced via curve discount factors (v3.4+)",
+  "bond": {
+    "face_value": 1000.0,
+    "coupon_rate": 0.05,
+    "years_to_maturity": 5.0,
+    "periods_per_year": 2
+  },
+  "curve_source": "rates_curve_simple.json",
+  "expected_price_range": [950.0, 1050.0]
+}
