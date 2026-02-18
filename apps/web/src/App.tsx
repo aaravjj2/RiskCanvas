@@ -24,6 +24,8 @@ import BondsPage from '@/pages/BondsPage';
 import MicrosoftModePage from '@/pages/MicrosoftModePage';
 // Phase 4 Pages (v2.3-v2.5)
 import JobsPage from '@/pages/JobsPage';
+// Wave 6 Pages (v2.9-v3.2)
+import PlatformPage from '@/pages/PlatformPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -56,6 +58,8 @@ export default function App() {
             <Route path="/microsoft" element={<MicrosoftModePage />} />
             {/* Phase 4 Routes */}
             <Route path="/jobs" element={<JobsPage />} />
+            {/* Wave 6 Routes */}
+            <Route path="/platform" element={<PlatformPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>
