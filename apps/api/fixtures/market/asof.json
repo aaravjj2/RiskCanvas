@@ -1,0 +1,7 @@
+{
+  "asof": "2026-01-15T16:00:00",
+  "timezone": "America/New_York",
+  "session": "CLOSE",
+  "provider": "fixture",
+  "note": "Deterministic demo as-of date — frozen for reproducibility"
+}

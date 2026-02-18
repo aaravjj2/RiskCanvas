@@ -1,0 +1,17 @@
+{
+  "provider": "fixture",
+  "asof": "2026-01-15T16:00:00",
+  "spots": {
+    "AAPL": 187.50,
+    "MSFT": 412.30,
+    "GOOGL": 178.90,
+    "AMZN": 215.40,
+    "TSLA": 241.80,
+    "NVDA": 875.60,
+    "META": 583.20,
+    "JPM": 214.70,
+    "GS": 498.30,
+    "SPY": 482.15
+  },
+  "_comment": "All prices are deterministic demo values — no live market data"
+}

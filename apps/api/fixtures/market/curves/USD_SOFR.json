@@ -1,0 +1,18 @@
+{
+  "curve_id": "USD_SOFR",
+  "provider": "fixture",
+  "asof": "2026-01-15T16:00:00",
+  "currency": "USD",
+  "index": "SOFR",
+  "points": [
+    {"tenor": "1M",  "tenor_years": 0.0833, "rate": 0.0530},
+    {"tenor": "3M",  "tenor_years": 0.25,   "rate": 0.0525},
+    {"tenor": "6M",  "tenor_years": 0.50,   "rate": 0.0515},
+    {"tenor": "1Y",  "tenor_years": 1.00,   "rate": 0.0498},
+    {"tenor": "2Y",  "tenor_years": 2.00,   "rate": 0.0472},
+    {"tenor": "5Y",  "tenor_years": 5.00,   "rate": 0.0448},
+    {"tenor": "7Y",  "tenor_years": 7.00,   "rate": 0.0441},
+    {"tenor": "10Y", "tenor_years": 10.00,  "rate": 0.0438},
+    {"tenor": "30Y", "tenor_years": 30.00,  "rate": 0.0452}
+  ]
+}

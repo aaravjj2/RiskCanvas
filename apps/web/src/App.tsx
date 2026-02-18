@@ -36,6 +36,8 @@ import ActivityPage from '@/pages/ActivityPage';
 import SearchPage from '@/pages/SearchPage';
 // v4.5.0 UI Test Harness
 import TestHarnessPage from '@/pages/TestHarnessPage';
+// Wave 13+14 Pages (v4.6-v4.9)
+import MarketDataPage from '@/pages/MarketDataPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -80,6 +82,8 @@ export default function App() {
             <Route path="/search" element={<SearchPage />} />
             {/* v4.5.0 UI Test Harness */}
             <Route path="/__harness" element={<TestHarnessPage />} />
+            {/* Wave 13+14 Routes (v4.6-v4.9) */}
+            <Route path="/market" element={<MarketDataPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>
