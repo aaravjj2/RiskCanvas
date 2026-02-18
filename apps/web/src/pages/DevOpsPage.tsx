@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  generateRiskBotReport, 
-  analyzeGitLabMR, 
+import {
+  generateRiskBotReport,
+  analyzeGitLabMR,
   getGitLabComments,
   generateMonitoringReport,
   getMonitoringReports,
-  runTestScenario 
+  runTestScenario
 } from '@/lib/api';
 
 export default function DevOpsPage() {
@@ -84,6 +85,43 @@ export default function DevOpsPage() {
     setLoading(false);
   };
 
+  // Policy Gate state
+  const [policyDiff, setPolicyDiff] = useState('');
+  const [policyResult, setPolicyResult] = useState<any>(null);
+  const [policyExport, setPolicyExport] = useState<any>(null);
+  const [policyLoading, setPolicyLoading] = useState(false);
+
+  const handleEvaluatePolicy = async () => {
+    setPolicyLoading(true);
+    setPolicyResult(null);
+    setPolicyExport(null);
+    try {
+      const res = await fetch('http://localhost:8090/devops/policy/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ diff_text: policyDiff || '+def foo():\n+    pass\n' }),
+      });
+      if (res.ok) setPolicyResult(await res.json());
+    } finally {
+      setPolicyLoading(false);
+    }
+  };
+
+  const handleExportMarkdown = async () => {
+    try {
+      const res = await fetch('http://localhost:8090/devops/policy/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ diff_text: policyDiff || '+def foo():\n+    pass\n' }),
+      });
+      if (res.ok) setPolicyExport(await res.json());
+    } catch {/**/}
+  };
+
+  const handleExportJson = async () => {
+    await handleExportMarkdown();
+  };
+
   return (
     <div data-testid="devops-page" className="p-6">
       <div className="mb-6">
@@ -97,6 +135,7 @@ export default function DevOpsPage() {
           <TabsTrigger value="gitlab" data-testid="devops-tab-gitlab">GitLab MR Bot</TabsTrigger>
           <TabsTrigger value="monitoring" data-testid="devops-tab-monitor">Monitor Reporter</TabsTrigger>
           <TabsTrigger value="test-harness" data-testid="devops-tab-harness">Test Harness</TabsTrigger>
+          <TabsTrigger value="policy" data-testid="devops-tab-policy">Policy Gate</TabsTrigger>
         </TabsList>
 
         {/* Risk-Bot Report Tab */}
@@ -302,6 +341,74 @@ export default function DevOpsPage() {
               <h3 className="font-semibold mb-2">Scenario Result</h3>
               <pre className="text-xs bg-gray-100 p-3 rounded overflow-x-auto">
                 {JSON.stringify(scenarioResult, null, 2)}
+              </pre>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Policy Gate Tab */}
+        <TabsContent value="policy" data-testid="devops-panel-policy">
+          <Card className="p-4 mb-4">
+            <h2 className="text-lg font-semibold mb-2">Policy Gate</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Evaluate a MR diff against the RiskCanvas policy ruleset (offline, deterministic).
+            </p>
+            <textarea
+              className="w-full h-28 border rounded-md p-2 font-mono text-xs mb-3 bg-muted"
+              placeholder="+def my_change():\n+    pass"
+              value={policyDiff}
+              onChange={e => setPolicyDiff(e.target.value)}
+              data-testid="policy-diff-input"
+            />
+            <div className="flex gap-2">
+              <Button
+                onClick={handleEvaluatePolicy}
+                disabled={policyLoading}
+                data-testid="policy-evaluate-btn"
+              >
+                {policyLoading ? 'Evaluating…' : 'Evaluate Policy'}
+              </Button>
+              <Button variant="outline" onClick={handleExportMarkdown} data-testid="export-markdown-btn">
+                Export Markdown
+              </Button>
+              <Button variant="outline" onClick={handleExportJson} data-testid="export-json-btn">
+                Export JSON
+              </Button>
+            </div>
+          </Card>
+
+          {policyResult && (
+            <Card className="p-4 mb-4" data-testid="policy-result-section">
+              <div className="flex items-center gap-3 mb-3">
+                <Badge
+                  variant={policyResult.decision === 'allow' ? 'default' : 'destructive'}
+                  data-testid="policy-result-badge"
+                >
+                  {policyResult.decision?.toUpperCase()}
+                </Badge>
+                <span className="text-sm font-medium">{policyResult.summary}</span>
+              </div>
+              {policyResult.reasons?.length > 0 && (
+                <ul data-testid="policy-reasons-list" className="space-y-1">
+                  {policyResult.reasons.map((r: any, i: number) => (
+                    <li key={i} className="text-sm flex items-center gap-2">
+                      <Badge variant={r.severity === 'blocker' ? 'destructive' : 'secondary'} className="text-xs">
+                        {r.severity}
+                      </Badge>
+                      <span className="font-mono text-xs">[{r.code}]</span>
+                      <span>{r.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          )}
+
+          {policyExport && (
+            <Card className="p-4" data-testid="policy-export-section">
+              <h3 className="font-semibold mb-2 text-sm">MR Comment Preview</h3>
+              <pre className="text-xs bg-muted p-3 rounded overflow-x-auto whitespace-pre-wrap">
+                {policyExport.mr_comment_markdown}
               </pre>
             </Card>
           )}
