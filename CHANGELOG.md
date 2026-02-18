@@ -2,6 +2,72 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [3.6.0] – 2026-02-19
+
+### Added (v3.6 – Phase 8 Judge Demo + Proof Pack)
+- **e2e/phase8-judge-demo.spec.ts** — full Wave 7+8 tour, ≥25 screenshots, TOUR.webm ≥ 180s
+- **e2e/playwright.w7w8.judge.config.ts** — `slowMo: 4000` judge config with 1920×1080 viewport
+- **scripts/run_wave7_8.ps1** — full proof runner: engine → backend → vitest → tsc → vite build, manifest.json + MANIFEST.md in timestamped artifacts dir
+
+### Changed
+- API version bumped to 3.6.0
+- Frontend version badge updated to v3.6.0
+
+---
+
+## [3.5.0] – 2026-02-19
+
+### Added (v3.5 – Stress Library + Compare)
+- **packages/engine/src/stress.py** — 5 canonical stress scenario presets (rates_up_200bp, rates_down_200bp, vol_up_25pct, equity_down_10pct, credit_spread_up_100bp) + `apply_preset()`
+- **packages/engine/tests/test_stress.py** — 29 pytest tests (TestPresetDefinitions ×13, TestApplyPreset ×16)
+- **apps/api/stress_library.py** — `stress_router` (GET /stress/presets, GET /stress/presets/{id}, POST /stress/apply) + `compare_router` (POST /compare/runs)
+- **apps/api/tests/test_stress_compare.py** — 20 pytest tests (TestStressPresets, TestStressApply, TestCompareRuns)
+- **apps/web/src/pages/StressPage.tsx** — stress preset cards, run-btn, results panel with delta table; nav via `nav-stress`
+- **e2e/test-stress-compare.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- `packages/engine/src/__init__.py` — added stress exports
+- `apps/api/main.py` — stress_router + compare_router registered
+
+---
+
+## [3.4.0] – 2026-02-19
+
+### Added (v3.4 – Rates Curve Bootstrap)
+- **packages/engine/src/rates.py** — deterministic rates curve bootstrap (deposits + swaps), `bond_price_from_curve()`
+- **packages/engine/tests/test_rates.py** — 30 pytest tests (TestBootstrapDepositsOnly ×10, TestBootstrapWithSwaps ×5, TestBondPriceFromCurve ×5)
+- **apps/api/rates_curve.py** — `rates_router` with GET /rates/fixtures/simple, POST /rates/curve/bootstrap, POST /rates/bond/price-curve
+- **apps/api/fixtures/rates_curve_simple.json** + **apps/api/fixtures/bond_curve_case.json** — deterministic test fixtures
+- **apps/api/tests/test_rates_curve.py** — 20 pytest tests
+- **apps/web/src/pages/RatesPage.tsx** — instruments editor, Bootstrap Curve button, zero-rate table, bond price panel
+- **e2e/test-rates.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- `packages/engine/src/__init__.py` — added rates exports
+- `apps/api/main.py` — rates_router registered
+- `apps/web/src/components/layout/AppLayout.tsx` — added `nav-rates` (TrendingUp icon)
+
+---
+
+## [3.3.0] – 2026-02-19
+
+### Added (v3.3 – AuditV2 Hash Chain + Provenance)
+- **apps/api/audit_v2.py** — immutable sha256 hash-chained audit log; `emit_audit_v2()`, `get_chain_head()`; endpoints GET /audit/v2/events, POST /audit/v2/reset, GET /audit/v2/verify
+- **apps/api/provenance.py** — provenance record store; `record_provenance()`, GET /provenance/{kind}/{id}
+- **apps/api/tests/test_audit_v2.py** — 23 pytest tests (TestAuditV2Events ×9, TestAuditV2Reset ×3, TestAuditV2Verify ×4, TestAuditChainDeterminism ×2, TestProvenanceEndpoint ×5)
+- **apps/web/src/components/ProvenanceDrawer.tsx** — collapsible provenance panel: `provenance-open`, `provenance-drawer`, `provenance-input-hash`, `provenance-output-hash`, `provenance-audit-head`, `provenance-verify`, `provenance-verify-ok`
+- **e2e/test-audit-provenance.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- `apps/api/main.py` — audit_v2_router + provenance_router registered; audit+provenance emitted in /runs/execute (both cache-hit and non-hit paths)
+- `apps/api/devops_policy.py` — `_emit_audit_safe()` lazy audit integration on policy evaluate
+- `apps/web/src/pages/RunHistory.tsx` — ProvenanceDrawer added per run row
+- `apps/web/src/pages/DevOpsPage.tsx` — ProvenanceDrawer added in policy result section
+- `apps/web/src/components/layout/AppLayout.tsx` — added `nav-stress` (FlameKindling icon)
+- `apps/web/src/lib/api.ts` — 11 new API client functions (audit, provenance, rates, stress, compare)
+
+---
+
 ## [3.2.0] – 2026-02-18
 
 ### Added (v3.2 – Submission Pack + Judge Demo)

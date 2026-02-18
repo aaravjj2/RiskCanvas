@@ -26,6 +26,9 @@ import MicrosoftModePage from '@/pages/MicrosoftModePage';
 import JobsPage from '@/pages/JobsPage';
 // Wave 6 Pages (v2.9-v3.2)
 import PlatformPage from '@/pages/PlatformPage';
+// Wave 7+8 Pages (v3.3-v3.6)
+import RatesPage from '@/pages/RatesPage';
+import StressPage from '@/pages/StressPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -60,6 +63,9 @@ export default function App() {
             <Route path="/jobs" element={<JobsPage />} />
             {/* Wave 6 Routes */}
             <Route path="/platform" element={<PlatformPage />} />
+            {/* Wave 7+8 Routes */}
+            <Route path="/rates" element={<RatesPage />} />
+            <Route path="/stress" element={<StressPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>
