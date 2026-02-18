@@ -1,6 +1,7 @@
 """
 Workspaces module for v1.4 - Enterprise Readiness Pack 1
 Provides workspace isolation and multi-tenancy support.
+Enhanced in v2.0 with ownership verification.
 """
 
 import hashlib
@@ -9,6 +10,11 @@ from typing import List, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Session, select
 from database import db, canonicalize_json
+
+
+class WorkspaceAccessError(Exception):
+    """Raised when user attempts to access workspace they don't own"""
+    pass
 
 
 class WorkspaceModel(SQLModel, table=True):
@@ -91,8 +97,11 @@ def list_workspaces(owner: Optional[str] = None) -> List[dict]:
         ]
 
 
-def get_workspace(workspace_id: str) -> Optional[dict]:
-    """Get workspace by ID"""
+def get_workspace(workspace_id: str, requesting_user: Optional[str] = None) -> Optional[dict]:
+    """
+    Get workspace by ID.
+    In v2.0+, optionally verifies requesting_user matches owner.
+    """
     with db.get_session() as session:
         workspace = session.exec(
             select(WorkspaceModel).where(WorkspaceModel.workspace_id == workspace_id)
@@ -100,6 +109,12 @@ def get_workspace(workspace_id: str) -> Optional[dict]:
         
         if not workspace:
             return None
+        
+        # Ownership check (v2.0+)
+        if requesting_user and workspace.owner != requesting_user:
+            raise WorkspaceAccessError(
+                f"User {requesting_user} does not have access to workspace {workspace_id}"
+            )
         
         return {
             "workspace_id": workspace.workspace_id,
@@ -111,8 +126,11 @@ def get_workspace(workspace_id: str) -> Optional[dict]:
         }
 
 
-def delete_workspace(workspace_id: str) -> bool:
-    """Delete workspace and all associated data"""
+def delete_workspace(workspace_id: str, requesting_user: Optional[str] = None) -> bool:
+    """
+    Delete workspace and all associated data.
+    In v2.0+, optionally verifies requesting_user matches owner.
+    """
     with db.get_session() as session:
         workspace = session.exec(
             select(WorkspaceModel).where(WorkspaceModel.workspace_id == workspace_id)
@@ -120,6 +138,12 @@ def delete_workspace(workspace_id: str) -> bool:
         
         if not workspace:
             return False
+        
+        # Ownership check (v2.0+)
+        if requesting_user and workspace.owner != requesting_user:
+            raise WorkspaceAccessError(
+                f"User {requesting_user} does not have access to workspace {workspace_id}"
+            )
         
         session.delete(workspace)
         session.commit()

@@ -69,9 +69,9 @@ test('phase2b-03: view audit log and apply filters', async ({ page }) => {
   await page.getByTestId('filter-actor-input').fill('test-user');
   await page.waitForTimeout(500);
 
-  // Apply resource type filter
-  await page.getByTestId('filter-resource-select').click();
-  await page.waitForTimeout(300);
+  // Apply resource type filter  
+  await page.getByTestId('filter-resource-input').fill('workspace');
+  await page.waitForTimeout(500);
 
   // Verify audit events table still visible after filtering
   await expect(page.getByTestId('audit-events-table')).toBeVisible();

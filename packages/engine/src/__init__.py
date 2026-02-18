@@ -8,6 +8,13 @@ from .portfolio import portfolio_pnl, portfolio_greeks
 from .var import var_parametric, var_historical
 from .scenario import scenario_run
 from .config import NUMERIC_PRECISION, round_to_precision
+from .bonds import (
+    bond_price_from_yield,
+    bond_yield_from_price,
+    bond_duration,
+    bond_convexity,
+    bond_risk_metrics,
+)
 
 __version__ = "0.1.0"
 
@@ -27,4 +34,9 @@ __all__ = [
     "scenario_run",
     "NUMERIC_PRECISION",
     "round_to_precision",
+    "bond_price_from_yield",
+    "bond_yield_from_price",
+    "bond_duration",
+    "bond_convexity",
+    "bond_risk_metrics",
 ]

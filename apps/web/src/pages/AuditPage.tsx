@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { listAuditEvents } from '@/lib/api';
 
 export default function AuditPage() {
@@ -21,14 +20,20 @@ export default function AuditPage() {
 
   const loadAuditEvents = async () => {
     setLoading(true);
-    const filters: any = {};
-    if (workspace) filters.workspace_id = workspace;
-    if (actor) filters.actor = actor;
-    if (resourceType) filters.resource_type = resourceType;
+    try {
+      const filters: any = {};
+      if (workspace) filters.workspace_id = workspace;
+      if (actor) filters.actor = actor;
+      if (resourceType) filters.resource_type = resourceType;
 
-    const result = await listAuditEvents(filters);
-    if (result) {
-      setEvents(result.events || []);
+      const result = await listAuditEvents(filters);
+      if (result) {
+        // API returns array directly, not wrapped in {events: [...]}
+        setEvents(Array.isArray(result) ? result : []);
+      }
+    } catch (error) {
+      console.error('Failed to load audit events:', error);
+      setEvents([]);
     }
     setLoading(false);
   };
@@ -75,20 +80,13 @@ export default function AuditPage() {
           </div>
           <div>
             <Label htmlFor="filter-resource">Resource Type</Label>
-            <Select value={resourceType} onValueChange={setResourceType}>
-              <SelectTrigger data-testid="filter-resource-select">
-                <SelectValue placeholder="All types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All types</SelectItem>
-                <SelectItem value="portfolio">Portfolio</SelectItem>
-                <SelectItem value="run">Run</SelectItem>
-                <SelectItem value="report">Report</SelectItem>
-                <SelectItem value="hedge">Hedge</SelectItem>
-                <SelectItem value="workspace">Workspace</SelectItem>
-                <SelectItem value="monitor">Monitor</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              id="filter-resource"
+              data-testid="filter-resource-input"
+              placeholder="All types, portfolio, run, report, hedge, workspace, monitor"
+              value={resourceType}
+              onChange={(e) => setResourceType(e.target.value)}
+            />
           </div>
         </div>
       </Card>

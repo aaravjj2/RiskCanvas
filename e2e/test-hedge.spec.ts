@@ -24,10 +24,10 @@ test('phase2a-05: generate hedges with target reduction', async ({ page }) => {
   // Generate hedges
   await page.getByTestId('generate-hedges-btn').click();
 
-  // Wait for hedges to generate
+  // Wait for API response (may return empty if portfolio doesn't exist)
   await page.waitForTimeout(2000);
 
-  // Verify hedges list is visible
+  // Verify hedges list container is always visible (shows empty state or results)
   await expect(page.getByTestId('hedges-list')).toBeVisible();
 
   // Check if any hedge cards were generated
@@ -40,7 +40,7 @@ test('phase2a-05: generate hedges with target reduction', async ({ page }) => {
     // Verify first hedge card has expected structure
     await expect(hedgeCards.first()).toBeVisible();
   } else {
-    console.log('No hedges generated (may be expected for test data)');
+    console.log('No hedges to apply, test skipped');
   }
 });
 

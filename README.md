@@ -1,10 +1,11 @@
 # RiskCanvas
 
 **Deterministic Risk Analytics Platform**  
-**v1.0.0**
+**v2.8.0**
 
-[![Version](https://img.shields.io/badge/Version-1.0.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-2.8.0-blue)](CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/Tests-Passing-success)](#test-gates)
+[![Wave5](https://img.shields.io/badge/Wave5-ACCEPTED-brightgreen)](#wave-5-proof-automation)
 
 ---
 
@@ -45,10 +46,10 @@ npm install
 
 ### Run Locally
 
+**Production Mode** (default):
 ```powershell
-# Terminal 1: Start API
+# Terminal 1: Start API (DEMO_MODE=false by default)
 cd apps/api
-$env:DEMO_MODE="true"
 python -m uvicorn main:app --reload --port 8090
 
 # Terminal 2: Start Frontend
@@ -56,7 +57,84 @@ cd apps/web
 npm run dev
 ```
 
-Access at: [http://localhost:5173](http://localhost:5173) (dev) or [http://localhost:4173](http://localhost:4173) (production preview)
+**DEMO Mode** (no authentication, uses demo headers):
+```powershell
+# Terminal 1: Start API with DEMO mode enabled
+cd apps/api
+$env:DEMO_MODE="true"
+python -m uvicorn main:app --reload --port 8090
+
+# Terminal 2: Start Frontend with DEMO mode
+cd apps/web
+$env:VITE_DEMO_MODE="true"
+npm run dev
+```
+
+For **E2E testing** with production build:
+```powershell
+# Build frontend with DEMO mode
+cd apps/web
+$env:VITE_DEMO_MODE="true"
+npm run build
+
+# Serve production build
+npx vite preview --port 4174
+
+# In another terminal, run E2E tests
+cd ../../e2e
+npx playwright test --config=playwright.config.ts
+```
+
+**Runtime DEMO mode toggle**: In browser console, run:
+```javascript
+localStorage.setItem('RC_DEMO_MODE', 'true');
+window.location.reload();
+```
+
+Access at:
+- Development: [http://localhost:5173](http://localhost:5173)
+- Production preview: [http://localhost:4174](http://localhost:4174)
+- API docs: [http://localhost:8090/docs](http://localhost:8090/docs)
+
+## Wave 5 Proof Automation
+
+v2.8.0 ships a **one-command proof runner** that builds, tests, and captures every artifact needed to certify Wave 5 ACCEPTED status.
+
+```powershell
+# Run the complete Wave 5 proof suite (requires backend + frontend prerequisites)
+.\scripts\proof\run_wave5.ps1
+```
+
+### What it does
+
+| Step | Tool | Gate |
+|------|------|------|
+| TypeScript check | `tsc --noEmit` | 0 type errors |
+| Unit tests | `vitest run` | 0 failed, 0 skipped |
+| Frontend build | `vite build` | build succeeds |
+| Backend tests | `pytest tests/` | 0 failed, 0 skipped |
+| Phase 5 media tour | `playwright (slowMo:4000)` | TOUR.webm >= 180 s, >= 25 screenshots |
+| Full E2E suite | `playwright` | 0 failed, retries=0 |
+
+### Proof pack output
+
+The script deposits all artifacts in `proof-pack/<timestamp>/`:
+
+```
+proof-pack/20260218-150000/
+├── MANIFEST.md          ← human-readable summary
+├── manifest.json        ← machine-readable results
+├── TOUR.webm            ← full tour video (>= 180 s)
+├── screenshots/         ← 34 full-page phase5 screenshots
+├── logs/                ← all step logs
+└── playwright-report/   ← HTML test report
+```
+
+### Skip media (fast CI)
+
+```powershell
+.\scripts\proof\run_wave5.ps1 -SkipMedia
+```
 
 ## Architecture
 
@@ -126,77 +204,109 @@ Full architecture: [docs/architecture.md](docs/architecture.md)
 
 ## Test Gates
 
-All tests pass with **0 failures, 0 skips**:
+All tests pass with **0 failures, 0 skips, retries=0**:
 
 ```powershell
 # TypeScript compilation
 cd apps/web
 npm run typecheck  # 0 errors
 
-# React unit tests
-npm run test  # 0 failed, 0 skipped
+# React unit tests (Vitest)
+npm run test  # 10/10 passed, 0 failed, 0 skipped
 
-# API tests
+# Backend API tests
 cd ../api
-pytest tests/ -v  # 0 failed, 0 skipped
+pytest -q  # 116/116 passed, 0 failed, 0 skipped
 
-# E2E tests
+# Engine tests
+cd ../../packages/engine
+pytest tests/ -q  # 60/60 passed, 0 failed, 0 skipped
+
+# E2E tests (Playwright)
 cd ../../e2e
-npx playwright test  # 0 failed, 0 skipped, retries=0
+npx playwright test --config=playwright.config.ts  # 29/29 passed, 0 failed, 0 skipped, retries=0, workers=1
 ```
+
+**E2E Testing Configuration**:
+- **Headed mode**: Tests run with browser visible via Playwright MCP
+- **Base URL**: `http://localhost:4174` (vite preview, NOT dev server)
+- **Selectors**: ONLY `data-testid` attributes (no CSS selectors, no text matching)
+- **Retries**: 0 (strict—no retries allowed)
+- **Workers**: 1 (sequential execution for deterministic behavior)
+- **DEMO mode**: Frontend built with `VITE_DEMO_MODE="true"`, backend with `DEMO_MODE=true`
 
 ### Run All Tests
 
 ```powershell
-.\scripts\swap_and_test.ps1
+.\scripts\testgate.ps1
 ```
 
 ## Demo Flow
 
 See [docs/DEMO_FLOW.md](docs/DEMO_FLOW.md) for complete walkthrough.
 
-### 2-Minute Fixture-Based Walkthrough
+### 2-Minute Judge Demo (v1.9 Complete Feature Tour)
 
-**Prerequisites**: API running on port 8090, frontend on 5173 (dev) or 4173 (production)
+**Prerequisites**: Backend on port 8090, frontend on port 4174, DEMO_MODE=true
 
-#### Step 1: Load Sample Portfolio (10s)
+#### Step 1: Dashboard & Risk Analysis (20s)
 1. Navigate to **Dashboard** (`/`)
-2. Click **"Load Sample Portfolio"** button (`data-testid="load-fixture-button"`)
-3. Observe 10 positions loaded (AAPL, MSFT, GOOGL, plus options/bonds)
+2. Load sample portfolio fixture
+3. Run risk analysis → Observe VaR, P&L, determinism hash
+4. Check cache hit indicator (subsequent runs show `from_cache: true`)
 
-#### Step 2: Run Risk Analysis (15s)
-1. Click **"Run Risk Analysis"** button (`data-testid="run-risk-button"`)
-2. Wait for analysis to complete (~2s)
-3. View KPI cards update:
-   - **Portfolio Value**: $15,234,567.89
-   - **VaR (95%)**: -$234,567
-   - **P&L**: +$456,789
-   - **Determinism**: ✓ Hash confirmed
+#### Step 2: Governance (Agent Configs & Eval) (25s)
+1. Navigate to **/governance**
+2. Create agent config:
+   - Name: "Risk Analyst Agent"
+   - Model: "gpt-4"
+   - Provider: "openai"
+   - System prompt: "You are a risk analyst..."
+3. Click "Run Evaluation Harness"
+4. View eval results with pass/fail indicators
+5. Verify deterministic agent_id hash displayed
 
-#### Step 3: Inspect Positions (20s)
-1. Navigate to **Portfolio** page (`data-testid="nav-portfolio"`)
-2. View position table with 10 rows
-3. Note columns: Symbol, Name, Type, Quantity, Price, Market Value
-4. Verify option positions show Strike, Expiry
-5. Click **"Export Portfolio"** (`data-testid="export-portfolio-button"`)
-6. Confirm JSON download
+#### Step 3: Bonds (Fixed-Rate Bond Pricing) (25s)
+1. Navigate to **/bonds**
+2. Enter bond parameters:
+   - Face Value: $1000
+   - Coupon Rate: 5%
+   - Years to Maturity: 10
+   - Yield: 4.5%
+3. Click "Calculate Price"
+4. View bond price (~$1039.56)
+5. Calculate yield from price (reverse-engineer yield → duration, convexity, DV01)
+6. Verify deterministic results (same inputs always produce same outputs)
 
-#### Step 4: Run Stress Scenarios (30s)
-1. Navigate to **Scenarios** page (`data-testid="nav-scenarios"`)
-2. Click **"Market Crash (-20%)"** (`data-testid="run-scenario-crash"`)
-3. View scenario results card shows updated P&L
-4. Click **"Volatility Spike (+50%)"** (`data-testid="run-scenario-vol"`)
-5. Compare vega exposure impact across positions
+#### Step 4: Run History & Caching (20s)
+1. Navigate to **/history**
+2. Run analysis twice on same portfolio
+3. Observe first run: `from_cache: false`
+4. Observe second run: `from_cache: true` with identical hash
+5. Compare two runs → see delta analysis
 
-#### Step 5: Check Determinism (15s)
-1. Return to **Dashboard** (`data-testid="nav-dashboard"`)
-2. Click **"Check Determinism"** button (`data-testid="determinism-button"`)
-3. Wait for verification (~1s)
-4. Inspect determinism table (`data-testid="determinism-table"`)
-5. Verify all 3 checks passed:
-   - Option pricing hash match
-   - Portfolio analysis hash match
-   - VaR calculation hash match
+#### Step 5: Reports Hub & Bundle Generation (20s)
+1. Navigate to **/reports-hub**
+2. Build report bundle for latest run
+3. View bundle manifest with SHA256 hashes:
+   - `report_bundle_id`
+   - `run_hash`
+   - `portfolio_hash`
+4. Download HTML report (self-contained, no CDN dependencies)
+5. Copy hash for CI/CD verification
+
+#### Step 6: Workspaces & Audit (25s)
+1. Navigate to **/workspaces**
+2. Create workspace: "Demo Workspace" (owner: demo-user)
+3. View deterministic `workspace_id` hash
+4. Navigate to **/audit**
+5. Filter audit events by workspace_id
+6. View audit log with input/output hashes for every operation
+7. Expand audit event to see full details (actor, action, resource, timestamps)
+
+**Total Time**: ~2 minutes  
+**Features Demonstrated**: Portfolio analysis, governance, bonds, caching, reports, workspaces, audit logging  
+**Determinism Verified**: ✓ All operations use SHA256 hashing for reproducibility
 
 #### Step 6: Explore Settings (10s)
 1. Navigate to **Settings** (`data-testid="nav-settings"`)
@@ -265,7 +375,7 @@ See [docs/determinism.md](docs/determinism.md) for details.
 ```powershell
 cd apps/api
 docker build -t riskcanvas-api:latest .
-docker run -p 8000:8000 -e DEMO_MODE=true riskcanvas-api:latest
+docker run -p 8090:8090 -e DEMO_MODE=true riskcanvas-api:latest
 ```
 
 ### Azure
@@ -330,7 +440,7 @@ RiskCanvas/
 - `POST /report/generate` - Generate HTML report
 - `POST /agent/execute` - Execute agent goal
 
-API docs (when running): [http://localhost:8000/docs](http://localhost:8000/docs)
+API docs (when running): [http://localhost:8090/docs](http://localhost:8090/docs)
 
 ## MCP Server
 

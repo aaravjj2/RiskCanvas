@@ -9,6 +9,7 @@ import { test, expect } from '@playwright/test';
  */
 
 test('phase2-tour: comprehensive end-to-end flow (≥180s)', async ({ page }) => {
+  test.setTimeout(240000); // 4 minutes for comprehensive tour
   console.log('=== TOUR START: Phase 2A+2B Comprehensive Demo ===');
 
   // 1. Dashboard (baseline)

@@ -226,7 +226,7 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "2.5.1"
+API_VERSION = "2.8.0"
 ENGINE_VERSION = "0.1.0"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000

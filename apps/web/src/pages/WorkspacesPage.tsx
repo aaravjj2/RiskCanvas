@@ -22,14 +22,20 @@ export default function WorkspacesPage() {
 
   const loadWorkspaces = async () => {
     setLoading(true);
-    const result = await listWorkspaces();
-    if (result) {
-      setWorkspaces(result.workspaces || []);
-      if (!currentWorkspace && result.workspaces.length > 0) {
-        setCurrentWorkspace(result.workspaces[0].workspace_id);
+    try {
+      const result = await listWorkspaces();
+      if (result) {
+        // API returns array directly, not wrapped in {workspaces: [...]}
+        setWorkspaces(Array.isArray(result) ? result : []);
+        if (!currentWorkspace && Array.isArray(result) && result.length > 0) {
+          setCurrentWorkspace(result[0].workspace_id);
+        }
       }
+    } catch (error) {
+      console.error('Failed to load workspaces:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleCreateWorkspace = async () => {
@@ -39,39 +45,51 @@ export default function WorkspacesPage() {
     }
 
     setLoading(true);
-    const tags = newWorkspaceTags
-      .split(',')
-      .map((t) => t.trim())
-      .filter((t) => t);
+    try {
+      const tags = newWorkspaceTags
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t);
 
-    const result = await createWorkspace({
-      name: newWorkspaceName,
-      owner: newWorkspaceOwner,
-      tags,
-    });
+      const result = await createWorkspace({
+        name: newWorkspaceName,
+        owner: newWorkspaceOwner,
+        tags,
+      });
 
-    if (result) {
-      await loadWorkspaces();
-      setShowCreateForm(false);
-      setNewWorkspaceName('');
-      setNewWorkspaceTags('');
-      alert(`Workspace created with ID: ${result.workspace_id}`);
+      if (result) {
+        await loadWorkspaces();
+        setShowCreateForm(false);
+        setNewWorkspaceName('');
+        setNewWorkspaceTags('');
+        alert(`Workspace created with ID: ${result.workspace_id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create workspace:', error);
+      alert('Failed to create workspace. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDeleteWorkspace = async (workspaceId: string) => {
     if (!confirm('Delete this workspace? This cannot be undone.')) return;
 
     setLoading(true);
-    const result = await deleteWorkspace(workspaceId);
-    if (result) {
-      await loadWorkspaces();
-      if (currentWorkspace === workspaceId) {
-        setCurrentWorkspace(null);
+    try {
+      const result = await deleteWorkspace(workspaceId);
+      if (result) {
+        await loadWorkspaces();
+        if (currentWorkspace === workspaceId) {
+          setCurrentWorkspace(null);
+        }
       }
+    } catch (error) {
+      console.error('Failed to delete workspace:', error);
+      alert('Failed to delete workspace. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

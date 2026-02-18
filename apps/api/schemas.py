@@ -397,3 +397,122 @@ class DriftSummaryInfo(BaseModel):
     drift_score: float
     sequence: int
     created_at: str
+
+
+# ===== v1.7 Governance Schemas =====
+
+
+class AgentConfigCreateRequest(BaseModel):
+    """Request to create an agent configuration"""
+    name: str
+    model: str
+    provider: str
+    system_prompt: str
+    tool_policies: Dict[str, Any]
+    thresholds: Dict[str, Any]
+    tags: Optional[List[str]] = None
+
+
+class AgentConfigInfo(BaseModel):
+    """Agent configuration information"""
+    config_id: str
+    name: str
+    model: str
+    provider: str
+    system_prompt: str
+    tool_policies: Dict[str, Any]
+    thresholds: Dict[str, Any]
+    tags: List[str]
+    status: str
+    sequence: Optional[int]
+    created_at: str
+    updated_at: str
+
+
+class ConfigActivateRequest(BaseModel):
+    """Request to activate a configuration"""
+    config_id: str
+
+
+class EvalRunRequest(BaseModel):
+    """Request to run eval harness"""
+    config_id: str
+
+
+class EvalReportInfo(BaseModel):
+    """Eval report information"""
+    eval_report_id: str
+    config_id: str
+    sequence: Optional[int]
+    total_cases: int
+    passed: int
+    failed: int
+    score: float
+    results: List[Dict[str, Any]]
+    created_at: str
+
+
+# ===== v1.8 Bonds Schemas =====
+
+
+class BondPriceRequest(BaseModel):
+    """Request to calculate bond price from yield"""
+    face_value: float
+    coupon_rate: float
+    years_to_maturity: float
+    yield_to_maturity: float
+    periods_per_year: int = 2
+
+
+class BondPriceResponse(BaseModel):
+    """Bond price response"""
+    price: float
+
+
+class BondYieldRequest(BaseModel):
+    """Request to calculate yield from price"""
+    face_value: float
+    coupon_rate: float
+    years_to_maturity: float
+    price: float
+    periods_per_year: int = 2
+
+
+class BondYieldResponse(BaseModel):
+    """Bond yield response"""
+    yield_to_maturity: float
+
+
+class BondRiskRequest(BaseModel):
+    """Request to calculate bond risk metrics"""
+    face_value: float
+    coupon_rate: float
+    years_to_maturity: float
+    yield_to_maturity: float
+    periods_per_year: int = 2
+
+
+class BondRiskResponse(BaseModel):
+    """Bond risk metrics response"""
+    price: float
+    duration: float
+    modified_duration: float
+    convexity: float
+
+
+# === v1.9 Caching Schemas ===
+
+
+class CacheStatsResponse(BaseModel):
+    """Cache statistics response"""
+    size: int
+    hits: int
+    misses: int
+    hit_rate: float
+
+
+class CacheClearResponse(BaseModel):
+    """Cache clear response"""
+    cleared: int
+    status: str = "success"
+

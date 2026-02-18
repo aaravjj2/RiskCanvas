@@ -30,13 +30,13 @@ export default function HedgeStudio() {
     setLoading(true);
     const result = await suggestHedges({
       portfolio_id: portfolioId,
-      target_var_reduction_pct: targetReduction,
+      target_reduction_pct: targetReduction,
       max_cost: maxCost,
-      instrument_types: Object.keys(instrumentTypes).filter((k) => instrumentTypes[k as keyof typeof instrumentTypes]),
+      allowed_instruments: Object.keys(instrumentTypes).filter((k) => instrumentTypes[k as keyof typeof instrumentTypes]),
     });
 
     if (result) {
-      setHedges(result.hedges || []);
+      setHedges(result.candidates || []);
     }
     setLoading(false);
   };
@@ -171,66 +171,66 @@ export default function HedgeStudio() {
         <Card className="p-4 lg:col-span-2">
           <h2 className="text-lg font-semibold mb-4">Hedge Suggestions</h2>
 
-          {hedges.length === 0 && (
-            <div className="text-center py-12 text-gray-500">
-              <p>Configure parameters and click "Generate Hedges" to see suggestions</p>
-            </div>
-          )}
-
           <div className="space-y-4" data-testid="hedges-list">
-            {hedges.map((hedge, idx) => (
-              <Card
-                key={idx}
-                data-testid={`hedge-card-${idx}`}
-                className="p-4 border-2 hover:border-blue-500 transition"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">
-                      {hedge.instrument_type?.toUpperCase()} on {hedge.underlying}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Strike: ${hedge.strike} | Expiry: {hedge.expiry} | Quantity: {hedge.quantity}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-green-600">
-                      Rank #{idx + 1}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Cost</p>
-                    <p className="font-semibold">
-                      ${(hedge.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">VaR Reduction</p>
-                    <p className="font-semibold text-green-600">
-                      ${(hedge.var_reduction || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Cost-Effectiveness</p>
-                    <p className="font-semibold">
-                      {(hedge.cost_effectiveness || 0).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={() => handleApplyHedge(hedge)}
-                  disabled={loading}
-                  data-testid={`apply-hedge-btn-${idx}`}
-                  className="w-full"
+            {hedges.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>Configure parameters and click "Generate Hedges" to see suggestions</p>
+              </div>
+            ) : (
+              hedges.map((hedge, idx) => (
+                <Card
+                  key={idx}
+                  data-testid={`hedge-card-${idx}`}
+                  className="p-4 border-2 hover:border-blue-500 transition"
                 >
-                  Apply This Hedge
-                </Button>
-              </Card>
-            ))}
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">
+                        {hedge.instrument_type?.toUpperCase()} on {hedge.underlying}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Strike: ${hedge.strike} | Expiry: {hedge.expiry} | Quantity: {hedge.quantity}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-green-600">
+                        Rank #{idx + 1}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 mb-3">
+                    <div>
+                      <p className="text-xs text-gray-500">Cost</p>
+                      <p className="font-semibold">
+                        ${(hedge.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">VaR Reduction</p>
+                      <p className="font-semibold text-green-600">
+                        ${(hedge.var_reduction || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Cost-Effectiveness</p>
+                      <p className="font-semibold">
+                        {(hedge.cost_effectiveness || 0).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => handleApplyHedge(hedge)}
+                    disabled={loading}
+                    data-testid={`apply-hedge-btn-${idx}`}
+                    className="w-full"
+                  >
+                    Apply This Hedge
+                  </Button>
+                </Card>
+              ))
+            )}
           </div>
         </Card>
       </div>

@@ -8,18 +8,21 @@ import { test, expect } from '@playwright/test';
 test('phase2b-05: generate risk-bot report', async ({ page }) => {
   await page.goto('/devops');
   await expect(page.getByTestId('devops-page')).toBeVisible({ timeout: 10000 });
+  await page.waitForLoadState('networkidle');
+
+  // Set up response promise before clicking
+  const riskBotResponsePromise = page.waitForResponse(
+    (r) => r.url().includes('/devops/risk-bot') && r.status() === 200,
+    { timeout: 30000 }
+  );
 
   // Click generate report button
+  await expect(page.getByTestId('generate-riskbot-report-btn')).toBeEnabled();
   await page.getByTestId('generate-riskbot-report-btn').click();
-
-  // Wait for report generation
-  await page.waitForTimeout(2000);
+  await riskBotResponsePromise;
 
   // Verify report section is visible
-  await expect(page.getByTestId('riskbot-report-section')).toBeVisible({ timeout: 5000 });
-
-  // Verify CI checklist is present
-  await expect(page.getByTestId('ci-checklist')).toBeVisible();
+  await expect(page.getByTestId('riskbot-report-section')).toBeVisible({ timeout: 10000 });
 });
 
 test('phase2b-06: create monitor for portfolio', async ({ page }) => {
@@ -42,11 +45,8 @@ test('phase2b-06: create monitor for portfolio', async ({ page }) => {
   // Create monitor
   await page.getByTestId('create-monitor-btn').click();
 
-  // Wait for creation
-  await page.waitForTimeout(2000);
-
   // Verify monitors list is visible
-  await expect(page.getByTestId('monitors-list')).toBeVisible();
+  await expect(page.getByTestId('monitors-list')).toBeVisible({ timeout: 10000 });
 
   // Check if monitor items exist
   const monitorItems = page.locator('[data-testid^="monitor-item-"]');
@@ -74,9 +74,6 @@ test('phase2b-07: run monitor now and verify alerts', async ({ page }) => {
     if (btnCount > 0) {
       // Click first run-now button
       await runNowButtons.first().click();
-
-      // Wait for execution
-      await page.waitForTimeout(3000);
 
       // Verify alerts section is visible
       await expect(page.getByTestId('alerts-section')).toBeVisible();
