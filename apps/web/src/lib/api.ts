@@ -689,3 +689,59 @@ export async function generateSREPlaybook(params?: {
     body: JSON.stringify(body),
   });
 }
+
+// === v4.1 Activity Stream ===
+
+export async function getActivity(params?: { workspace_id?: string; limit?: number; since_event_id?: number }) {
+  const qs = new URLSearchParams();
+  if (params?.workspace_id) qs.set('workspace_id', params.workspace_id);
+  if (params?.limit !== undefined) qs.set('limit', String(params.limit));
+  if (params?.since_event_id !== undefined) qs.set('since_event_id', String(params.since_event_id));
+  const query = qs.toString() ? `?${qs}` : '';
+  return apiFetch<any>(`/activity${query}`);
+}
+
+export async function resetActivity() {
+  return apiFetch<any>('/activity/reset', { method: 'POST' });
+}
+
+// === v4.1 Presence ===
+
+export async function getPresence(params?: { workspace_id?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.workspace_id) qs.set('workspace_id', params.workspace_id);
+  const query = qs.toString() ? `?${qs}` : '';
+  return apiFetch<any>(`/presence${query}`);
+}
+
+export async function updatePresence(body: { workspace_id: string; actor: string; status: string; display?: string }) {
+  return apiFetch<any>('/presence/update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+// === v4.2 Live Run ===
+
+export async function getRunStatus(run_id: string) {
+  return apiFetch<any>(`/runs/${run_id}/status`);
+}
+
+// === v4.3 Search ===
+
+export async function searchQuery(params: { text: string; filters?: string[]; limit?: number }) {
+  return apiFetch<any>('/search/query', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+export async function searchReindex() {
+  return apiFetch<any>('/search/reindex', { method: 'POST' });
+}
+
+export async function searchStatus() {
+  return apiFetch<any>('/search/status');
+}

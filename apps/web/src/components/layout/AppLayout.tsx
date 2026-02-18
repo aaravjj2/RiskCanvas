@@ -13,9 +13,12 @@ import {
   Activity,
   TrendingUp,
   FlameKindling,
-  ShieldCheck
+  ShieldCheck,
+  Search,
+  Radio
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CommandPalette } from "@/components/CommandPalette";
 
 const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard", testid: "dashboard" },
@@ -32,6 +35,8 @@ const navItems = [
   { path: "/stress", icon: FlameKindling, label: "Stress", testid: "stress" },
   { path: "/governance", icon: ShieldCheck, label: "Governance", testid: "governance" },
   { path: "/sre", icon: ShieldCheck, label: "SRE Playbooks", testid: "sre" },
+  { path: "/activity", icon: Radio, label: "Activity", testid: "activity" },
+  { path: "/search", icon: Search, label: "Search", testid: "search" },
   { path: "/settings", icon: SettingsIcon, label: "Settings", testid: "settings" },
 ];
 
@@ -48,7 +53,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.0.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.4.0</p>
           </div>
 
           {/* Navigation */}
@@ -92,6 +97,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* Command Palette (Ctrl+K) */}
+      <CommandPalette />
     </div>
   );
 }

@@ -31,6 +31,9 @@ import RatesPage from '@/pages/RatesPage';
 import StressPage from '@/pages/StressPage';
 // Wave 9+10 Pages (v3.7-v4.0)
 import SREPlaybooksPage from '@/pages/SREPlaybooksPage';
+// Wave 11+12 Pages (v4.1-v4.4)
+import ActivityPage from '@/pages/ActivityPage';
+import SearchPage from '@/pages/SearchPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -70,6 +73,9 @@ export default function App() {
             <Route path="/stress" element={<StressPage />} />
             {/* Wave 9+10 Routes */}
             <Route path="/sre" element={<SREPlaybooksPage />} />
+            {/* Wave 11+12 Routes */}
+            <Route path="/activity" element={<ActivityPage />} />
+            <Route path="/search" element={<SearchPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>
