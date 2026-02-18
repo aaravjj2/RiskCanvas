@@ -1,11 +1,12 @@
 # RiskCanvas
 
 **Deterministic Risk Analytics Platform**  
-**v4.4.0**
+**v4.5.0**
 
-[![Version](https://img.shields.io/badge/Version-4.4.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-4.5.0-blue)](CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/Tests-493%20passing-success)](#test-gates)
 [![Wave11-12](https://img.shields.io/badge/Wave11--12-v4.4.0-brightgreen)](#wave-11-12-activity-stream--live-run--global-search--command-palette)
+[![Testing](https://img.shields.io/badge/Frontend%20Tests-Playwright--only-blueviolet)](#frontend-testing-v450)
 
 ---
 
@@ -110,8 +111,8 @@ v2.8.0 ships a **one-command proof runner** that builds, tests, and captures eve
 | Step | Tool | Gate |
 |------|------|------|
 | TypeScript check | `tsc --noEmit` | 0 type errors |
-| Unit tests | `vitest run` | 0 failed, 0 skipped |
 | Frontend build | `vite build` | build succeeds |
+| Harness tests | `playwright --project uiunit` | 0 failed, retries=0 |
 | Backend tests | `pytest tests/` | 0 failed, 0 skipped |
 | Phase 5 media tour | `playwright (slowMo:4000)` | TOUR.webm >= 180 s, >= 25 screenshots |
 | Full E2E suite | `playwright` | 0 failed, retries=0 |
@@ -301,8 +302,10 @@ All tests pass with **0 failures, 0 skips, retries=0**:
 cd apps/web
 npx tsc --noEmit  # 0 errors
 
-# React unit tests (Vitest)
-npx vitest run  # 10/10 passed, 0 failed, 0 skipped
+# Harness tests (Playwright uiunit project — replaces Vitest)
+cd ../../e2e
+npx playwright test --project uiunit  # 10/10 passed, 0 failed, retries=0
+cd ../../apps/web
 
 # Backend API tests (v4.0.0 — 422 passing)
 cd ../api
@@ -595,8 +598,36 @@ Tools:
 | v4.2.0 | Live Run SSE + progress panel (18 tests) | ✅ Complete |
 | v4.3.0 | Global Search local index + grouped results (15 tests) | ✅ Complete |
 | v4.4.0 | Command Palette + judge demo + invariants | ✅ Complete |
+| v4.5.0 | Frontend Testing Migration: Playwright-only (remove Vitest) | ✅ Complete |
 
-**Wave 11+12: COMPLETE** ✅ — 493 backend tests, 10 Vitest, 0 TypeScript errors, vite build OK
+**Wave 11+12 + v4.5.0: COMPLETE** ✅ — 493 backend tests, 0 TypeScript errors, vite build OK, Playwright-only frontend tests
+
+## Frontend Testing (v4.5.0) {#frontend-testing-v450}
+
+**Vitest has been removed.** From v4.5.0, all frontend test confidence is delivered by Playwright headed tests.
+
+| Mechanism | Location | Description |
+|-----------|----------|-------------|
+| `/__harness` route | `apps/web/src/pages/TestHarnessPage.tsx` | 12 deterministic synchronous checks; djb2-hashed expected vs actual |
+| Harness spec | `e2e/test-ui-harness.spec.ts` | 10 Playwright tests; `uiunit` project; data-testid only |
+| Playwright config | `e2e/playwright.config.ts` | `uiunit` project runs harness first; `main` project runs all other specs |
+
+### Running frontend tests
+
+```powershell
+# TypeCheck
+cd apps/web; npx tsc --noEmit
+
+# Build + preview (prerequisite for Playwright)
+cd apps/web; npm run build
+cd apps/web; npm run preview -- --port 4174 --host localhost
+
+# Harness only
+cd e2e; npx playwright test --project uiunit
+
+# Full suite (harness first, then E2E)
+cd e2e; npx playwright test
+```
 
 ## License
 

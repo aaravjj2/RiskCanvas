@@ -34,6 +34,8 @@ import SREPlaybooksPage from '@/pages/SREPlaybooksPage';
 // Wave 11+12 Pages (v4.1-v4.4)
 import ActivityPage from '@/pages/ActivityPage';
 import SearchPage from '@/pages/SearchPage';
+// v4.5.0 UI Test Harness
+import TestHarnessPage from '@/pages/TestHarnessPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -76,6 +78,8 @@ export default function App() {
             {/* Wave 11+12 Routes */}
             <Route path="/activity" element={<ActivityPage />} />
             <Route path="/search" element={<SearchPage />} />
+            {/* v4.5.0 UI Test Harness */}
+            <Route path="/__harness" element={<TestHarnessPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>

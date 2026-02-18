@@ -16,7 +16,7 @@ export interface CommandItem {
   action?: () => void;
 }
 
-const NAV_COMMANDS: CommandItem[] = [
+export const NAV_COMMANDS: CommandItem[] = [
   { id: 'dashboard', label: 'Go to Dashboard', description: 'Main analytics dashboard', path: '/' },
   { id: 'search', label: 'Go to Search', description: 'Global search across all data', path: '/search' },
   { id: 'activity', label: 'Go to Activity', description: 'Activity stream & presence', path: '/activity' },

@@ -2,6 +2,55 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [4.5.0] – 2026-02-18
+
+### Changed (v4.5 – Frontend Testing Migration: Playwright-Only)
+
+**Vitest removed** — all frontend unit-test confidence is now delivered by Playwright MCP headed tests.
+
+#### Removed
+- `apps/web/src/App.test.tsx` — Vitest test suite (10 tests; replicated by Playwright harness)
+- `apps/web/src/setupTests.ts` — `@testing-library/jest-dom` setup file
+- `apps/web/src/__mocks__/fileMock.ts` — jsdom SVG/image mock
+- `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom` from `devDependencies`
+- `"test": "vitest run"` npm script
+- `test:vitest` job from `.gitlab-ci.yml`
+- `vitest/config` import and `test` block from `vite.config.ts`
+
+#### Added
+- **apps/web/src/pages/TestHarnessPage.tsx** — deterministic UI unit harness at route `/__harness`; all checks run synchronously on mount; shows `data-testid=harness-ready` (data-all-pass), `data-testid=harness-check-<slug>` rows with `data-pass`, `data-expected-hash`, `data-actual-hash`; 12 checks covering: demo headers, auth mode, auth headers, CommandPalette NAV_COMMANDS, API mock constants, EventClient lifecycle
+- **e2e/test-ui-harness.spec.ts** — 10 Playwright MCP headed tests validating the harness page; no waitForTimeout, data-testid only, retries=0
+- **e2e/playwright.config.ts** — added `projects` array: `uiunit` (harness spec, runs first) and `main` (all other specs, depends on uiunit)
+
+#### Updated
+- `apps/web/src/App.tsx` — added `<Route path="/__harness" element={<TestHarnessPage />} />`
+- `apps/web/src/components/CommandPalette.tsx` — exported `NAV_COMMANDS` const so harness can import it
+- `apps/web/vite.config.ts` — simplified: `vite` config (not `vitest/config`), removed test block and SVG mock aliases
+- `apps/web/package.json` — pruned vitest and testing-library from devDependencies
+- `.gitlab-ci.yml` — replaced `test:vitest` job with updated `test:playwright` comment
+
+### How to Run
+
+```powershell
+# TypeScript typecheck
+cd apps/web; npx tsc --noEmit
+
+# Build + preview (required before E2E)
+cd apps/web; npm run build
+cd apps/web; npm run preview -- --port 4174 --host localhost
+
+# Full Playwright suite (includes harness first, then all other specs)
+cd e2e; npx playwright test --config playwright.config.ts
+
+# Harness-only suite
+cd e2e; npx playwright test --config playwright.config.ts --project uiunit
+
+# Backend pytest (unchanged)
+cd apps/api; python -m pytest tests/ -q
+```
+
+---
+
 ## [4.4.0] – 2026-02-21
 
 ### Added (v4.4 – Command Palette + Judge Demo + Stabilization)
