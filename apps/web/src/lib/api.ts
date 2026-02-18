@@ -745,3 +745,104 @@ export async function searchReindex() {
 export async function searchStatus() {
   return apiFetch<any>('/search/status');
 }
+// === v4.6 Market Data Provider ===
+
+export async function getMarketAsof() {
+  return apiFetch<any>('/market/asof', { method: 'GET' });
+}
+
+export async function getMarketSpot(symbol: string) {
+  return apiFetch<any>(`/market/spot?symbol=${encodeURIComponent(symbol)}`, { method: 'GET' });
+}
+
+export async function postMarketSeries(params: { symbol: string; start?: string; end?: string; freq?: string }) {
+  return apiFetch<any>('/market/series', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+export async function getMarketCurve(curveId: string) {
+  return apiFetch<any>(`/market/curves/${encodeURIComponent(curveId)}`, { method: 'GET' });
+}
+
+// === v4.7 Cache v2 ===
+
+export async function getCacheV2Stats() {
+  return apiFetch<any>('/cache/v2/stats', { method: 'GET' });
+}
+
+export async function clearCacheV2(layer?: string) {
+  const qs = layer ? `?layer=${encodeURIComponent(layer)}` : '';
+  return apiFetch<any>(`/cache/v2/clear${qs}`, { method: 'POST' });
+}
+
+export async function getCacheV2Keys(layer: string, limit = 20) {
+  return apiFetch<any>(`/cache/v2/keys?layer=${encodeURIComponent(layer)}&limit=${limit}`, { method: 'GET' });
+}
+
+// === v4.8 Hedge Engine v2 ===
+
+export async function getHedgeTemplates() {
+  return apiFetch<any>('/hedge/v2/templates', { method: 'GET' });
+}
+
+export async function suggestHedgesV2(params: {
+  portfolio_id?: string;
+  portfolio_value?: number;
+  template_id?: string;
+  objective?: string;
+  before_metrics?: Record<string, number>;
+  constraints?: Record<string, any>;
+}) {
+  return apiFetch<any>('/hedge/v2/suggest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+export async function compareHedgeV2(params: {
+  base_run_id?: string;
+  base_metrics?: Record<string, number>;
+  hedged_metrics?: Record<string, number>;
+}) {
+  return apiFetch<any>('/hedge/v2/compare', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+// === v4.9 Decision Memo ===
+
+export async function buildDecisionMemo(params: {
+  hedge_result: any;
+  compare_deltas: any;
+  provenance_hashes?: Record<string, string>;
+  analyst_notes?: string;
+}) {
+  return apiFetch<any>('/hedge/v2/memo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+export async function exportHedgeDecisionPack(params: {
+  memo_request: {
+    hedge_result: any;
+    compare_deltas: any;
+    provenance_hashes?: Record<string, string>;
+    analyst_notes?: string;
+  };
+  include_candidates?: boolean;
+  include_compare?: boolean;
+}) {
+  return apiFetch<any>('/exports/hedge-decision-pack', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}

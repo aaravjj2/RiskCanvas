@@ -198,6 +198,18 @@ from live_run import live_run_router, get_run_status_store
 # Search Index Local (v4.3+)
 from search_index_local import search_router, get_local_index
 
+# v4.6 Market Data
+from market_data import market_router
+
+# v4.7 Cache v2
+from cache_v2 import cache_v2_router, reset_cache_v2
+
+# v4.8 Hedge Engine v2
+from hedge_engine_v2 import hedge_v2_router
+
+# v4.9 Decision Memo + Exports
+from decision_memo import decision_memo_router, exports_router
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -269,7 +281,7 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "4.4.0"
+API_VERSION = "4.9.0"
 ENGINE_VERSION = "0.1.0"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000
@@ -337,6 +349,19 @@ app.include_router(live_run_router)
 
 # Search Index Local (v4.3+)
 app.include_router(search_router)
+
+# Market Data Provider (v4.6+)
+app.include_router(market_router)
+
+# Cache v2 (v4.7+)
+app.include_router(cache_v2_router)
+
+# Hedge Engine v2 (v4.8+)
+app.include_router(hedge_v2_router)
+
+# Decision Memo + Exports (v4.9+)
+app.include_router(decision_memo_router)
+app.include_router(exports_router)
 
 # ===== Error handlers =====
 
@@ -504,6 +529,9 @@ async def test_reset():
     # Seed search index (v4.3+)
     get_local_index().reset()
     get_local_index().build()
+
+    # Reset cache v2 (v4.7+)
+    reset_cache_v2()
 
     # Seed demo run status (v4.2+)
     get_run_status_store().reset()

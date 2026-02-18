@@ -1,11 +1,11 @@
 # RiskCanvas
 
 **Deterministic Risk Analytics Platform**  
-**v4.5.0**
+**v4.9.0**
 
-[![Version](https://img.shields.io/badge/Version-4.5.0-blue)](CHANGELOG.md)
-[![Tests](https://img.shields.io/badge/Tests-493%20passing-success)](#test-gates)
-[![Wave11-12](https://img.shields.io/badge/Wave11--12-v4.4.0-brightgreen)](#wave-11-12-activity-stream--live-run--global-search--command-palette)
+[![Version](https://img.shields.io/badge/Version-4.9.0-blue)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-578%20passing-success)](#test-gates)
+[![Wave13-14](https://img.shields.io/badge/Wave13--14-v4.9.0-brightgreen)](#wave-13-14-market-data--cache-v2--hedge-studio-pro--decision-memo)
 [![Testing](https://img.shields.io/badge/Frontend%20Tests-Playwright--only-blueviolet)](#frontend-testing-v450)
 
 ---
@@ -202,6 +202,48 @@ Full architecture: [docs/architecture.md](docs/architecture.md)
 - E2E tests (retries=0, workers=1, headless=false)
 - Architecture diagram (Mermaid)
 - Demo flow documentation
+
+---
+
+## Wave 13+14: Market Data / Cache v2 / Hedge Studio Pro / Decision Memo (v4.6–v4.9) {#wave-13-14-market-data--cache-v2--hedge-studio-pro--decision-memo}
+
+### ✅ Market Data Provider Abstraction (v4.6.0)
+- `MarketDataProvider` ABC with `FixtureMarketDataProvider` loading deterministically from `fixtures/market/`
+- Fixture data: 10 equity spots, 3 OHLCV series (AAPL, MSFT, SPY), USD SOFR rates curve (9 tenors)
+- **Endpoints**: `GET /market/asof`, `GET /market/spot?symbol=`, `POST /market/series`, `GET /market/curves/{curve_id}`
+- **Frontend**: `MarketDataPage.tsx` — spot lookup, series chart-ready data, rates curve display; `nav-market` in sidebar
+- **Tests**: 19 backend tests, 7 Playwright E2E tests
+
+### ✅ Cache v2 Layered (v4.7.0)
+- `CacheV2` with per-layer `OrderedDict` LRU eviction (128 slots/layer)
+- `make_cache_key()` producing 32-char hex keys for provenance-safe cache lookups
+- **Endpoints**: `GET /cache/v2/stats`, `POST /cache/v2/clear` (DEMO only), `GET /cache/v2/keys`
+- **Tests**: 22 backend tests including non-DEMO clear rejection
+
+### ✅ Hedge Studio Pro (v4.8.0)
+- 4 hedge templates: `protective_put`, `collar`, `delta_hedge`, `duration_hedge`
+- `generate_hedge_v2_candidates()` returning up to 10 scored candidates with cost/effectiveness breakdown
+- `compare_hedge_runs()` producing delta + pct_change metrics between base and hedged runs
+- **Endpoints**: `POST /hedge/v2/suggest`, `POST /hedge/v2/compare`, `GET /hedge/v2/templates`
+- **Frontend**: `HedgeStudio.tsx` — v2 Pro section with template selector, constraint inputs, optimizer and compare workflow; all v1 data-testids preserved
+- **Tests**: 24 backend tests, 9 Playwright E2E tests
+
+### ✅ Decision Memo Export (v4.9.0)
+- `DecisionMemoBuilder.build()` generating Markdown + JSON memos with provenance hashes
+- Deterministic timestamps via `DEMO_ASOF = "2026-01-15T16:00:00"` in DEMO_MODE
+- **Endpoints**: `POST /hedge/v2/memo`, `POST /exports/hedge-decision-pack`
+- **Frontend**: Build Memo and Export Decision Pack buttons in `HedgeStudio.tsx`
+- **Tests**: 20 backend tests
+
+### Evidence
+
+| Gate | Result |
+|------|--------|
+| pytest | **578 passed**, 0 failed |
+| tsc --noEmit | **0 errors** |
+| vite build | **✅ success** (462 KB JS, 30 KB CSS) |
+| Playwright uiunit | **10/10** |
+| Playwright Wave 13+14 | **14/14** |
 
 ---
 
@@ -599,6 +641,8 @@ Tools:
 | v4.3.0 | Global Search local index + grouped results (15 tests) | ✅ Complete |
 | v4.4.0 | Command Palette + judge demo + invariants | ✅ Complete |
 | v4.5.0 | Frontend Testing Migration: Playwright-only (remove Vitest) | ✅ Complete |
+
+**Wave 13+14 + v4.9.0: COMPLETE** ✅ — 578 backend tests, 0 TypeScript errors, vite build OK, Playwright uiunit 10/10, Playwright Wave 13+14 14/14
 
 **Wave 11+12 + v4.5.0: COMPLETE** ✅ — 493 backend tests, 0 TypeScript errors, vite build OK, Playwright-only frontend tests
 

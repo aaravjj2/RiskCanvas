@@ -15,7 +15,8 @@ import {
   FlameKindling,
   ShieldCheck,
   Search,
-  Radio
+  Radio,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -38,6 +39,7 @@ const navItems = [
   { path: "/activity", icon: Radio, label: "Activity", testid: "activity" },
   { path: "/search", icon: Search, label: "Search", testid: "search" },
   { path: "/settings", icon: SettingsIcon, label: "Settings", testid: "settings" },
+  { path: "/market", icon: BarChart2, label: "Market Data", testid: "market" },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -53,7 +55,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.4.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.9.0</p>
           </div>
 
           {/* Navigation */}

@@ -2,7 +2,77 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [4.9.0] – 2026-01-15
+
+### Added (v4.9 – Decision Memo Export)
+
+- **`apps/api/decision_memo.py`** — `DecisionMemoBuilder` that generates Markdown + JSON memos from hedge results; `_now_iso()` returns deterministic timestamp in DEMO_MODE; `decision_memo_router` at `POST /hedge/v2/memo`; `exports_router` at `POST /exports/hedge-decision-pack`
+- **`apps/api/tests/test_decision_memo.py`** — 20 tests (memo build, hash determinism, DEMO asof, export pack endpoint)
+- **Frontend**: `HedgeStudio.tsx` — Build Memo button, Decision Pack export buttons (`hedge-build-memo-btn`, `hedge-memo-ready`, `hedge-memo-export-md`, `hedge-memo-export-pack`)
+- **`apps/web/src/lib/api.ts`** — `buildDecisionMemo()`, `exportHedgeDecisionPack()` functions
+- **`e2e/test-hedge-v2.spec.ts`** — hv2-7 (build memo), hv2-8 (export pack), hv2-9 (v1 still works)
+- `API_VERSION` updated to `"4.9.0"`
+
+---
+
+## [4.8.0] – 2026-01-15
+
+### Added (v4.8 – Hedge Studio Pro)
+
+- **`apps/api/hedge_engine_v2.py`** — `HEDGE_TEMPLATES` dict (4 strategies: protective_put, collar, delta_hedge, duration_hedge); `generate_hedge_v2_candidates()` returning up to 10 scored candidates; `compare_hedge_runs()` producing deltas + pct_changes; `hedge_v2_router` at `POST /hedge/v2/suggest`, `POST /hedge/v2/compare`, `GET /hedge/v2/templates`
+- **`apps/api/tests/test_hedge_v2.py`** — 24 tests
+- **Frontend**: `HedgeStudio.tsx` — v2 Pro section with template selection, constraint inputs, optimizer and compare workflow; all v1 data-testids preserved
+- **`apps/web/src/lib/api.ts`** — `getHedgeTemplates()`, `suggestHedgesV2()`, `compareHedgeV2()` functions
+- **`e2e/test-hedge-v2.spec.ts`** — 9 tests covering pro mode init, template cards, constraints, suggest, compare, delta display
+
+---
+
+## [4.7.0] – 2026-01-15
+
+### Added (v4.7 – Cache v2 Layered)
+
+- **`apps/api/cache_v2.py`** — `CacheV2` with per-layer `OrderedDict` LRU eviction; `LAYER_MAX_SIZE = 128`; `make_cache_key()` for provenance-safe 32-char hex keys; `cache_v2_router` at `GET /cache/v2/stats`, `POST /cache/v2/clear` (DEMO only), `GET /cache/v2/keys`; `get_cache_v2()` singleton and `reset_cache_v2()` for test isolation
+- **`apps/api/tests/test_cache_v2.py`** — 22 tests
+- **`apps/web/src/lib/api.ts`** — `getCacheV2Stats()`, `clearCacheV2()`, `getCacheV2Keys()` functions
+
+---
+
+## [4.6.0] – 2026-01-15
+
+### Added (v4.6 – Market Data Provider Abstraction)
+
+- **`apps/api/market_data.py`** — `MarketDataProvider` ABC; `FixtureMarketDataProvider` loading from `fixtures/market/`; `get_market_data_provider()` factory; `market_router` at `GET /market/asof`, `GET /market/spot`, `POST /market/series`, `GET /market/curves/{curve_id}`
+- **`apps/api/fixtures/market/`** — 6 JSON fixture files: `asof.json`, `spot.json`, `series/AAPL.json`, `series/MSFT.json`, `series/SPY.json`, `curves/USD_SOFR.json`
+- **`apps/api/tests/test_market_data.py`** — 19 tests
+- **`apps/web/src/pages/MarketDataPage.tsx`** — Market Data page with spot lookup, series, and rates curve UI (`data-testid="market-page"`)
+- **`apps/web/src/components/layout/AppLayout.tsx`** — `nav-market` nav item (BarChart2 icon); version badge `v4.9.0`
+- **`apps/web/src/App.tsx`** — `/market` route pointing to `MarketDataPage`
+- **`e2e/test-market.spec.ts`** — 7 tests covering market page render, as-of load, spot lookup, series, curve, nav, and determinism
+
+### How to Run (Wave 13+14)
+
+```powershell
+# Backend pytest (578 tests)
+cd apps/api; python -m pytest tests/ -q
+
+# Build
+cd apps/web; npm run build
+
+# Start servers
+$env:DEMO_MODE="true"; Start-Job { cd apps/api; python -m uvicorn main:app --port 8090 }
+Start-Job { cd apps/web; npm run preview -- --port 4174 }
+
+# Playwright uiunit harness (10/10)
+cd e2e; npx playwright test --project uiunit
+
+# Playwright Wave 13+14 specs
+cd e2e; npx playwright test test-market.spec.ts test-hedge-v2.spec.ts --project=main
+```
+
+---
+
 ## [4.5.0] – 2026-02-18
+
 
 ### Changed (v4.5 – Frontend Testing Migration: Playwright-Only)
 
