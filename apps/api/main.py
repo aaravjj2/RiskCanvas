@@ -186,6 +186,18 @@ from devops_pro import devops_pro_router
 # SRE Playbook (v4.0+)
 from sre_playbook import sre_router
 
+# Activity Stream (v4.1+)
+from activity_stream import activity_router, seed_demo_activity, emit_activity
+
+# Presence (v4.1+)
+from presence import presence_router, seed_demo_presence
+
+# Live Run + SSE streams (v4.2+)
+from live_run import live_run_router, get_run_status_store
+
+# Search Index Local (v4.3+)
+from search_index_local import search_router, get_local_index
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -257,7 +269,7 @@ from errors import ErrorCode, RiskCanvasError, error_response
 
 # ===== Constants =====
 
-API_VERSION = "4.0.0"
+API_VERSION = "4.4.0"
 ENGINE_VERSION = "0.1.0"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 MAX_POSITIONS = 1000
@@ -313,6 +325,18 @@ app.include_router(devops_pro_router)
 
 # SRE Playbook (v4.0+)
 app.include_router(sre_router)
+
+# Activity Stream (v4.1+)
+app.include_router(activity_router)
+
+# Presence (v4.1+)
+app.include_router(presence_router)
+
+# Live Run + SSE streams (v4.2+)
+app.include_router(live_run_router)
+
+# Search Index Local (v4.3+)
+app.include_router(search_router)
 
 # ===== Error handlers =====
 
@@ -473,6 +497,18 @@ async def test_reset():
     reset_governance()
     reset_caching()
     
+    # Seed activity stream + presence (v4.1+)
+    seed_demo_activity()
+    seed_demo_presence()
+
+    # Seed search index (v4.3+)
+    get_local_index().reset()
+    get_local_index().build()
+
+    # Seed demo run status (v4.2+)
+    get_run_status_store().reset()
+    get_run_status_store().seed_demo()
+
     return {"status": "ok", "message": "Test sequences reset"}
 
 

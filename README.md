@@ -1,11 +1,11 @@
 # RiskCanvas
 
 **Deterministic Risk Analytics Platform**  
-**v4.0.0**
+**v4.4.0**
 
-[![Version](https://img.shields.io/badge/Version-4.0.0-blue)](CHANGELOG.md)
-[![Tests](https://img.shields.io/badge/Tests-422%20passing-success)](#test-gates)
-[![Wave9-10](https://img.shields.io/badge/Wave9--10-v4.0.0-brightgreen)](#wave-9-10-trust--governance--devops-pro--sre)
+[![Version](https://img.shields.io/badge/Version-4.4.0-blue)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-493%20passing-success)](#test-gates)
+[![Wave11-12](https://img.shields.io/badge/Wave11--12-v4.4.0-brightgreen)](#wave-11-12-activity-stream--live-run--global-search--command-palette)
 
 ---
 
@@ -201,6 +201,54 @@ Full architecture: [docs/architecture.md](docs/architecture.md)
 - E2E tests (retries=0, workers=1, headless=false)
 - Architecture diagram (Mermaid)
 - Demo flow documentation
+
+---
+
+## Wave 11+12: Activity Stream / Live Run / Global Search / Command Palette (v4.1–v4.4) {#wave-11-12-activity-stream--live-run--global-search--command-palette}
+
+### ✅ Activity Stream + Presence (v4.1.0)
+- 8 DEMO_SEED events across 6 event types (run.execute, report.generate, audit.log, policy.evaluate, eval.run, sre.incident)
+- `PresenceStore` with 4 actors: alice/bob (online), carol (idle), dave (offline)
+- SSE streams: `GET /events/activity`, `GET /events/presence`
+- **Endpoints**: `GET /activity`, `POST /activity/reset`, `GET /presence`, `POST /presence/update`
+- **Frontend**: `ActivityPage.tsx` — live feed with type filters + presence panel with status chips
+- **Tests**: 28 new backend tests (activity: 15, presence: 13)
+
+### ✅ Live Run View / SSE (v4.2.0)
+- `RunStatusStore` with 5 DEMO_STAGES: VALIDATE(10%)→PRICE(35%)→VAR(60%)→REPORT(85%)→DONE(100%)
+- Demo run `run-demo-001` pre-seeded as DONE
+- SSE stream: `GET /events/run-progress?run_id=`
+- **Endpoints**: `GET /runs/{run_id}/status`
+- **Frontend**: `LiveRunPanel` component in `RunHistory.tsx` — wires to single selected run
+- **Tests**: 18 new backend tests
+
+### ✅ Global Search: Local Index (v4.3.0)
+- `SearchIndexLocal` with 15 DEMO_INDEX_DOCS, 7 document types
+- Deterministic `tokenize()` + `score_doc()` — same query always same order
+- `SearchIndexElastic` stub (SEARCH_BACKEND=elastic only, never instantiated in tests)
+- **Endpoints**: `POST /search/query`, `POST /search/reindex`, `GET /search/status`
+- **Frontend**: `SearchPage.tsx` — grouped results by type, chip filters, highlight on click
+- **Tests**: 15 new backend tests
+
+### ✅ Command Palette + Judge Demo (v4.4.0)
+- `CommandPalette.tsx` — Ctrl+K opens palette, Escape closes; 8 NAV_COMMANDS; type-to-search routes to `/search?q=`
+- `data-testids`: `cmdk-open`, `cmdk-input`, `cmdk-item-{id}`
+- Judge demo: `e2e/phase12-judge-demo.spec.ts` — 27 screenshots
+- Invariant tests: `test_repo_invariants.py` — checks Wave 11+12 specs for forbidden patterns
+
+### Test Gates
+| Suite | Count | Status |
+|-------|-------|--------|
+| Backend pytest | 493 | ✅ 0 failed |
+| Vitest | 10 | ✅ 0 failed |
+| TypeScript | — | ✅ 0 errors |
+| Vite build | — | ✅ OK |
+
+```powershell
+# Run the Wave 11+12 judge demo (requires backend + vite preview running)
+cd e2e
+npx playwright test --config playwright.w11w12.judge.config.ts
+```
 
 ---
 
@@ -543,8 +591,12 @@ Tools:
 | v3.8.0 | Eval Harness v2 + scorecard + suites UI | ✅ Complete |
 | v3.9.0 | DevOps Pro: MR review + pipeline + artifacts | ✅ Complete |
 | v4.0.0 | SRE Playbooks + judge demo + proof pack | ✅ Complete |
+| v4.1.0 | Activity Stream + Presence (28 tests) | ✅ Complete |
+| v4.2.0 | Live Run SSE + progress panel (18 tests) | ✅ Complete |
+| v4.3.0 | Global Search local index + grouped results (15 tests) | ✅ Complete |
+| v4.4.0 | Command Palette + judge demo + invariants | ✅ Complete |
 
-**Wave 9+10: COMPLETE** ✅ — 422 backend tests, 10 Vitest, 0 TypeScript errors, vite build OK
+**Wave 11+12: COMPLETE** ✅ — 493 backend tests, 10 Vitest, 0 TypeScript errors, vite build OK
 
 ## License
 

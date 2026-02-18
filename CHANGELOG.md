@@ -2,7 +2,70 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [4.4.0] – 2026-02-21
+
+### Added (v4.4 – Command Palette + Judge Demo + Stabilization)
+- **apps/web/src/components/CommandPalette.tsx** — Ctrl+K quick-navigation panel; 8 NAV_COMMANDS; type-to-search routes to `/search?q=`; `data-testid`: `cmdk-open`, `cmdk-input`, `cmdk-item-{id}`
+- **apps/web/src/components/layout/AppLayout.tsx** — CommandPalette rendered globally; version badge `v4.4.0`
+- **e2e/phase12-judge-demo.spec.ts** — 27-screenshot full Wave 11+12 tour (≥25 required)
+- **e2e/playwright.w11w12.judge.config.ts** — `slowMo: 4000`, `video: on`, `retries: 0`, `workers: 1`
+- **apps/api/tests/test_repo_invariants.py** — 5 tests checking Wave 11+12 spec invariants (no waitForTimeout, no getByText/Role, no forbidden ports)
+
+### Changed
+- API version bumped to 4.4.0
+- Frontend version badge updated to v4.4.0
+
+---
+
+## [4.3.0] – 2026-02-21
+
+### Added (v4.3 – Global Search: local index)
+- **apps/api/search_index_local.py** — `SearchIndexLocal` (15 DEMO_INDEX_DOCS, 7 types: run/report/audit/activity/policy/eval/sre_playbook); `tokenize()`, `score_doc()`; `SearchIndexElastic` stub; endpoints: `POST /search/query`, `POST /search/reindex`, `GET /search/status`
+- **apps/web/src/pages/SearchPage.tsx** — global search input, type filter chips, grouped results; click navigates to `result.url`; `data-testid`: `search-page`, `search-input`, `search-chips`, `search-chip-{type}`, `search-results-ready`, `search-result-{idx}`, `search-empty`, `search-submit`, `search-reindex`
+- **apps/web/src/lib/api.ts** — `searchQuery()`, `searchReindex()`, `searchStatus()`
+- **apps/web/src/components/layout/AppLayout.tsx** — `nav-search` with Search icon
+- **apps/web/src/App.tsx** — route `/search`
+- **apps/api/tests/test_search_index.py** — 15 tests (status, query, reindex, direct local index)
+- **e2e/test-search.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- `/test/reset` now resets + rebuilds search index
+
+---
+
+## [4.2.0] – 2026-02-21
+
+### Added (v4.2 – Live Run View: SSE progress stream)
+- **apps/api/live_run.py** — `RunStatusStore` (DEMO_STAGES: VALIDATE→PRICE→VAR→REPORT→DONE); `run_progress_generator()`, `activity_stream_generator()`, `presence_stream_generator()`; endpoints: `GET /events/run-progress`, `GET /events/activity`, `GET /events/presence`, `GET /runs/{run_id}/status`
+- **apps/web/src/pages/RunHistory.tsx** — `LiveRunPanel` component: SSE connection, stage/pct display; `data-testid`: `run-live-ready`, `run-live-stage`, `run-live-pct`, `run-live-done`, `run-live-connect`
+- **apps/api/tests/test_live_run.py** — 18 tests (run status, SSE run progress, SSE activity, SSE presence)
+
+### Changed
+- `/test/reset` now resets + seeds run status store
+
+---
+
+## [4.1.0] – 2026-02-21
+
+### Added (v4.1 – Activity Stream + Presence)
+- **apps/api/activity_stream.py** — `ActivityStore` (8 DEMO_SEED events, 6 event types); `emit_activity()`, `seed_demo_activity()`; endpoints: `GET /activity`, `POST /activity/reset`
+- **apps/api/presence.py** — `PresenceStore` (4 DEMO_PRESENCE actors: alice/bob=online, carol=idle, dave=offline); `seed_demo_presence()`; endpoints: `GET /presence`, `POST /presence/update`
+- **apps/web/src/pages/ActivityPage.tsx** — activity feed + type filters + SSE live connection + presence panel with status chips; `data-testid`: `activity-page`, `activity-feed-ready`, `activity-item-{idx}`, `presence-ready`, `presence-user-{idx}`, `activity-live-badge`, `activity-connect-live`, `activity-refresh`, `activity-reset`
+- **apps/web/src/lib/api.ts** — `getActivity()`, `resetActivity()`, `getPresence()`, `updatePresence()`, `getRunStatus()`
+- **apps/web/src/components/layout/AppLayout.tsx** — `nav-activity` with Radio icon
+- **apps/web/src/App.tsx** — route `/activity`
+- **apps/api/tests/test_activity_stream.py** — 15 tests (list, reset, determinism)
+- **apps/api/tests/test_presence.py** — 13 tests (list, update, hash stability)
+- **e2e/test-activity.spec.ts** — 8 Playwright E2E tests
+
+### Changed
+- `/test/reset` now seeds activity + presence stores
+- Test count: 422 → 493 passing
+
+---
+
 ## [4.0.0] – 2026-02-20
+
 
 ### Added (v4.0 – SRE Playbooks + Judge Demo + Proof/Submission Pack)
 - **apps/api/sre_playbook.py** — `sre_router` (POST /sre/playbook/generate); deterministic triage→mitigate→follow-up playbooks; all facts cited by hash
