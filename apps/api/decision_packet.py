@@ -1,0 +1,288 @@
+"""
+decision_packet.py (v5.33.0 — Wave 51)
+
+Decision Packet: bundles subject + runs + artifacts + attestations + review decision.
+
+POST /exports/decision-packet → returns a zip-like manifest with verifiable hash.
+All content is deterministic for same (subject_type, subject_id, tenant_id).
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Header, HTTPException
+from pydantic import BaseModel
+
+ASOF = "2026-02-19T00:00:00Z"
+
+PACKET_STORE: Dict[str, Dict[str, Any]] = {}
+
+
+def _sha(data: Any) -> str:
+    return hashlib.sha256(
+        json.dumps(data, sort_keys=True, ensure_ascii=True).encode()
+    ).hexdigest()
+
+
+def _canonical(data: Any) -> str:
+    return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+
+
+def generate_decision_packet(
+    tenant_id: str,
+    subject_type: str,
+    subject_id: str,
+    requested_by: str = "demo@riskcanvas.io",
+) -> Dict[str, Any]:
+    """
+    Build a decision packet for (subject_type, subject_id).
+    Collects:
+      - subject data
+      - linked run outputs (if scenario)
+      - linked artifacts
+      - attestations chain head
+      - review decision + decision_hash
+      - human summary (deterministic Markdown template)
+    """
+    files: List[Dict[str, Any]] = []
+
+    # ── 1. Subject data ───────────────────────────────────────────────────────
+    subject_data: Dict[str, Any] = {"subject_type": subject_type, "subject_id": subject_id}
+    if subject_type == "scenario":
+        try:
+            from scenarios_v2 import get_scenario
+            subject_data = get_scenario(subject_id)
+        except ValueError:
+            pass
+    elif subject_type == "artifact":
+        try:
+            from artifacts_registry import get_artifact
+            subject_data = get_artifact(subject_id)
+        except ValueError:
+            pass
+    elif subject_type == "compliance_pack":
+        try:
+            from compliance_pack import list_compliance_packs
+            packs = list_compliance_packs(tenant_id)
+            matches = [p for p in packs if p.get("pack_id") == subject_id]
+            if matches:
+                subject_data = matches[0]
+        except Exception:
+            pass
+    elif subject_type == "dataset":
+        try:
+            from datasets import get_dataset
+            subject_data = get_dataset(subject_id)
+        except ValueError:
+            pass
+
+    subject_json = _canonical(subject_data)
+    subject_sha = hashlib.sha256(subject_json.encode()).hexdigest()
+    files.append({"name": "subject.json", "sha256": subject_sha, "size": len(subject_json.encode())})
+
+    # ── 2. Runs (if scenario) ─────────────────────────────────────────────────
+    runs_data: List[Dict[str, Any]] = []
+    if subject_type == "scenario":
+        try:
+            from scenarios_v2 import get_scenario_runs
+            runs_data = get_scenario_runs(subject_id)
+        except ValueError:
+            pass
+    runs_json = _canonical({"runs": runs_data})
+    runs_sha = hashlib.sha256(runs_json.encode()).hexdigest()
+    files.append({"name": "runs.json", "sha256": runs_sha, "size": len(runs_json.encode())})
+
+    # ── 3. Attestations ───────────────────────────────────────────────────────
+    from attestations import list_attestations, get_chain_head
+    atts = list_attestations(tenant_id, limit=50)
+    linked_atts = [a for a in atts if subject_id in a.get("subject", "")]
+    chain_head = get_chain_head(tenant_id)
+    atts_data = {"attestations": linked_atts, "chain_head": chain_head}
+    atts_json = _canonical(atts_data)
+    atts_sha = hashlib.sha256(atts_json.encode()).hexdigest()
+    files.append({"name": "attestations.json", "sha256": atts_sha, "size": len(atts_json.encode())})
+
+    # ── 4. Review decision ────────────────────────────────────────────────────
+    from reviews import list_reviews
+    linked_reviews = list_reviews(tenant_id=tenant_id, subject_type=subject_type)
+    linked_reviews = [r for r in linked_reviews if r["subject_id"] == subject_id]
+    review_decision = None
+    decision_hash = None
+    if linked_reviews:
+        approved = [r for r in linked_reviews if r["status"] == "APPROVED"]
+        if approved:
+            review_decision = approved[0]
+            decision_hash = approved[0].get("decision_hash")
+
+    reviews_json = _canonical({"reviews": linked_reviews})
+    reviews_sha = hashlib.sha256(reviews_json.encode()).hexdigest()
+    files.append({"name": "reviews.json", "sha256": reviews_sha, "size": len(reviews_json.encode())})
+
+    # ── 5. Human summary ─────────────────────────────────────────────────────
+    kind_label = subject_type.replace("_", " ").title()
+    status_line = "APPROVED" if review_decision else "PENDING REVIEW"
+    summary_md = (
+        f"# Decision Packet — {kind_label}: {subject_id[:12]}…\n\n"
+        f"**Tenant**: {tenant_id}\n"
+        f"**Generated by**: {requested_by}\n"
+        f"**As of**: {ASOF}\n"
+        f"**Review Status**: {status_line}\n"
+        f"**Decision Hash**: {decision_hash or '(no decision yet)'}\n"
+        f"**Chain Head**: {chain_head or '(no attestations)'}\n\n"
+        f"## Included Evidence\n"
+        f"- `subject.json` — {kind_label} definition\n"
+        f"- `runs.json` — {len(runs_data)} linked run(s)\n"
+        f"- `attestations.json` — {len(linked_atts)} linked attestation(s)\n"
+        f"- `reviews.json` — {len(linked_reviews)} review(s)\n"
+        f"- `summary.md` — this file\n\n"
+        f"## Verification\n"
+        f"All files carry SHA-256 hashes. Verify integrity by re-hashing `subject.json`.\n"
+    )
+    summary_sha = hashlib.sha256(summary_md.encode()).hexdigest()
+    files.append({"name": "summary.md", "sha256": summary_sha, "size": len(summary_md.encode())})
+
+    # ── 6. Manifest hash ──────────────────────────────────────────────────────
+    manifest_payload = {"tenant_id": tenant_id, "subject_type": subject_type,
+                        "subject_id": subject_id, "files": files}
+    manifest_hash = _sha(manifest_payload)
+
+    packet_id_src = {"tenant_id": tenant_id, "subject_type": subject_type,
+                     "subject_id": subject_id, "manifest_hash": manifest_hash}
+    packet_id = _sha(packet_id_src)[:32]
+
+    packet: Dict[str, Any] = {
+        "packet_id": packet_id,
+        "tenant_id": tenant_id,
+        "subject_type": subject_type,
+        "subject_id": subject_id,
+        "files": files,
+        "file_count": len(files),
+        "manifest_hash": manifest_hash,
+        "review_decision": review_decision["decision"] if review_decision else None,
+        "decision_hash": decision_hash,
+        "chain_head": chain_head,
+        "run_count": len(runs_data),
+        "attestation_count": len(linked_atts),
+        "verified": True,
+        "generated_by": requested_by,
+        "generated_at": ASOF,
+    }
+
+    PACKET_STORE[packet_id] = packet
+    return packet
+
+
+def list_packets(tenant_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    results = list(PACKET_STORE.values())
+    if tenant_id:
+        results = [p for p in results if p["tenant_id"] == tenant_id]
+    results.sort(key=lambda p: p["packet_id"])
+    return results[:limit]
+
+
+def get_packet(packet_id: str) -> Dict[str, Any]:
+    p = PACKET_STORE.get(packet_id)
+    if not p:
+        raise ValueError(f"Decision packet not found: {packet_id}")
+    return p
+
+
+def verify_packet(packet_id: str) -> Dict[str, Any]:
+    p = get_packet(packet_id)
+    # Recompute: deterministic
+    files = p["files"]
+    manifest_payload = {
+        "tenant_id": p["tenant_id"],
+        "subject_type": p["subject_type"],
+        "subject_id": p["subject_id"],
+        "files": files,
+    }
+    recomputed = _sha(manifest_payload)
+    verified = recomputed == p["manifest_hash"]
+    return {
+        "packet_id": packet_id,
+        "verified": verified,
+        "manifest_hash": p["manifest_hash"],
+        "recomputed_hash": recomputed,
+        "match": verified,
+    }
+
+
+# ── Seed DEMO packets ─────────────────────────────────────────────────────────
+
+def _seed() -> None:
+    from tenancy_v2 import DEFAULT_TENANT_ID
+    from scenarios_v2 import SCENARIO_STORE
+
+    tid = DEFAULT_TENANT_ID
+    scenario_ids = sorted(SCENARIO_STORE.keys())
+    if scenario_ids:
+        generate_decision_packet(tid, "scenario", scenario_ids[0], "seed@riskcanvas.io")
+
+
+_seed()
+
+
+# ── FastAPI router ────────────────────────────────────────────────────────────
+
+router = APIRouter(prefix="/exports", tags=["decision-packets"])
+
+
+class DecisionPacketRequest(BaseModel):
+    tenant_id: Optional[str] = None
+    subject_type: str
+    subject_id: str
+    requested_by: str = "demo@riskcanvas.io"
+
+
+@router.post("/decision-packet")
+async def api_generate_decision_packet(
+    req: DecisionPacketRequest,
+    x_demo_tenant: Optional[str] = Header(None),
+):
+    if req.subject_type not in VALID_SUBJECT_TYPES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid subject_type. Valid: {VALID_SUBJECT_TYPES}",
+        )
+    tid = req.tenant_id or x_demo_tenant or "default"
+    packet = generate_decision_packet(
+        tenant_id=tid,
+        subject_type=req.subject_type,
+        subject_id=req.subject_id,
+        requested_by=req.requested_by,
+    )
+    return {"packet": packet}
+
+
+@router.get("/decision-packets")
+async def api_list_packets(
+    tenant_id: Optional[str] = None,
+    limit: int = 50,
+    x_demo_tenant: Optional[str] = Header(None),
+):
+    tid = tenant_id or x_demo_tenant
+    items = list_packets(tenant_id=tid, limit=limit)
+    return {"packets": items, "count": len(items)}
+
+
+@router.get("/decision-packets/{packet_id}")
+async def api_get_packet(packet_id: str):
+    try:
+        return {"packet": get_packet(packet_id)}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/decision-packets/{packet_id}/verify")
+async def api_verify_packet(packet_id: str):
+    try:
+        return verify_packet(packet_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+VALID_SUBJECT_TYPES = ["scenario", "run", "artifact", "compliance_pack", "dataset"]
