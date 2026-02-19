@@ -114,9 +114,9 @@ const navItems = [
   { path: "/attestations", icon: Link2, label: "Attestations", testid: "attestations" },
   { path: "/compliance", icon: ClipboardCheck, label: "Compliance", testid: "compliance" },
   // Wave 49-56: Dataset & Scenario & Review Layer
-  { path: "/datasets", icon: Database, label: "Datasets", testid: "nav-datasets" },
-  { path: "/scenario-composer", icon: Layers, label: "Scenario Composer", testid: "nav-scenario-composer" },
-  { path: "/reviews", icon: FileCheck2, label: "Reviews", testid: "nav-reviews" },
+  { path: "/datasets", icon: Database, label: "Datasets", testid: "datasets" },
+  { path: "/scenario-composer", icon: Layers, label: "Scenario Composer", testid: "scenario-composer" },
+  { path: "/reviews", icon: FileCheck2, label: "Reviews", testid: "reviews" },
 ];
 
 function PresentationToggle() {
