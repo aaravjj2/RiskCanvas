@@ -61,13 +61,20 @@ import WorkflowStudioPage from '@/pages/WorkflowStudioPage';
 import PoliciesV2Page from '@/pages/PoliciesV2Page';
 import SearchV2Page from '@/pages/SearchV2Page';
 import JudgeModePage from '@/pages/JudgeModePage';
+// Wave 33-40 Pages (v4.74-v4.97)
+import ExportsHubPage from '@/pages/ExportsHubPage';
+import WorkbenchPage from '@/pages/WorkbenchPage';
 import { AppProvider } from '@/lib/context';
+import { ToastProvider } from '@/components/ui/ToastCenter';
+import { PresentationProvider } from '@/components/ui/PresentationMode';
 
 export default function App() {
   return (
     <BrowserRouter>
       <AppProvider>
-        <AppLayout>
+        <ToastProvider>
+          <PresentationProvider>
+            <AppLayout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/portfolio" element={<Portfolio />} />
@@ -131,8 +138,13 @@ export default function App() {
             <Route path="/policies-v2" element={<PoliciesV2Page />} />
             <Route path="/search-v2" element={<SearchV2Page />} />
             <Route path="/judge-mode" element={<JudgeModePage />} />
+            {/* Wave 33-40 Routes (v4.74-v4.97) */}
+            <Route path="/exports" element={<ExportsHubPage />} />
+            <Route path="/workbench" element={<WorkbenchPage />} />
           </Routes>
-        </AppLayout>
+            </AppLayout>
+          </PresentationProvider>
+        </ToastProvider>
       </AppProvider>
     </BrowserRouter>
   );
