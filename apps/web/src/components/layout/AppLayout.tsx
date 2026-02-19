@@ -38,10 +38,14 @@ import {
   Package,
   MonitorPlay,
   Presentation,
+  Users,
+  Archive,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
 import { usePresentationMode, ALL_RAILS, PresentationStepCard } from "@/components/ui/PresentationMode";
+import TenantSwitcher from "@/components/ui/TenantSwitcher";
 
 const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard", testid: "dashboard" },
@@ -102,6 +106,11 @@ const navItems = [
   { path: "/exports", icon: Package, label: "Exports Hub", testid: "exports" },
   // Wave 37
   { path: "/workbench", icon: MonitorPlay, label: "Workbench", testid: "workbench" },
+  // Wave 41-48: Enterprise Layer
+  { path: "/admin", icon: Users, label: "Admin", testid: "admin" },
+  { path: "/artifacts", icon: Archive, label: "Artifacts", testid: "artifacts" },
+  { path: "/attestations", icon: Link2, label: "Attestations", testid: "attestations" },
+  { path: "/compliance", icon: ClipboardCheck, label: "Compliance", testid: "compliance" },
 ];
 
 function PresentationToggle() {
@@ -158,7 +167,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.97.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v5.21.0</p>
+            <div className="mt-2">
+              <TenantSwitcher />
+            </div>
           </div>
 
           {/* Navigation */}
