@@ -504,6 +504,31 @@ app.include_router(compliance_pack_router)
 from judge_mode_v2 import router as judge_v2_router
 app.include_router(judge_v2_router)
 
+# ─── Wave 49-56: Risk OS Layer (v5.22.0 → v5.45.0) ──────────────────────────
+
+# Wave 49 — Dataset Ingestion v1 (v5.22.0)
+from datasets import router as datasets_router
+app.include_router(datasets_router)
+
+# Wave 50 — Scenario Composer v1 (v5.26.0)
+from scenarios_v2 import router as scenarios_v2_router
+app.include_router(scenarios_v2_router)
+
+# Wave 51 — Collaboration: Reviews + Decision Packets (v5.30.0)
+from reviews import router as reviews_router
+app.include_router(reviews_router)
+
+from decision_packet import router as decision_packet_router
+app.include_router(decision_packet_router)
+
+# Wave 53 — Deploy Credibility (v5.38.0)
+from deploy_validator import router as deploy_validator_router
+app.include_router(deploy_validator_router)
+
+# Wave 54 — Judge Mode v3 (v5.40.0)
+from judge_mode_v3 import router as judge_v3_router
+app.include_router(judge_v3_router)
+
 # ===== Error handlers =====
 
 
