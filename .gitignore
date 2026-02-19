@@ -46,6 +46,11 @@ playwright/.cache/
 # Test screenshots, traces, and videos
 **/test-finished-*.png
 **/trace.zip
+
+# ============================================================
+# Proof / submission artifacts (never commit runtime outputs)
+# ============================================================
+artifacts/
 **/video.webm
 
 # ============================================================
