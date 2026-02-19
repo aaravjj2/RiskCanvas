@@ -1,10 +1,10 @@
 # RiskCanvas
 
 **Deterministic Risk Analytics Platform**  
-**v5.21.0**
+**v5.45.0**
 
-[![Version](https://img.shields.io/badge/Version-5.21.0-blue)](CHANGELOG.md)
-[![Tests](https://img.shields.io/badge/Tests-1087%20passing-success)](#test-gates)
+[![Version](https://img.shields.io/badge/Version-5.45.0-blue)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-1189%20passing-success)](#test-gates)
 [![Wave13-14](https://img.shields.io/badge/Wave13--14-v4.9.0-brightgreen)](#wave-13-14-market-data--cache-v2--hedge-studio-pro--decision-memo)
 [![Testing](https://img.shields.io/badge/Frontend%20Tests-Playwright--only-blueviolet)](#frontend-testing-v450)
 
@@ -202,6 +202,37 @@ Full architecture: [docs/architecture.md](docs/architecture.md)
 - E2E tests (retries=0, workers=1, headless=false)
 - Architecture diagram (Mermaid)
 - Demo flow documentation
+
+---
+
+## Wave 49-56: Mega-Delivery (v5.22.0-v5.45.0)
+
+### ✅ Dataset Ingestion v1 (Wave 49, v5.22.0-v5.24.0)
+- `datasets.py`: 5 kinds (`portfolio|rates_curve|stress_preset|fx_set|credit_curve`), 6 demo seeds, validation engine
+- **Endpoints**: `GET /datasets`, `GET /datasets/{id}`, `POST /datasets/ingest`, `POST /datasets/validate`
+- **Frontend**: `DatasetsPage.tsx` with kind filter, ingest drawer, validate/save actions
+
+### ✅ Scenario Composer v2 (Wave 50, v5.25.0-v5.28.0)
+- `scenarios_v2.py`: First-class scenario objects with deterministic run/replay; 5 scenario kinds
+- **Endpoints**: `GET/POST /scenarios-v2`, `POST /scenarios-v2/{id}/run`, `POST /scenarios-v2/{id}/replay`, `GET /scenarios-v2/templates/all`
+- **Frontend**: `ScenarioComposerPage.tsx` — two-panel editor, action log, run/replay controls
+
+### ✅ Reviews (Wave 51, v5.29.0-v5.32.0)
+- `reviews.py`: State machine `DRAFT→IN_REVIEW→APPROVED/REJECTED`; decision hash (SHA-256)
+- **Endpoints**: `GET/POST /reviews`, `POST /reviews/{id}/submit`, `POST /reviews/{id}/decide`
+- **Frontend**: `ReviewsPage.tsx` — status-gated submit/approve/reject, decision hash display
+
+### ✅ Decision Packets (Wave 51-52, v5.32.0-v5.35.0)
+- `decision_packet.py`: 5-file tamper-evident evidence bundle with manifest hash chain
+- **Endpoints**: `POST /exports/decision-packet`, `GET /exports/decision-packets`, `POST /exports/decision-packets/{id}/verify`
+
+### ✅ Deploy Validator (Wave 53, v5.36.0-v5.39.0)
+- `deploy_validator.py`: OFFLINE Azure (9 vars) + DigitalOcean (7 vars) env validation; Docker Compose + nginx lint
+- **Endpoints**: `POST /deploy/validate-azure`, `POST /deploy/validate-do`, `POST /deploy/validate-all`, `POST /deploy/lint-template`
+
+### ✅ Judge Mode v3 (Wave 54, v5.40.0-v5.43.0)
+- `judge_mode_v3.py`: 3-vendor decision+compliance+evidence packs; Microsoft=97, GitLab=95, DigitalOcean=93, overall=95 (STRONG PASS)
+- **Endpoints**: `POST /judge/v3/generate`, `GET /judge/v3/packs`, `GET /judge/v3/definitions`
 
 ---
 
