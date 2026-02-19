@@ -171,6 +171,23 @@ def generate_decision_packet(
         "generated_at": ASOF,
     }
 
+    # ── Wave 57: auto-sign the packet ─────────────────────────────────────────
+    try:
+        from packet_signing import sign_packet as _sign_packet
+        file_hashes = {f["name"]: f["sha256"] for f in files}
+        sig = _sign_packet(
+            packet_id=packet_id,
+            manifest_hash=manifest_hash,
+            files=file_hashes,
+            signed_by=requested_by,
+        )
+        packet["signature_id"] = packet_id
+        packet["signed"] = True
+        packet["signature_algorithm"] = sig.get("algorithm", "Ed25519")
+    except Exception:
+        packet["signature_id"] = None
+        packet["signed"] = False
+
     PACKET_STORE[packet_id] = packet
     return packet
 
