@@ -978,3 +978,246 @@ export async function exportConstructionPack(solveResult: any) {
     body: JSON.stringify({ solve_result: solveResult }),
   });
 }
+
+// ===== FX Risk (Wave 19, v4.26-v4.29) =====
+
+export async function getFxSpot(pair: string) {
+  return apiFetch<any>(`/fx/spot?pair=${pair}`, { method: 'GET' });
+}
+
+export async function getFxForward(pair: string, tenor: string) {
+  return apiFetch<any>(`/fx/forward?pair=${pair}&tenor=${tenor}`, { method: 'GET' });
+}
+
+export async function getFxVol(pair: string) {
+  return apiFetch<any>(`/fx/vol?pair=${pair}`, { method: 'GET' });
+}
+
+export async function getFxPairs() {
+  return apiFetch<any>('/fx/pairs', { method: 'GET' });
+}
+
+export async function getFxExposure(portfolio: any[], base_ccy: string = 'USD') {
+  return apiFetch<any>('/fx/exposure', {
+    method: 'POST',
+    body: JSON.stringify({ portfolio, base_ccy }),
+  });
+}
+
+export async function applyFxShocks(exposure: any, fx_shocks: Array<{pair: string, pct: number}>) {
+  return apiFetch<any>('/fx/shock', {
+    method: 'POST',
+    body: JSON.stringify({ exposure, fx_shocks }),
+  });
+}
+
+export async function exportFxPack(portfolio?: any[], base_ccy?: string, fx_shocks?: any[]) {
+  return apiFetch<any>('/exports/fx-pack', {
+    method: 'POST',
+    body: JSON.stringify({ portfolio, base_ccy, fx_shocks }),
+  });
+}
+
+// ===== Credit Risk (Wave 20, v4.30-v4.33) =====
+
+export async function getCreditCurves() {
+  return apiFetch<any>('/credit/curves', { method: 'GET' });
+}
+
+export async function getCreditCurve(curveId: string) {
+  return apiFetch<any>(`/credit/curves/${curveId}`, { method: 'GET' });
+}
+
+export async function computeCreditRisk(
+  positions: any[],
+  curve_id: string = 'usd_ig',
+  shock_bps: number = 0,
+) {
+  return apiFetch<any>('/credit/risk', {
+    method: 'POST',
+    body: JSON.stringify({ positions, curve_id, shock_bps }),
+  });
+}
+
+export async function exportCreditPack(positions: any[], curve_id: string, shock_bps: number) {
+  return apiFetch<any>('/exports/credit-risk-pack', {
+    method: 'POST',
+    body: JSON.stringify({ positions, curve_id, shock_bps }),
+  });
+}
+
+// ===== Liquidity (Wave 21, v4.34-v4.37) =====
+
+export async function getLiquidityTiers() {
+  return apiFetch<any>('/liquidity/tiers', { method: 'GET' });
+}
+
+export async function computeHaircut(portfolio: any[]) {
+  return apiFetch<any>('/liquidity/haircut', {
+    method: 'POST',
+    body: JSON.stringify({ portfolio }),
+  });
+}
+
+export async function estimateTcost(trades: any[]) {
+  return apiFetch<any>('/tcost/estimate', {
+    method: 'POST',
+    body: JSON.stringify({ trades }),
+  });
+}
+
+export async function computeTradeoff(hedge_trades: any[], risk_reduction_usd: number) {
+  return apiFetch<any>('/tcost/tradeoff', {
+    method: 'POST',
+    body: JSON.stringify({ hedge_trades, risk_reduction_usd }),
+  });
+}
+
+export async function exportLiquidityPack(portfolio: any[], trades: any[]) {
+  return apiFetch<any>('/exports/liquidity-pack', {
+    method: 'POST',
+    body: JSON.stringify({ portfolio, trades }),
+  });
+}
+
+// ===== Approvals (Wave 22, v4.38-v4.41) =====
+
+export async function listApprovals(state?: string) {
+  const qs = state ? `?state=${state}` : '';
+  return apiFetch<any>(`/approvals/list${qs}`, { method: 'GET' });
+}
+
+export async function createApproval(payload: {
+  document_type: string;
+  title: string;
+  payload: Record<string, any>;
+  requester: string;
+}) {
+  return apiFetch<any>('/approvals/create', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function submitApproval(approvalId: string, actor: string = 'demo_user') {
+  return apiFetch<any>(`/approvals/submit/${approvalId}`, {
+    method: 'POST',
+    body: JSON.stringify({ actor }),
+  });
+}
+
+export async function decideApproval(
+  approvalId: string,
+  decision: 'approved' | 'rejected',
+  actor: string = 'risk_committee',
+  notes?: string,
+) {
+  return apiFetch<any>(`/approvals/decide/${approvalId}`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, actor, notes }),
+  });
+}
+
+export async function getApproval(approvalId: string) {
+  return apiFetch<any>(`/approvals/${approvalId}`, { method: 'GET' });
+}
+
+export async function exportApprovalPack(approvalId: string) {
+  return apiFetch<any>(`/exports/approval-pack/${approvalId}`, { method: 'GET' });
+}
+
+// ===== GitLab Adapter (Wave 23, v4.42-v4.45) =====
+
+export async function listMrs() {
+  return apiFetch<any>('/gitlab/mrs', { method: 'GET' });
+}
+
+export async function getMrDiff(iid: number) {
+  return apiFetch<any>(`/gitlab/mrs/${iid}/diff`, { method: 'GET' });
+}
+
+export async function postMrComment(iid: number, body: string, author: string = 'demo_user') {
+  return apiFetch<any>(`/gitlab/mrs/${iid}/comment`, {
+    method: 'POST',
+    body: JSON.stringify({ body, author }),
+  });
+}
+
+export async function exportMrCompliancePack(iid: number) {
+  return apiFetch<any>(`/exports/mr-compliance-pack/${iid}`, { method: 'GET' });
+}
+
+// ===== CI Intelligence (Wave 24, v4.46-v4.47) =====
+
+export async function listPipelines() {
+  return apiFetch<any>('/ci/pipelines', { method: 'GET' });
+}
+
+export async function analyzePipeline(pipelineId: string) {
+  return apiFetch<any>(`/ci/pipelines/${pipelineId}/analysis`, { method: 'GET' });
+}
+
+export async function getCiTemplateFeatures() {
+  return apiFetch<any>('/ci/template/features', { method: 'GET' });
+}
+
+export async function generateCiTemplate(features: string[]) {
+  return apiFetch<any>('/ci/template/generate', {
+    method: 'POST',
+    body: JSON.stringify({ features }),
+  });
+}
+
+export async function exportCiTemplatePack(features: string[]) {
+  return apiFetch<any>('/exports/ci-template-pack', {
+    method: 'POST',
+    body: JSON.stringify({ features }),
+  });
+}
+
+// ===== DevSecOps (Wave 25, v4.48-v4.49) =====
+
+export async function getSecurityRules() {
+  return apiFetch<any>('/sec/rules', { method: 'GET' });
+}
+
+export async function scanDiff(content: string) {
+  return apiFetch<any>('/sec/scan/diff', {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+}
+
+export async function getSbom() {
+  return apiFetch<any>('/sec/sbom', { method: 'GET' });
+}
+
+export async function validateSecurityRules(rules: any[]) {
+  return apiFetch<any>('/sec/rules/validate', {
+    method: 'POST',
+    body: JSON.stringify({ rules }),
+  });
+}
+
+export async function getAttestation(
+  commit_sha: string,
+  proof_pack_hash: string,
+  scan_results: any,
+) {
+  return apiFetch<any>('/exports/attestation', {
+    method: 'POST',
+    body: JSON.stringify({ commit_sha, proof_pack_hash, scan_results }),
+  });
+}
+
+export async function exportDevSecOpsPack(
+  commit_sha: string = 'HEAD',
+  proof_pack_hash: string = '',
+  diff_content?: string,
+) {
+  return apiFetch<any>('/exports/devsecops-pack', {
+    method: 'POST',
+    body: JSON.stringify({ commit_sha, proof_pack_hash, diff_content }),
+  });
+}
+

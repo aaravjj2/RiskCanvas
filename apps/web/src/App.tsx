@@ -46,6 +46,14 @@ import ScenariosDSLPage from '@/pages/ScenariosDSLPage';
 import ReplayPage from '@/pages/ReplayPage';
 // Wave 18 Pages (v4.22-v4.25)
 import ConstructionStudioPage from '@/pages/ConstructionStudioPage';
+// Wave 19-25 Pages (v4.26-v4.49)
+import FXPage from '@/pages/FXPage';
+import CreditPage from '@/pages/CreditPage';
+import LiquidityPage from '@/pages/LiquidityPage';
+import ApprovalsPage from '@/pages/ApprovalsPage';
+import GitLabPage from '@/pages/GitLabPage';
+import CIPage from '@/pages/CIPage';
+import SecurityPage from '@/pages/SecurityPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -100,6 +108,14 @@ export default function App() {
             <Route path="/replay" element={<ReplayPage />} />
             {/* Wave 18 Routes (v4.22-v4.25) */}
             <Route path="/construction" element={<ConstructionStudioPage />} />
+            {/* Wave 19-25 Routes (v4.26-v4.49) */}
+            <Route path="/fx" element={<FXPage />} />
+            <Route path="/credit" element={<CreditPage />} />
+            <Route path="/liquidity" element={<LiquidityPage />} />
+            <Route path="/approvals" element={<ApprovalsPage />} />
+            <Route path="/gitlab" element={<GitLabPage />} />
+            <Route path="/ci" element={<CIPage />} />
+            <Route path="/security" element={<SecurityPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>

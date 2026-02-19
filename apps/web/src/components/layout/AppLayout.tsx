@@ -21,6 +21,13 @@ import {
   Code2,
   RefreshCw,
   Building2,
+  DollarSign,
+  CreditCard,
+  Droplets,
+  ClipboardCheck,
+  GitMerge,
+  Cpu,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -52,6 +59,20 @@ const navItems = [
   { path: "/replay", icon: RefreshCw, label: "Replay", testid: "replay" },
   // Wave 18
   { path: "/construction", icon: Building2, label: "Construction", testid: "construction" },
+  // Wave 19
+  { path: "/fx", icon: DollarSign, label: "FX Risk", testid: "fx" },
+  // Wave 20
+  { path: "/credit", icon: CreditCard, label: "Credit Risk", testid: "credit" },
+  // Wave 21
+  { path: "/liquidity", icon: Droplets, label: "Liquidity", testid: "liquidity" },
+  // Wave 22
+  { path: "/approvals", icon: ClipboardCheck, label: "Approvals", testid: "approvals" },
+  // Wave 23
+  { path: "/gitlab", icon: GitMerge, label: "GitLab MR", testid: "gitlab" },
+  // Wave 24
+  { path: "/ci", icon: Cpu, label: "CI Intel", testid: "ci" },
+  // Wave 25
+  { path: "/security", icon: Lock, label: "Security", testid: "security" },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -67,7 +88,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.25.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.49.0</p>
           </div>
 
           {/* Navigation */}

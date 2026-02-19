@@ -222,6 +222,27 @@ from replay_store import replay_router, replay_exports_router
 # v4.22 Construction Engine (Wave 18)
 from construction_engine import construction_router, construction_exports_router
 
+# v4.26 FX Risk (Wave 19)
+from fx import fx_router, fx_exports_router
+
+# v4.30 Credit Risk (Wave 20)
+from credit import credit_router, credit_exports_router
+
+# v4.34 Liquidity + TCost (Wave 21)
+from liquidity import liquidity_router, tcost_router, liquidity_exports_router
+
+# v4.38 Approval Workflows (Wave 22)
+from approvals import approvals_router, approvals_exports_router
+
+# v4.42 GitLab Adapter (Wave 23)
+from gitlab_adapter import gitlab_router, gitlab_exports_router
+
+# v4.46 CI Intelligence (Wave 24)
+from ci_intel import ci_router, ci_exports_router
+
+# v4.48 DevSecOps Pack (Wave 25)
+from devsecops import security_router, security_exports_router
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -390,6 +411,35 @@ app.include_router(replay_exports_router)
 # Construction Engine (v4.22+)
 app.include_router(construction_router)
 app.include_router(construction_exports_router)
+
+# FX Risk (v4.26+)
+app.include_router(fx_router)
+app.include_router(fx_exports_router)
+
+# Credit Risk (v4.30+)
+app.include_router(credit_router)
+app.include_router(credit_exports_router)
+
+# Liquidity + TCost (v4.34+)
+app.include_router(liquidity_router)
+app.include_router(tcost_router)
+app.include_router(liquidity_exports_router)
+
+# Approval Workflows (v4.38+)
+app.include_router(approvals_router)
+app.include_router(approvals_exports_router)
+
+# GitLab Adapter (v4.42+)
+app.include_router(gitlab_router)
+app.include_router(gitlab_exports_router)
+
+# CI Intelligence (v4.46+)
+app.include_router(ci_router)
+app.include_router(ci_exports_router)
+
+# DevSecOps Pack (v4.48+)
+app.include_router(security_router)
+app.include_router(security_exports_router)
 
 # ===== Error handlers =====
 
