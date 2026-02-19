@@ -1,5 +1,5 @@
 /**
- * ReviewsPage.tsx (v5.31.0 — Wave 51)
+ * ReviewsPage.tsx (v5.49.0 — Wave 51 + Wave 60 SLA) (v5.31.0 — Wave 51)
  * Route: /reviews
  * data-testids: reviews-page, review-row-{i}, reviews-table-ready, review-submit,
  *               review-approve, review-reject, review-drawer-ready, review-decision-hash
@@ -150,6 +150,14 @@ export default function ReviewsPage() {
     },
     { key: "requested_by", header: "Requested By", sortable: true, width: "w-44" },
     { key: "created_at", header: "Created", sortable: true, width: "w-44" },
+    { key: "_sla", header: "SLA", width: "w-20",
+      render: (r: Review) => {
+        const sla = (r as Record<string, unknown>).sla_breached as boolean | undefined;
+        return sla
+          ? <span data-testid="review-sla-breached" className="text-xs px-1.5 py-0.5 rounded bg-red-900/40 text-red-300">⚠ Breached</span>
+          : <span className="text-xs text-gray-500">On track</span>;
+      },
+    },
     { key: "_actions", header: "", width: "w-24",
       render: (row: Review, i: number) => (
         <button
@@ -214,6 +222,24 @@ export default function ReviewsPage() {
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Subject</p><p className="text-gray-200">{selected.subject_type}: <span className="font-mono text-xs">{selected.subject_id}</span></p></div>
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Requested By</p><p className="text-gray-200">{selected.requested_by}</p></div>
             {selected.notes && <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Notes</p><p className="text-gray-300">{selected.notes}</p></div>}
+
+            {/* SLA indicator (Wave 60) */}
+            {!!(selected as Record<string, unknown>).sla_deadline && (
+              <div data-testid="review-sla-indicator" className={`rounded border p-2 ${
+                (selected as Record<string, unknown>).sla_breached
+                  ? "border-red-700/50 bg-red-900/20"
+                  : "border-teal-700/50 bg-teal-900/20"
+              }`}>
+                <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">SLA (Wave 60)</p>
+                <p className="text-xs text-gray-300">Deadline: {(selected as Record<string, unknown>).sla_deadline as string}</p>
+                {!!(selected as Record<string, unknown>).assigned_to && (
+                  <p className="text-xs text-gray-300">Assigned: {(selected as Record<string, unknown>).assigned_to as string}</p>
+                )}
+                {(selected as Record<string, unknown>).sla_breached
+                  ? <p className="text-xs text-red-400 mt-1">⚠ SLA Breached</p>
+                  : <p className="text-xs text-teal-400 mt-1">✓ Within SLA</p>}
+              </div>
+            )}
 
             {/* Decision hash (APPROVED / REJECTED) */}
             {selected.decision_hash && (
