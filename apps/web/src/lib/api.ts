@@ -1354,3 +1354,84 @@ export async function judgeW33W40GeneratePack() {
 export async function judgeW33W40GetFiles() {
   return apiFetch<any>('/judge/w33-40/files');
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 41 — Tenancy v2 + RBAC (v4.98.0-v5.01.0)
+// ═══════════════════════════════════════════════════════════════
+export async function tenantsListAll(role = 'OWNER') {
+  return apiFetch<any>('/tenants', { headers: { 'x-demo-role': role } });
+}
+export async function tenantsListMembers(tenantId: string) {
+  return apiFetch<any>(`/tenants/${tenantId}/members`);
+}
+export async function tenantsAddMember(tenantId: string, email: string, role: string) {
+  return apiFetch<any>(`/tenants/${tenantId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  });
+}
+export async function tenantContext() {
+  return apiFetch<any>('/tenants/~context');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 42 — Artifact Registry (v5.02.0-v5.05.0)
+// ═══════════════════════════════════════════════════════════════
+export async function artifactsList(tenantId?: string, type?: string) {
+  const params = new URLSearchParams();
+  if (tenantId) params.set('tenant_id', tenantId);
+  if (type) params.set('type', type);
+  const qs = params.toString();
+  return apiFetch<any>(`/artifacts${qs ? '?' + qs : ''}`);
+}
+export async function artifactsGet(artifactId: string) {
+  return apiFetch<any>(`/artifacts/${artifactId}`);
+}
+export async function artifactsGetDownload(artifactId: string) {
+  return apiFetch<any>(`/artifacts/${artifactId}/downloads`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 43 — Attestations (v5.06.0-v5.09.0)
+// ═══════════════════════════════════════════════════════════════
+export async function attestationsList(tenantId?: string) {
+  const qs = tenantId ? `?tenant_id=${tenantId}` : '';
+  return apiFetch<any>(`/attestations${qs}`);
+}
+export async function attestationsGet(id: string) {
+  return apiFetch<any>(`/attestations/${id}`);
+}
+export async function attestationsReceiptsPack(tenantId?: string) {
+  const qs = tenantId ? `?tenant_id=${tenantId}` : '';
+  return apiFetch<any>(`/attestations/receipts-pack${qs}`, { method: 'POST' });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 44 — Compliance Pack (v5.10.0-v5.13.0)
+// ═══════════════════════════════════════════════════════════════
+export async function complianceGeneratePack(window = 'last_30_demo_days') {
+  return apiFetch<any>('/compliance/generate-pack', {
+    method: 'POST',
+    body: JSON.stringify({ window }),
+  });
+}
+export async function complianceListPacks(tenantId?: string) {
+  const qs = tenantId ? `?tenant_id=${tenantId}` : '';
+  return apiFetch<any>(`/compliance/packs${qs}`);
+}
+export async function complianceVerifyPack(packId: string) {
+  return apiFetch<any>(`/compliance/packs/${packId}/verify`, { method: 'POST' });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 47 — Judge Mode v2 (v5.18.0-v5.19.0)
+// ═══════════════════════════════════════════════════════════════
+export async function judgeV2Generate(target = 'all') {
+  return apiFetch<any>('/judge/v2/generate', { method: 'POST', body: JSON.stringify({ target }) });
+}
+export async function judgeV2ListPacks() {
+  return apiFetch<any>('/judge/v2/packs');
+}
+export async function judgeV2Definitions() {
+  return apiFetch<any>('/judge/v2/definitions');
+}
