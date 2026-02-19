@@ -1,32 +1,98 @@
-﻿node_modules/
-**/node_modules/
-dist/
-coverage/
-playwright-report/
-test-results/
-*.log
+﻿# ============================================================
+# Dependencies
+# ============================================================
+node_modules/
+.pnp
+.pnp.js
 
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
+# ============================================================
+# Build outputs
+# ============================================================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+*.tsbuildinfo
+
+# ============================================================
+# Environment & secrets
+# ============================================================
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.env.staging
+
+# ============================================================
+# Python / virtual environments
+# ============================================================
+.venv/
 venv/
-venv/
-virtualenv/
-.env.*
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
 
-# Generated API outputs
-apps/api/artifacts/
-apps/api/artifacts/*.json
-
-# Repo root artifacts directory
-artifacts/
-artifacts/*
-
-# Tool outputs
-playwright-report/
+# ============================================================
+# Playwright / test artifacts
+# ============================================================
 test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+# Test screenshots, traces, and videos
+**/test-finished-*.png
+**/trace.zip
+**/video.webm
+
+# ============================================================
+# Windows Zone.Identifier metadata files
+# (created when files are downloaded on Windows)
+# ============================================================
+*:Zone.Identifier
+
+# ============================================================
+# Logs
+# ============================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================================================
+# Package manager locks (keep only one — remove the others)
+# Keep whichever your project uses and delete the rest:
+#   package-lock.json  (npm)
+#   yarn.lock          (yarn)
+#   pnpm-lock.yaml     (pnpm)
+# ============================================================
+
+# ============================================================
+# Editor & OS
+# ============================================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ============================================================
+# Coverage
+# ============================================================
 coverage/
+.nyc_output/
+
+# ============================================================
+# Misc
+# ============================================================
+*.local
+.cache/
+.temp/
+.tmp/
+
