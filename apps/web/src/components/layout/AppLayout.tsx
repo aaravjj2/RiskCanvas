@@ -41,6 +41,8 @@ import {
   Users,
   Archive,
   Link2,
+  Layers,
+  FileCheck2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -111,6 +113,10 @@ const navItems = [
   { path: "/artifacts", icon: Archive, label: "Artifacts", testid: "artifacts" },
   { path: "/attestations", icon: Link2, label: "Attestations", testid: "attestations" },
   { path: "/compliance", icon: ClipboardCheck, label: "Compliance", testid: "compliance" },
+  // Wave 49-56: Dataset & Scenario & Review Layer
+  { path: "/datasets", icon: Database, label: "Datasets", testid: "nav-datasets" },
+  { path: "/scenario-composer", icon: Layers, label: "Scenario Composer", testid: "nav-scenario-composer" },
+  { path: "/reviews", icon: FileCheck2, label: "Reviews", testid: "nav-reviews" },
 ];
 
 function PresentationToggle() {
@@ -167,7 +173,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v5.21.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v5.45.0</p>
             <div className="mt-2">
               <TenantSwitcher />
             </div>

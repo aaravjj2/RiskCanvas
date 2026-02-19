@@ -69,6 +69,10 @@ import AdminPage from '@/pages/AdminPage';
 import ArtifactsPage from '@/pages/ArtifactsPage';
 import AttestationsPage from '@/pages/AttestationsPage';
 import CompliancePage from '@/pages/CompliancePage';
+// Wave 49-56 Pages (v5.22-v5.45)
+import DatasetsPage from '@/pages/DatasetsPage';
+import ScenarioComposerPage from '@/pages/ScenarioComposerPage';
+import ReviewsPage from '@/pages/ReviewsPage';
 import { AppProvider } from '@/lib/context';
 import { ToastProvider } from '@/components/ui/ToastCenter';
 import { PresentationProvider } from '@/components/ui/PresentationMode';
@@ -151,6 +155,10 @@ export default function App() {
             <Route path="/artifacts" element={<ArtifactsPage />} />
             <Route path="/attestations" element={<AttestationsPage />} />
             <Route path="/compliance" element={<CompliancePage />} />
+            {/* Wave 49-56 Routes (v5.22-v5.45) */}
+            <Route path="/datasets" element={<DatasetsPage />} />
+            <Route path="/scenario-composer" element={<ScenarioComposerPage />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
           </Routes>
             </AppLayout>
           </PresentationProvider>
