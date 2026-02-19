@@ -482,6 +482,28 @@ app.include_router(exports_hub_router)
 from judge_mode_w33_40 import router as judge_w33_40_router
 app.include_router(judge_w33_40_router)
 
+# ─── Wave 41-48: Enterprise Layer (v4.98.0 → v5.21.0) ───────────────────────
+
+# Wave 41 — Tenancy v2 + RBAC (v4.98.0)
+from tenancy_v2 import router as tenancy_v2_router
+app.include_router(tenancy_v2_router)
+
+# Wave 42 — Artifact Registry (v5.02.0)
+from artifacts_registry import router as artifacts_registry_router
+app.include_router(artifacts_registry_router)
+
+# Wave 43 — Attestations (v5.06.0)
+from attestations import router as attestations_router
+app.include_router(attestations_router)
+
+# Wave 44 — Compliance Pack (v5.10.0)
+from compliance_pack import router as compliance_pack_router
+app.include_router(compliance_pack_router)
+
+# Wave 47 — Judge Mode v2 (v5.18.0)
+from judge_mode_v2 import router as judge_v2_router
+app.include_router(judge_v2_router)
+
 # ===== Error handlers =====
 
 
