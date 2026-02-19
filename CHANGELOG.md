@@ -2,6 +2,51 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [5.45.0] – 2026-02-19 — Wave 49-56 Mega-Delivery
+
+### Added (Wave 54 — Judge Mode v3, v5.40.0-v5.43.0)
+
+- **`apps/api/judge_mode_v3.py`** — `generate_judge_pack_v3()`, `list_judge_packs_v3()`, `get_pack_definitions_v3()`; 3-vendor decision+compliance+evidence packs; scores: Microsoft=97, GitLab=95, DigitalOcean=93, overall=95 (STRONG PASS); `GET /judge/v3/packs`, `POST /judge/v3/generate`, `GET /judge/v3/definitions`
+
+### Added (Wave 53 — Deploy Validator, v5.36.0-v5.39.0)
+
+- **`apps/api/deploy_validator.py`** — OFFLINE Azure (9 vars) + DigitalOcean (7 vars) env validation; Docker Compose schema lint; nginx template lint; ZERO network calls; `POST /deploy/validate-azure`, `POST /deploy/validate-do`, `POST /deploy/validate-all`, `POST /deploy/lint-template`
+
+### Added (Wave 51-52 — Decision Packets, v5.32.0-v5.35.0)
+
+- **`apps/api/decision_packet.py`** — `generate_decision_packet()` bundles subject+runs+attestations+reviews+summary into 5-file tamper-evident evidence packet; `verify_packet()` validates manifest hash chain; `POST /exports/decision-packet`, `GET /exports/decision-packets`, `GET /exports/decision-packets/{id}`, `POST /exports/decision-packets/{id}/verify`
+
+### Added (Wave 51 — Reviews, v5.29.0-v5.32.0)
+
+- **`apps/api/reviews.py`** — Review state machine: `DRAFT` → `IN_REVIEW` → `APPROVED`/`REJECTED`; `create_review()`, `submit_review()`, `decide_review()`, `_compute_decision_hash()`; `GET /reviews`, `POST /reviews`, `GET /reviews/{id}`, `POST /reviews/{id}/submit`, `POST /reviews/{id}/decide`
+- **`apps/web/src/pages/ReviewsPage.tsx`** — Status-gated action buttons; DRAFT→submit, IN_REVIEW→approve/reject; decision hash display; testids: `reviews-page`, `review-row-{i}`, `reviews-table-ready`, `review-submit`, `review-approve`, `review-reject`, `review-drawer-ready`, `review-decision-hash`
+
+### Added (Wave 50 — Scenario Composer v2, v5.25.0-v5.28.0)
+
+- **`apps/api/scenarios_v2.py`** — First-class scenario objects: `create_scenario()`, `run_scenario()`, `replay_scenario()`, `_compute_impact()`; deterministic run IDs; 5 scenario kinds; `GET/POST /scenarios-v2`, `GET /scenarios-v2/{id}`, `POST /scenarios-v2/{id}/run`, `POST /scenarios-v2/{id}/replay`, `GET /scenarios-v2/{id}/runs`, `GET /scenarios-v2/templates/all`
+- **`apps/web/src/pages/ScenarioComposerPage.tsx`** — Two-panel editor (YAML left, preview right), action log panel, run/replay controls; testids: `scenario-composer`, `scenario-kind-select`, `scenario-validate`, `scenario-run`, `scenario-replay`, `scenario-preview-ready`, `scenario-action-log`, `scenario-list-ready`, `scenario-row-{i}`
+
+### Added (Wave 49 — Datasets, v5.22.0-v5.24.0)
+
+- **`apps/api/datasets.py`** — Dataset Ingestion v1: 5 kinds (`portfolio|rates_curve|stress_preset|fx_set|credit_curve`), validation engine, 6 demo seeds; `ingest_dataset()`, `list_datasets()`, `get_dataset()`; `GET /datasets`, `GET /datasets/{id}`, `POST /datasets/ingest`, `POST /datasets/validate`
+- **`apps/web/src/pages/DatasetsPage.tsx`** — Ingest drawer, kind filter, validate/save actions; testids: `datasets-page`, `dataset-row-{i}`, `dataset-ingest-open`, `dataset-validate-btn`, `dataset-save-btn`, `datasets-table-ready`, `dataset-drawer-ready`, `dataset-kind-filter`
+- **`apps/api/artifacts_registry.py`** — Added `register_artifact_direct` alias for `create_artifact`
+
+### Changed
+
+- **`apps/api/main.py`** — Registered 6 new routers (datasets, scenarios_v2, reviews, decision_packet, deploy_validator, judge_mode_v3)
+- **`apps/web/src/App.tsx`** — Added routes `/datasets`, `/scenario-composer`, `/reviews`
+- **`apps/web/src/components/layout/AppLayout.tsx`** — 3 new nav items (`nav-datasets`, `nav-scenario-composer`, `nav-reviews`), version badge v5.45.0
+- **`apps/web/src/lib/api.ts`** — 26 new API helper functions for Wave 49-56
+- **`docs/TESTIDS.md`** — Wave 49-56 testid inventory appended
+
+### Tests
+
+- **`apps/api/tests/test_wave49_56.py`** — 102 new deterministic pytest tests; total suite: **1189 passed, 0 failed**
+- TypeScript: `tsc --noEmit` → 0 errors; `npm run build` → 1829 modules, 0 warnings
+
+---
+
 ## [5.21.0] – 2026-02-19 — Wave 41-48 Enterprise Layer
 
 ### Added (Wave 47 — Judge Mode v2, v5.18.0-v5.21.0)
