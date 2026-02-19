@@ -38,6 +38,14 @@ import SearchPage from '@/pages/SearchPage';
 import TestHarnessPage from '@/pages/TestHarnessPage';
 // Wave 13+14 Pages (v4.6-v4.9)
 import MarketDataPage from '@/pages/MarketDataPage';
+// Wave 15 Pages (v4.10-v4.13)
+import PnLAttributionPage from '@/pages/PnLAttributionPage';
+// Wave 16 Pages (v4.14-v4.17)
+import ScenariosDSLPage from '@/pages/ScenariosDSLPage';
+// Wave 17 Pages (v4.18-v4.21)
+import ReplayPage from '@/pages/ReplayPage';
+// Wave 18 Pages (v4.22-v4.25)
+import ConstructionStudioPage from '@/pages/ConstructionStudioPage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -84,6 +92,14 @@ export default function App() {
             <Route path="/__harness" element={<TestHarnessPage />} />
             {/* Wave 13+14 Routes (v4.6-v4.9) */}
             <Route path="/market" element={<MarketDataPage />} />
+            {/* Wave 15 Routes (v4.10-v4.13) */}
+            <Route path="/pnl" element={<PnLAttributionPage />} />
+            {/* Wave 16 Routes (v4.14-v4.17) */}
+            <Route path="/scenarios-dsl" element={<ScenariosDSLPage />} />
+            {/* Wave 17 Routes (v4.18-v4.21) */}
+            <Route path="/replay" element={<ReplayPage />} />
+            {/* Wave 18 Routes (v4.22-v4.25) */}
+            <Route path="/construction" element={<ConstructionStudioPage />} />
           </Routes>
         </AppLayout>
       </AppProvider>

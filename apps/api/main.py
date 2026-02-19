@@ -210,6 +210,18 @@ from hedge_engine_v2 import hedge_v2_router
 # v4.9 Decision Memo + Exports
 from decision_memo import decision_memo_router, exports_router
 
+# v4.10 PnL Attribution (Wave 15)
+from pnl_attribution import pnl_router, pnl_exports_router
+
+# v4.14 Scenario DSL (Wave 16)
+from scenario_dsl import scenario_router, scenario_exports_router
+
+# v4.18 Replay Store (Wave 17)
+from replay_store import replay_router, replay_exports_router
+
+# v4.22 Construction Engine (Wave 18)
+from construction_engine import construction_router, construction_exports_router
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -362,6 +374,22 @@ app.include_router(hedge_v2_router)
 # Decision Memo + Exports (v4.9+)
 app.include_router(decision_memo_router)
 app.include_router(exports_router)
+
+# PnL Attribution (v4.10+)
+app.include_router(pnl_router)
+app.include_router(pnl_exports_router)
+
+# Scenario DSL (v4.14+)
+app.include_router(scenario_router)
+app.include_router(scenario_exports_router)
+
+# Replay Store (v4.18+)
+app.include_router(replay_router)
+app.include_router(replay_exports_router)
+
+# Construction Engine (v4.22+)
+app.include_router(construction_router)
+app.include_router(construction_exports_router)
 
 # ===== Error handlers =====
 

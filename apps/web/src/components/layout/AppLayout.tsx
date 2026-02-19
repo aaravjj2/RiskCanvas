@@ -17,6 +17,10 @@ import {
   Search,
   Radio,
   BarChart2,
+  LineChart,
+  Code2,
+  RefreshCw,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -40,6 +44,14 @@ const navItems = [
   { path: "/search", icon: Search, label: "Search", testid: "search" },
   { path: "/settings", icon: SettingsIcon, label: "Settings", testid: "settings" },
   { path: "/market", icon: BarChart2, label: "Market Data", testid: "market" },
+  // Wave 15
+  { path: "/pnl", icon: LineChart, label: "PnL Attribution", testid: "pnl" },
+  // Wave 16
+  { path: "/scenarios-dsl", icon: Code2, label: "Scenario DSL", testid: "scenarios-dsl" },
+  // Wave 17
+  { path: "/replay", icon: RefreshCw, label: "Replay", testid: "replay" },
+  // Wave 18
+  { path: "/construction", icon: Building2, label: "Construction", testid: "construction" },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -55,7 +67,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.9.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.25.0</p>
           </div>
 
           {/* Navigation */}
