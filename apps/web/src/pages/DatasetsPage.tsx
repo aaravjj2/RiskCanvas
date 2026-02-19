@@ -1,5 +1,5 @@
 /**
- * DatasetsPage.tsx (v5.24.0 — Wave 49)
+ * DatasetsPage.tsx (v5.47.0 — Wave 49 + Wave 58 provenance)
  * Route: /datasets
  * data-testids: datasets-page, dataset-row-{i}, dataset-ingest-open, dataset-validate-btn,
  *               dataset-save-btn, datasets-table-ready, dataset-drawer-ready, dataset-kind-filter
@@ -54,6 +54,7 @@ export default function DatasetsPage() {
   const [loading, setLoading] = useState(true);
   const [ingestOpen, setIngestOpen] = useState(false);
   const [kindFilter, setKindFilter] = useState<DatasetKind>("");
+  const [provenance, setProvenance] = useState<Record<string, unknown> | null>(null);
 
   // Ingest form state
   const [ingestKind, setIngestKind] = useState<DatasetKind>("portfolio");
@@ -77,6 +78,14 @@ export default function DatasetsPage() {
   }, [kindFilter]);
 
   useEffect(() => { loadDatasets(); }, [loadDatasets]);
+
+  useEffect(() => {
+    if (!selected) { setProvenance(null); return; }
+    fetch(API(`/provenance/datasets/${selected.dataset_id}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setProvenance(d?.dataset ?? null))
+      .catch(() => setProvenance(null));
+  }, [selected]);
 
   async function handleValidate() {
     setValidating(true);
@@ -146,6 +155,13 @@ export default function DatasetsPage() {
       ),
     },
     { key: "created_at", header: "Created", sortable: true, width: "w-44" },
+    { key: "_lic", header: "License", width: "w-24",
+      render: (_r: Dataset, i: number) => (
+        <span data-testid={`dataset-license-badge-${i}`} className="text-xs px-1.5 py-0.5 rounded bg-teal-900/40 text-teal-300">
+          {(_r as Record<string, unknown>).license_tag as string ?? "—"}
+        </span>
+      ),
+    },
     { key: "_actions", header: "", width: "w-24",
       render: (row: Dataset, i: number) => (
         <button
@@ -210,6 +226,18 @@ export default function DatasetsPage() {
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">SHA-256</p><p className="font-mono text-xs break-all text-gray-400">{selected.sha256}</p></div>
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Created By</p><p className="text-gray-200">{selected.created_by}</p></div>
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Created At</p><p className="text-gray-200">{selected.created_at}</p></div>
+            {provenance && (
+              <div data-testid="dataset-provenance-badge" className="rounded border border-teal-700/50 bg-teal-900/20 p-3 space-y-2">
+                <p className="text-xs uppercase tracking-widest text-teal-400 mb-1">Provenance (Wave 58)</p>
+                <div className="flex gap-2 flex-wrap">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-teal-900/40 text-teal-300">{(provenance.license_tag as string) ?? "—"}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">{(provenance.source_type as string) ?? "—"}</span>
+                  {(provenance.license_compliant as boolean) && <span className="text-xs text-green-400">✓ Compliant</span>}
+                </div>
+                <p className="text-xs text-gray-400">{(provenance.source_note as string) ?? ""}</p>
+                <p className="text-xs font-mono break-all text-gray-500">{(provenance.checksum as string) ?? ""}</p>
+              </div>
+            )}
           </div>
         )}
       </RightDrawer>
