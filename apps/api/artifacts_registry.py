@@ -116,6 +116,10 @@ def create_artifact(
     return art
 
 
+# Alias used by scenarios_v2 and other modules
+register_artifact_direct = create_artifact
+
+
 def list_artifacts(
     tenant_id: Optional[str] = None,
     artifact_type: Optional[str] = None,
