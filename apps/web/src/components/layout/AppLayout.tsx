@@ -35,9 +35,13 @@ import {
   BookOpen,
   Database,
   Scale,
+  Package,
+  MonitorPlay,
+  Presentation,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
+import { usePresentationMode, ALL_RAILS, PresentationStepCard } from "@/components/ui/PresentationMode";
 
 const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard", testid: "dashboard" },
@@ -94,7 +98,52 @@ const navItems = [
   { path: "/search-v2", icon: Database, label: "Search V2", testid: "search-v2" },
   // Wave 32
   { path: "/judge-mode", icon: Scale, label: "Judge Mode", testid: "judge-mode" },
+  // Wave 34
+  { path: "/exports", icon: Package, label: "Exports Hub", testid: "exports" },
+  // Wave 37
+  { path: "/workbench", icon: MonitorPlay, label: "Workbench", testid: "workbench" },
 ];
+
+function PresentationToggle() {
+  const { enabled, toggle, rail, setRailId } = usePresentationMode();
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <button
+          data-testid="presentation-toggle"
+          onClick={toggle}
+          aria-pressed={enabled}
+          className={cn(
+            "flex items-center gap-1.5 px-2 py-1 text-xs rounded border transition-colors w-full",
+            enabled
+              ? "bg-primary/10 border-primary/30 text-primary font-medium"
+              : "border-border text-muted-foreground hover:bg-muted"
+          )}
+        >
+          <Presentation className="h-3.5 w-3.5" />
+          {enabled ? "Demo Rail ON" : "Demo Rail"}
+        </button>
+      </div>
+      {enabled && (
+        <div className="flex flex-col gap-1 pl-1">
+          {ALL_RAILS.map(r => (
+            <button
+              key={r.id}
+              data-testid={`presentation-rail-select-${r.id}`}
+              onClick={() => setRailId(r.id)}
+              className={cn(
+                "text-xs px-2 py-0.5 rounded text-left transition-colors",
+                rail.id === r.id ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {rail.id === r.id ? "▶ " : "  "}{r.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -109,7 +158,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.73.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.97.0</p>
           </div>
 
           {/* Navigation */}
@@ -140,9 +189,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-border text-xs text-muted-foreground">
+          <div className="p-4 border-t border-border text-xs text-muted-foreground flex flex-col gap-2">
+            <PresentationToggle />
             <p>Engine v0.1.0</p>
-            <p className="mt-1">DEMO Mode</p>
+            <p>DEMO Mode</p>
           </div>
         </div>
       </aside>
@@ -156,6 +206,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Command Palette (Ctrl+K) */}
       <CommandPalette />
+
+      {/* Presentation Mode floating step card */}
+      <PresentationStepCard />
     </div>
   );
 }
