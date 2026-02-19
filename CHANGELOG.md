@@ -2,6 +2,56 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [5.21.0] – 2026-02-19 — Wave 41-48 Enterprise Layer
+
+### Added (Wave 47 — Judge Mode v2, v5.18.0-v5.21.0)
+
+- **`apps/api/judge_mode_v2.py`** — `generate_judge_pack_v2()`, `list_judge_packs_v2()`, `get_pack_definitions()`; 3 vendor packs: microsoft, gitlab, digitalocean; deterministic `generation_id`; `GET /judge/v2/packs`, `POST /judge/v2/generate`, `GET /judge/v2/definitions`
+
+### Added (Wave 44 — Compliance Pack, v5.10.0-v5.13.0)
+
+- **`apps/api/compliance_pack.py`** — `generate_compliance_pack()` produces 7-file SOC2-ish evidence bundle; `verify_compliance_pack()` validates manifest hashes; `POST /compliance/generate-pack`, `GET /compliance/packs/{id}`, `POST /compliance/packs/{id}/verify`
+- **`apps/web/src/pages/CompliancePage.tsx`** — Pack generator UI with verify action; testids: `compliance-page`, `compliance-generate-btn`, `compliance-pack-row-{i}`
+
+### Added (Wave 43 — Attestations, v5.06.0-v5.09.0)
+
+- **`apps/api/attestations.py`** — `issue_attestation()`, `get_chain_head()`, `build_receipts_pack()`; per-tenant hash chain; `GET /attestations`, `POST /attestations/receipts-pack`
+- **`apps/web/src/pages/AttestationsPage.tsx`** — Timeline with hash chain navigation; testids: `attestations-page`, `attestation-row-{i}`, `attestation-drawer-ready`
+- **`apps/web/src/components/ui/PermissionBadge.tsx`** — Role permission chip + `PermExplainDrawer`; testids: `perm-badge-{action}`, `perm-explain-drawer`
+
+### Added (Wave 42 — Artifact Registry, v5.02.0-v5.05.0)
+
+- **`apps/api/artifacts_registry.py`** — 5 demo artifacts with deterministic SHA-256; `list_artifacts()`, `get_artifact()`, `get_download_descriptor()`; `GET /artifacts`, `GET /artifacts/{id}/downloads`
+- **`apps/web/src/pages/ArtifactsPage.tsx`** — Artifact browser with verify; testids: `artifacts-page`, `artifact-row-{i}`, `artifact-drawer-ready`
+- **`apps/web/src/components/ui/EvidenceBadge.tsx`** — SHA-256 hash display + copy; testids: `evidence-badge`, `evidence-hash`, `evidence-verified`
+
+### Added (Wave 41 — Tenancy v2 / RBAC, v4.98.0-v5.01.0)
+
+- **`apps/api/tenancy_v2.py`** — 3 demo tenants, 4 demo users, `has_permission()`, `require_perm()`; `GET /tenants`, `GET /tenants/{id}/members`, `POST /tenants/{id}/members`, `GET /tenants/~context`
+- **`apps/web/src/pages/AdminPage.tsx`** — Tenant/member management + audit log tabs; testids: `admin-page`, `tenant-row-{i}`, `member-row-{i}`, `invite-btn`
+- **`apps/web/src/components/ui/TenantSwitcher.tsx`** — Sidebar tenant dropdown; testids: `tenant-switcher`, `tenant-current`, `tenant-option-{id}`
+
+### Changed
+
+- **`apps/api/main.py`** — Registered 5 new routers (tenancy_v2, artifacts_registry, attestations, compliance_pack, judge_mode_v2)
+- **`apps/web/src/App.tsx`** — Added routes `/admin`, `/artifacts`, `/attestations`, `/compliance`
+- **`apps/web/src/components/layout/AppLayout.tsx`** — 4 new nav items, TenantSwitcher in brand, version badge v5.21.0
+- **`apps/web/src/lib/api.ts`** — 15 new API helper functions for Wave 41-48
+- **`apps/api/judge_mode_v2.py`** — `get_pack_definitions()` public helper
+
+### Tests
+
+- **`apps/api/tests/test_wave41_48.py`** — 72 new tests (17+4+8+4+9+4+7+4+9+4); suite total: 1087 passed
+- **`conftest.py`** — Root conftest adds apps/api to sys.path
+- **`pytest.ini`** — Root pytest.ini with `asyncio_mode = auto`
+
+### Docs
+
+- **`docs/TESTIDS.md`** — 30 new Wave 41-48 testids documented
+- **`.gitignore`** — `artifacts/` dir now gitignored (fixes test_report_files_not_committed)
+
+---
+
 ## [4.9.0] – 2026-01-15
 
 ### Added (v4.9 – Decision Memo Export)
