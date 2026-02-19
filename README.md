@@ -1,10 +1,10 @@
 # RiskCanvas
 
 **Deterministic Risk Analytics Platform**  
-**v4.9.0**
+**v5.21.0**
 
-[![Version](https://img.shields.io/badge/Version-4.9.0-blue)](CHANGELOG.md)
-[![Tests](https://img.shields.io/badge/Tests-578%20passing-success)](#test-gates)
+[![Version](https://img.shields.io/badge/Version-5.21.0-blue)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-1087%20passing-success)](#test-gates)
 [![Wave13-14](https://img.shields.io/badge/Wave13--14-v4.9.0-brightgreen)](#wave-13-14-market-data--cache-v2--hedge-studio-pro--decision-memo)
 [![Testing](https://img.shields.io/badge/Frontend%20Tests-Playwright--only-blueviolet)](#frontend-testing-v450)
 
@@ -202,6 +202,36 @@ Full architecture: [docs/architecture.md](docs/architecture.md)
 - E2E tests (retries=0, workers=1, headless=false)
 - Architecture diagram (Mermaid)
 - Demo flow documentation
+
+---
+
+## Wave 41-48: Enterprise Layer (v4.98.0-v5.21.0)
+
+### ✅ Tenancy v2 + RBAC (Wave 41, v4.98.0-v5.01.0)
+- `tenancy_v2.py`: 3 demo tenants, 4 demo users, `has_permission()`, `require_perm()`
+- Roles: OWNER / ADMIN / ANALYST / VIEWER with scoped permission sets
+- **Endpoints**: `GET /tenants`, `GET /tenants/{id}/members`, `POST /tenants/{id}/members`, `GET /tenants/~context`
+- **Frontend**: `AdminPage.tsx` (tenant/member management + audit log), `TenantSwitcher.tsx`
+
+### ✅ Artifact Registry (Wave 42, v5.02.0-v5.05.0)
+- `artifacts_registry.py`: 5 demo artifacts with deterministic SHA-256 IDs
+- **Endpoints**: `GET /artifacts`, `GET /artifacts/{id}`, `GET /artifacts/{id}/downloads`
+- **Frontend**: `ArtifactsPage.tsx`, `EvidenceBadge.tsx`
+
+### ✅ Attestations (Wave 43, v5.06.0-v5.09.0)
+- `attestations.py`: per-tenant hash chain with `issue_attestation()`, `get_chain_head()`, `build_receipts_pack()`
+- **Endpoints**: `GET /attestations`, `GET /attestations/{id}`, `POST /attestations/receipts-pack`
+- **Frontend**: `AttestationsPage.tsx` with chain navigation, `PermissionBadge.tsx`
+
+### ✅ Compliance Pack (Wave 44, v5.10.0-v5.13.0)
+- `compliance_pack.py`: SOC2-ish 7-file evidence bundle generator + manifest verifier
+- **Endpoints**: `POST /compliance/generate-pack`, `GET /compliance/packs/{id}`, `POST /compliance/packs/{id}/verify`
+- **Frontend**: `CompliancePage.tsx`
+
+### ✅ Judge Mode v2 (Wave 47, v5.18.0-v5.21.0)
+- `judge_mode_v2.py`: 3-vendor hackathon judge packs (microsoft, gitlab, digitalocean)
+- **Endpoints**: `POST /judge/v2/generate`, `GET /judge/v2/packs`, `GET /judge/v2/definitions`
+- **Tests**: 72 new pytest tests; total suite 1087 passing, 0 failed
 
 ---
 
