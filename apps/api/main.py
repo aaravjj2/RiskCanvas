@@ -243,6 +243,15 @@ from ci_intel import ci_router, ci_exports_router
 # v4.48 DevSecOps Pack (Wave 25)
 from devsecops import security_router, security_exports_router
 
+# Wave 26-32 (v4.50+)
+from mr_review_agents import mr_review_router, mr_review_exports_router
+from incident_drills import incident_drills_router, incident_drills_exports_router
+from release_readiness import release_readiness_router, release_readiness_exports_router
+from workflow_studio import workflow_studio_router
+from policy_registry_v2 import policy_registry_v2_router
+from search_v2 import search_v2_router
+from judge_mode_w26_32 import judge_mode_w26_32_router
+
 # Foundry Provider import (v2.2+)
 from foundry_provider import get_foundry_provider, generate_analysis_narrative
 
@@ -440,6 +449,30 @@ app.include_router(ci_exports_router)
 # DevSecOps Pack (v4.48+)
 app.include_router(security_router)
 app.include_router(security_exports_router)
+
+# Agentic MR Review (v4.50+, Wave 26)
+app.include_router(mr_review_router)
+app.include_router(mr_review_exports_router)
+
+# Incident Drills (v4.54+, Wave 27)
+app.include_router(incident_drills_router)
+app.include_router(incident_drills_exports_router)
+
+# Release Readiness (v4.58+, Wave 28)
+app.include_router(release_readiness_router)
+app.include_router(release_readiness_exports_router)
+
+# Workflow Studio (v4.62+, Wave 29)
+app.include_router(workflow_studio_router)
+
+# Policy Registry V2 (v4.66+, Wave 30)
+app.include_router(policy_registry_v2_router)
+
+# Search V2 (v4.70+, Wave 31)
+app.include_router(search_v2_router)
+
+# Judge Mode W26-32 (v4.72+, Wave 32)
+app.include_router(judge_mode_w26_32_router)
 
 # ===== Error handlers =====
 

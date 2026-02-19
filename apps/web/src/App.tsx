@@ -54,6 +54,13 @@ import ApprovalsPage from '@/pages/ApprovalsPage';
 import GitLabPage from '@/pages/GitLabPage';
 import CIPage from '@/pages/CIPage';
 import SecurityPage from '@/pages/SecurityPage';
+import MRReviewPage from '@/pages/MRReviewPage';
+import IncidentDrillsPage from '@/pages/IncidentDrillsPage';
+import ReleaseReadinessPage from '@/pages/ReleaseReadinessPage';
+import WorkflowStudioPage from '@/pages/WorkflowStudioPage';
+import PoliciesV2Page from '@/pages/PoliciesV2Page';
+import SearchV2Page from '@/pages/SearchV2Page';
+import JudgeModePage from '@/pages/JudgeModePage';
 import { AppProvider } from '@/lib/context';
 
 export default function App() {
@@ -116,6 +123,14 @@ export default function App() {
             <Route path="/gitlab" element={<GitLabPage />} />
             <Route path="/ci" element={<CIPage />} />
             <Route path="/security" element={<SecurityPage />} />
+            {/* Wave 26-32 Routes (v4.50-v4.73) */}
+            <Route path="/mr-review" element={<MRReviewPage />} />
+            <Route path="/incidents" element={<IncidentDrillsPage />} />
+            <Route path="/readiness" element={<ReleaseReadinessPage />} />
+            <Route path="/workflows" element={<WorkflowStudioPage />} />
+            <Route path="/policies-v2" element={<PoliciesV2Page />} />
+            <Route path="/search-v2" element={<SearchV2Page />} />
+            <Route path="/judge-mode" element={<JudgeModePage />} />
           </Routes>
         </AppLayout>
       </AppProvider>

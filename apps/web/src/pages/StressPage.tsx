@@ -146,7 +146,7 @@ export default function StressPage() {
             <div className="font-semibold text-sm">{p.label}</div>
             <div className="text-xs text-gray-500 mt-1">{p.description}</div>
             <div className="text-xs font-mono text-gray-400 mt-2 truncate">
-              {p.preset_hash?.substring(0, 12)}…
+              {p.preset_hash?.substring(0, 12)}...
             </div>
           </Card>
         ))}
@@ -159,7 +159,7 @@ export default function StressPage() {
             onClick={handleRunStress}
             disabled={running}
           >
-            {running ? 'Running stress analysis…' : `Run: ${selectedPreset}`}
+            {running ? 'Running stress analysis...' : `Run: ${selectedPreset}`}
           </Button>
           <Button
             variant="outline"
@@ -180,7 +180,7 @@ export default function StressPage() {
       {stressedResult && (
         <Card className="p-4" data-testid="stress-run-complete">
           <h2 className="text-sm font-semibold mb-3">
-            Stress Result — {stressedResult.presetLabel}
+            Stress Result - {stressedResult.presetLabel}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>

@@ -136,7 +136,7 @@ export default function ActivityPage() {
 
           {/* Feed */}
           <Card className="p-4" data-testid="activity-feed">
-            {loading && <p className="text-muted-foreground text-sm">Loading…</p>}
+            {loading && <p className="text-muted-foreground text-sm">Loading...</p>}
             {!loading && filteredEvents.length === 0 && (
               <p className="text-muted-foreground text-sm">No events</p>
             )}
@@ -157,7 +157,7 @@ export default function ActivityPage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm">{ev.message}</p>
-                      <p className="text-xs text-muted-foreground">{ev.actor} · {ev.ts}</p>
+                      <p className="text-xs text-muted-foreground">{ev.actor}   {ev.ts}</p>
                     </div>
                   </li>
                 ))}

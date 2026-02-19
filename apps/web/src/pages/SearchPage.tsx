@@ -99,7 +99,7 @@ export default function SearchPage({ initialQuery = '' }: { initialQuery?: strin
       <div className="flex gap-2">
         <Input
           data-testid="search-input"
-          placeholder="Search runs, reports, policies…"
+          placeholder="Search runs, reports, policies..."
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -134,17 +134,17 @@ export default function SearchPage({ initialQuery = '' }: { initialQuery?: strin
       {/* Status info */}
       {statusInfo && (
         <p className="text-xs text-muted-foreground font-mono">
-          Index: {statusInfo.doc_count} docs · hash: {statusInfo.index_hash?.slice(0, 12)}
+          Index: {statusInfo.doc_count} docs   hash: {statusInfo.index_hash?.slice(0, 12)}
         </p>
       )}
 
       {/* Results */}
-      {loading && <p className="text-muted-foreground text-sm">Searching…</p>}
+      {loading && <p className="text-muted-foreground text-sm">Searching...</p>}
 
       {!loading && results.length > 0 && (
         <div className="space-y-4" data-testid="search-results-ready">
           {queryHash && (
-            <p className="text-xs text-muted-foreground font-mono">query_hash: {queryHash.slice(0, 16)}…</p>
+            <p className="text-xs text-muted-foreground font-mono">query_hash: {queryHash.slice(0, 16)}...</p>
           )}
           {/* Grouped by type */}
           {Object.entries(grouped).map(([type, items]) => (

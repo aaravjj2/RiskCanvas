@@ -133,7 +133,7 @@ export default function PlatformPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             ) : health ? (
               <div className="space-y-2">
                 {health.services.map(svc => (
@@ -166,7 +166,7 @@ export default function PlatformPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             ) : readiness ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function PlatformPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             ) : liveness ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -223,7 +223,7 @@ export default function PlatformPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             ) : infra ? (
               <div className="space-y-2">
                 <p className="text-sm font-medium">{infra.summary}</p>

@@ -89,7 +89,7 @@ export default function RatesPage() {
             onClick={handleBootstrap}
             disabled={loading}
           >
-            {loading ? 'Bootstrapping…' : 'Bootstrap Curve'}
+            {loading ? 'Bootstrapping...' : 'Bootstrap Curve'}
           </Button>
         </div>
       </Card>
@@ -100,7 +100,7 @@ export default function RatesPage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">Zero Curve</h2>
             <span className="text-xs text-gray-500 font-mono">
-              hash: {curveResult.curve_hash?.substring(0, 16)}…
+              hash: {curveResult.curve_hash?.substring(0, 16)}...
             </span>
           </div>
           <table className="w-full text-xs" data-testid="rates-curve-table">
@@ -168,7 +168,7 @@ export default function RatesPage() {
               disabled={bondLoading}
               data-testid="rates-bond-price-btn"
             >
-              {bondLoading ? 'Pricing…' : 'Price Bond'}
+              {bondLoading ? 'Pricing...' : 'Price Bond'}
             </Button>
             {bondPrice !== null && (
               <p className="mt-2 text-sm font-semibold" data-testid="rates-bond-price-result">

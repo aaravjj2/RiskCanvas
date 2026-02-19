@@ -1221,3 +1221,116 @@ export async function exportDevSecOpsPack(
   });
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Wave 26 — Agentic MR Review (v4.50-v4.53)
+// ═══════════════════════════════════════════════════════════════
+export async function mrListFixtures() {
+  return apiFetch<any>('/mr/fixtures');
+}
+export async function mrPlanReview(mr_id: string, options: Record<string, any> = {}) {
+  return apiFetch<any>('/mr/review/plan', { method: 'POST', body: JSON.stringify({ mr_id, options }) });
+}
+export async function mrRunReview(plan_id: string) {
+  return apiFetch<any>('/mr/review/run', { method: 'POST', body: JSON.stringify({ plan_id }) });
+}
+export async function mrGetReview(review_id: string) {
+  return apiFetch<any>(`/mr/review/${review_id}`);
+}
+export async function mrCommentPreview(review_id: string) {
+  return apiFetch<any>('/mr/review/comments/preview', { method: 'POST', body: JSON.stringify({ review_id }) });
+}
+export async function mrPostComments(review_id: string, comments: any[]) {
+  return apiFetch<any>('/mr/review/comments/post', { method: 'POST', body: JSON.stringify({ review_id, comments }) });
+}
+export async function mrExportPack(review_id: string) {
+  return apiFetch<any>('/exports/mr-review-pack', { method: 'POST', body: JSON.stringify({ review_id }) });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 27 — Incident Drills (v4.54-v4.57)
+// ═══════════════════════════════════════════════════════════════
+export async function incidentListScenarios() {
+  return apiFetch<any>('/incidents/scenarios');
+}
+export async function incidentRunDrill(scenario_id: string, options: Record<string, any> = {}) {
+  return apiFetch<any>('/incidents/run', { method: 'POST', body: JSON.stringify({ scenario_id, options }) });
+}
+export async function incidentGetRun(run_id: string) {
+  return apiFetch<any>(`/incidents/runs/${run_id}`);
+}
+export async function incidentExportPack(run_id: string) {
+  return apiFetch<any>('/exports/incident-pack', { method: 'POST', body: JSON.stringify({ run_id }) });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 28 — Release Readiness (v4.58-v4.61)
+// ═══════════════════════════════════════════════════════════════
+export async function releaseEvaluate(metrics: Record<string, number>, context: Record<string, any>) {
+  return apiFetch<any>('/release/readiness/evaluate', { method: 'POST', body: JSON.stringify({ metrics, context }) });
+}
+export async function releaseGetAssessment(assessment_id: string) {
+  return apiFetch<any>(`/release/readiness/${assessment_id}`);
+}
+export async function releaseExportPack(assessment_id: string) {
+  return apiFetch<any>('/exports/release-memo-pack', { method: 'POST', body: JSON.stringify({ assessment_id }) });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 29 — Workflow Studio (v4.62-v4.65)
+// ═══════════════════════════════════════════════════════════════
+export async function wfGenerate(spec: Record<string, any>) {
+  return apiFetch<any>('/workflows/generate', { method: 'POST', body: JSON.stringify(spec) });
+}
+export async function wfActivate(workflow_id: string) {
+  return apiFetch<any>('/workflows/activate', { method: 'POST', body: JSON.stringify({ workflow_id }) });
+}
+export async function wfList() {
+  return apiFetch<any>('/workflows/list');
+}
+export async function wfSimulate(workflow_id: string) {
+  return apiFetch<any>('/workflows/simulate', { method: 'POST', body: JSON.stringify({ workflow_id }) });
+}
+export async function wfRuns(workflow_id?: string) {
+  const qs = workflow_id ? `?workflow_id=${workflow_id}` : '';
+  return apiFetch<any>(`/workflows/runs${qs}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 30 — Policy Registry V2 (v4.66-v4.69)
+// ═══════════════════════════════════════════════════════════════
+export async function policyV2Create(slug: string, title: string, body: string, tags: string[]) {
+  return apiFetch<any>('/policies/v2/create', { method: 'POST', body: JSON.stringify({ slug, title, body, tags }) });
+}
+export async function policyV2Publish(slug: string, version_number: number | null) {
+  return apiFetch<any>('/policies/v2/publish', { method: 'POST', body: JSON.stringify({ slug, version_number }) });
+}
+export async function policyV2Rollback(slug: string, to_version: number) {
+  return apiFetch<any>('/policies/v2/rollback', { method: 'POST', body: JSON.stringify({ slug, to_version }) });
+}
+export async function policyV2List() {
+  return apiFetch<any>('/policies/v2/list');
+}
+export async function policyV2Versions(slug: string) {
+  return apiFetch<any>(`/policies/v2/versions/${slug}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 31 — Search V2 (v4.70-v4.71)
+// ═══════════════════════════════════════════════════════════════
+export async function searchV2Stats() {
+  return apiFetch<any>('/search/v2/stats');
+}
+export async function searchV2Query(q: string, type?: string, page = 1, page_size = 10) {
+  return apiFetch<any>('/search/v2/query', { method: 'POST', body: JSON.stringify({ q, type, page, page_size }) });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 32 — Judge Mode W26-32 (v4.72-v4.73)
+// ═══════════════════════════════════════════════════════════════
+export async function judgeW26W32GeneratePack() {
+  return apiFetch<any>('/judge/w26-32/generate-pack', { method: 'POST' });
+}
+export async function judgeW26W32GetFiles() {
+  return apiFetch<any>('/judge/w26-32/files');
+}
+

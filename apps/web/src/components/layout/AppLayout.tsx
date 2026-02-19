@@ -28,6 +28,13 @@ import {
   GitMerge,
   Cpu,
   Lock,
+  FileDiff,
+  AlertTriangle,
+  Rocket,
+  GitBranch,
+  BookOpen,
+  Database,
+  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -73,6 +80,20 @@ const navItems = [
   { path: "/ci", icon: Cpu, label: "CI Intel", testid: "ci" },
   // Wave 25
   { path: "/security", icon: Lock, label: "Security", testid: "security" },
+  // Wave 26
+  { path: "/mr-review", icon: FileDiff, label: "MR Review", testid: "mr-review" },
+  // Wave 27
+  { path: "/incidents", icon: AlertTriangle, label: "Incident Drills", testid: "incidents" },
+  // Wave 28
+  { path: "/readiness", icon: Rocket, label: "Readiness", testid: "readiness" },
+  // Wave 29
+  { path: "/workflows", icon: GitBranch, label: "Workflows", testid: "workflows" },
+  // Wave 30
+  { path: "/policies-v2", icon: BookOpen, label: "Policies V2", testid: "policies-v2" },
+  // Wave 31
+  { path: "/search-v2", icon: Database, label: "Search V2", testid: "search-v2" },
+  // Wave 32
+  { path: "/judge-mode", icon: Scale, label: "Judge Mode", testid: "judge-mode" },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -88,7 +109,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.49.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v4.73.0</p>
           </div>
 
           {/* Navigation */}

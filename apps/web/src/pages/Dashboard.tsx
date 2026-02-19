@@ -29,7 +29,7 @@ export default function Dashboard() {
             Load Fixture
           </Button>
           <Button onClick={runAnalysis} disabled={loading} data-testid="run-risk-button">
-            {loading ? 'Running…' : (
+            {loading ? 'Running...' : (
               <>
                 <Play className="h-4 w-4 mr-2" />
                 Run Analysis

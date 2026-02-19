@@ -221,7 +221,7 @@ export default function TestHarnessPage() {
     <div data-testid="harness-page" className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-1">UI Test Harness</h1>
       <p className="text-sm text-muted-foreground mb-4">
-        Deterministic frontend unit checks (v4.5.0) — Playwright-only, replacing Vitest.
+        Deterministic frontend unit checks (v4.5.0) - Playwright-only, replacing Vitest.
       </p>
 
       <div

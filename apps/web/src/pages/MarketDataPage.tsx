@@ -150,7 +150,7 @@ export default function MarketDataPage() {
         Market Data
       </h1>
       <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-        Deterministic market data provider — fixture-backed, audit-safe, no external calls.
+        Deterministic market data provider - fixture-backed, audit-safe, no external calls.
       </p>
 
       {error && (
@@ -277,7 +277,7 @@ export default function MarketDataPage() {
         {seriesReady && seriesData && (
           <div data-testid="market-series-ready">
             <p style={{ color: '#6b7280', marginBottom: 8 }}>
-              {seriesData.count} candles · {seriesData.freq} · Provider hash:{' '}
+              {seriesData.count} candles   {seriesData.freq}   Provider hash:{' '}
               <code style={{ fontSize: '12px' }}>{seriesData.output_hash}</code>
             </p>
             <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -333,7 +333,7 @@ export default function MarketDataPage() {
         {curveReady && curveData && (
           <div data-testid="market-curve-ready">
             <p style={{ color: '#6b7280', marginBottom: 8 }}>
-              {curveData.currency} · {curveData.count} tenors · Hash:{' '}
+              {curveData.currency}   {curveData.count} tenors   Hash:{' '}
               <code style={{ fontSize: '12px' }}>{curveData.output_hash}</code>
             </p>
             <table style={{ borderCollapse: 'collapse', width: '100%' }}>

@@ -347,7 +347,7 @@ export default function HedgeStudio() {
       <div className="mt-10">
         <h2 className="text-xl font-bold mb-2">Hedge Studio Pro <span className="text-sm font-normal text-blue-600 ml-2">v4.8+</span></h2>
         <p className="text-gray-500 text-sm mb-4">
-          Optimizer v2 · Templates · Constraints · Compare · Decision Memo
+          Optimizer v2   Templates   Constraints   Compare   Decision Memo
         </p>
 
         {!v2Ready && (
@@ -480,7 +480,7 @@ export default function HedgeStudio() {
                         <td style={{ padding: '6px 10px', border: '1px solid #e5e7eb' }}>
                           {v2CompareResult.pct_changes[metric] != null
                             ? `${(v2CompareResult.pct_changes[metric] * 100).toFixed(1)}%`
-                            : '—'}
+                            : '-'}
                         </td>
                       </tr>
                     ))}

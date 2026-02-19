@@ -326,7 +326,7 @@ export default function GovernancePage() {
                 disabled={policyLoading}
                 data-testid="gov-validate-btn"
               >
-                {policyLoading ? 'Evaluating…' : 'Evaluate Policy'}
+                {policyLoading ? 'Evaluating...' : 'Evaluate Policy'}
               </Button>
             </div>
 
@@ -391,7 +391,7 @@ export default function GovernancePage() {
               disabled={narrativeLoading}
               data-testid="gov-validate-narrative-btn"
             >
-              {narrativeLoading ? 'Validating…' : 'Validate Narrative'}
+              {narrativeLoading ? 'Validating...' : 'Validate Narrative'}
             </Button>
 
             {narrativeResult && (
@@ -426,7 +426,7 @@ export default function GovernancePage() {
                 disabled={suitesLoading}
                 data-testid="gov-load-suites-btn"
               >
-                {suitesLoading ? 'Loading…' : 'Load Suites'}
+                {suitesLoading ? 'Loading...' : 'Load Suites'}
               </Button>
             </div>
 
@@ -439,7 +439,7 @@ export default function GovernancePage() {
                   >
                     <div>
                       <p className="font-medium text-sm">{suite.label}</p>
-                      <p className="text-xs text-gray-500">{suite.suite_id} · {suite.case_count} cases</p>
+                      <p className="text-xs text-gray-500">{suite.suite_id}   {suite.case_count} cases</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {suiteRunResults[suite.suite_id] && (

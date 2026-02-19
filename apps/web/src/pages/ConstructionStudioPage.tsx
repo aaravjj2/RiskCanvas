@@ -144,7 +144,7 @@ export default function ConstructionStudioPage() {
                 className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
                 data-testid="construct-solve-btn"
               >
-                {loading ? 'Solving…' : 'Solve'}
+                {loading ? 'Solving...' : 'Solve'}
               </button>
             </div>
             {error && <p className="text-red-600 text-xs mt-2">{error}</p>}
@@ -284,7 +284,7 @@ export default function ConstructionStudioPage() {
                             <td className="py-2 text-right font-mono">{c.before}</td>
                             <td className="py-2 text-right font-mono">{c.after}</td>
                             <td className={`py-2 text-right font-mono ${(c.change || 0) < 0 ? 'text-green-600' : (c.change || 0) > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                              {c.change != null ? (c.change >= 0 ? '+' : '') + c.change?.toFixed(6) : '—'}
+                              {c.change != null ? (c.change >= 0 ? '+' : '') + c.change?.toFixed(6) : '-'}
                             </td>
                           </tr>
                         ))}

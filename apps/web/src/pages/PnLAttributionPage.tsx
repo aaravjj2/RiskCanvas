@@ -109,7 +109,7 @@ export default function PnLAttributionPage() {
             className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
             data-testid="pnl-compute-btn"
           >
-            {loading ? 'Computing…' : 'Compute Attribution'}
+            {loading ? 'Computing...' : 'Compute Attribution'}
           </button>
           <button
             onClick={loadPresets}

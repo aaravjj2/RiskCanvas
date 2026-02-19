@@ -1,0 +1,102 @@
+name: Deploy to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  AZURE_RESOURCE_GROUP: riskcanvas-rg
+  SOLUTION_PREFIX: riskcanvas
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Log in to ACR
+        run: |
+          az acr login --name ${{ env.SOLUTION_PREFIX }}acr
+      
+      - name: Build and push API image
+        run: |
+          docker build -t ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-api:${{ github.sha }} \
+            -t ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-api:latest \
+            -f apps/api/Dockerfile .
+          docker push ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-api:${{ github.sha }}
+          docker push ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-api:latest
+      
+      - name: Build and push Web image
+        run: |
+          docker build -t ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-web:${{ github.sha }} \
+            -t ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-web:latest \
+            -f apps/web/Dockerfile .
+          docker push ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-web:${{ github.sha }}
+          docker push ${{ env.SOLUTION_PREFIX }}acr.azurecr.io/riskcanvas-web:latest
+      
+      - name: Deploy to Azure Container Apps
+        run: |
+          az deployment group create \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --template-file infra/azure/main.bicep \
+            --parameters environment=${{ github.event.inputs.environment || 'dev' }} \
+            --parameters solutionPrefix=${{ env.SOLUTION_PREFIX }} \
+            --parameters apiImageTag=${{ github.sha }} \
+            --parameters webImageTag=${{ github.sha }} \
+            --parameters enableEntraAuth=${{ secrets.ENABLE_ENTRA_AUTH || 'false' }} \
+            --parameters azureTenantId=${{ secrets.AZURE_TENANT_ID || '' }} \
+            --parameters azureClientId=${{ secrets.AZURE_CLIENT_ID || '' }}
+      
+      - name: Get deployment outputs
+        id: deployment
+        run: |
+          API_URL=$(az deployment group show \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name main \
+            --query properties.outputs.apiUrl.value \
+            --output tsv)
+          WEB_URL=$(az deployment group show \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name main \
+            --query properties.outputs.webUrl.value \
+            --output tsv)
+          echo "API_URL=$API_URL" >> $GITHUB_OUTPUT
+          echo "WEB_URL=$WEB_URL" >> $GITHUB_OUTPUT
+      
+      - name: Run smoke tests
+        run: |
+          sleep 60  # Wait for containers to start
+          curl -f ${{ steps.deployment.outputs.API_URL }}/version || exit 1
+          curl -f ${{ steps.deployment.outputs.WEB_URL }} || exit 1
+      
+      - name: Comment deployment URL on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 Deployed to Azure!\n\n- API: ${{ steps.deployment.outputs.API_URL }}\n- Web: ${{ steps.deployment.outputs.WEB_URL }}`
+            })

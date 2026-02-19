@@ -412,7 +412,7 @@ export default function DevOpsPage() {
                 disabled={policyLoading}
                 data-testid="policy-evaluate-btn"
               >
-                {policyLoading ? 'Evaluating…' : 'Evaluate Policy'}
+                {policyLoading ? 'Evaluating...' : 'Evaluate Policy'}
               </Button>
               <Button variant="outline" onClick={handleExportMarkdown} data-testid="export-markdown-btn">
                 Export Markdown
@@ -482,7 +482,7 @@ export default function DevOpsPage() {
               disabled={mrLoading}
               data-testid="devops-mr-generate"
             >
-              {mrLoading ? 'Analyzing…' : 'Generate Review Bundle'}
+              {mrLoading ? 'Analyzing...' : 'Generate Review Bundle'}
             </Button>
 
             {mrBundle && (
@@ -534,7 +534,7 @@ export default function DevOpsPage() {
               disabled={pipeLoading}
               data-testid="devops-pipe-analyze"
             >
-              {pipeLoading ? 'Analyzing…' : 'Analyze Pipeline Log'}
+              {pipeLoading ? 'Analyzing...' : 'Analyze Pipeline Log'}
             </Button>
 
             {pipeResult && (
@@ -575,14 +575,14 @@ export default function DevOpsPage() {
               disabled={artifactLoading}
               data-testid="devops-artifacts-build"
             >
-              {artifactLoading ? 'Building…' : 'Build Artifact Pack'}
+              {artifactLoading ? 'Building...' : 'Build Artifact Pack'}
             </Button>
 
             {artifactResult && (
               <div data-testid="devops-artifacts-ready" className="space-y-3">
                 <p className="text-xs text-gray-500 font-mono">Manifest hash: {artifactResult.manifest_hash}</p>
                 <p className="text-sm text-gray-600">
-                  Files: {artifactResult.file_count} · Size: {(artifactResult.pack_size_bytes / 1024).toFixed(1)} KB
+                  Files: {artifactResult.file_count}   Size: {(artifactResult.pack_size_bytes / 1024).toFixed(1)} KB
                 </p>
                 <div className="flex gap-2">
                   {artifactResult.file_list?.map((f: string) => (

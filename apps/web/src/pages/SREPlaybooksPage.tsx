@@ -62,7 +62,7 @@ export default function SREPlaybooksPage() {
       </div>
       <p className="text-gray-600 text-sm">
         Generate deterministic triage → mitigate → follow-up runbooks for incidents.
-        All facts are cited by hash — no invented numbers.
+        All facts are cited by hash - no invented numbers.
       </p>
 
       <Card className="p-4 space-y-4">
@@ -110,7 +110,7 @@ export default function SREPlaybooksPage() {
           disabled={loading}
           data-testid="sre-generate"
         >
-          {loading ? 'Generating playbook…' : 'Generate Playbook'}
+          {loading ? 'Generating playbook...' : 'Generate Playbook'}
         </Button>
       </Card>
 

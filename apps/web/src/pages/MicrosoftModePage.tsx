@@ -230,7 +230,7 @@ export default function MicrosoftModePage() {
                   <p className="text-sm text-muted-foreground">
                     {providerInfo.mode === "foundry"
                       ? "Azure AI Foundry is active. Real inference will be used."
-                      : "Running in DEMO mode — all inference is offline and deterministic."}
+                      : "Running in DEMO mode - all inference is offline and deterministic."}
                   </p>
                 </>
               )}
@@ -303,7 +303,7 @@ export default function MicrosoftModePage() {
                     <li key={i} className="flex items-center gap-2 text-sm">
                       <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs">{i + 1}</span>
                       <span className="font-medium">{s.agent}</span>
-                      <span className="text-muted-foreground">— {s.description}</span>
+                      <span className="text-muted-foreground">- {s.description}</span>
                     </li>
                   ))}
                 </ol>

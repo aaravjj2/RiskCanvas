@@ -103,7 +103,7 @@ export default function ReplayPage() {
               className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50 mr-2"
               data-testid="replay-load-suites-btn"
             >
-              {loading ? 'Loading…' : 'Load Suites'}
+              {loading ? 'Loading...' : 'Load Suites'}
             </button>
           </div>
 
@@ -119,7 +119,7 @@ export default function ReplayPage() {
                     data-testid={`replay-suite-${s.suite_id}`}
                   >
                     <p className="text-sm font-medium">{s.name}</p>
-                    <p className="text-xs text-gray-500">{s.description} · {s.case_count} cases</p>
+                    <p className="text-xs text-gray-500">{s.description}   {s.case_count} cases</p>
                   </div>
                 ))}
               </div>
@@ -181,7 +181,7 @@ export default function ReplayPage() {
               className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
               data-testid="replay-store-btn"
             >
-              {loading ? 'Storing…' : 'Store Demo Entry'}
+              {loading ? 'Storing...' : 'Store Demo Entry'}
             </button>
             {storeResult && (
               <div className="mt-3 bg-green-50 border border-green-200 rounded p-3" data-testid="replay-stored">

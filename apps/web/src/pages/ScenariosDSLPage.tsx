@@ -171,7 +171,7 @@ export default function ScenariosDSLPage() {
                 className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
                 data-testid="scenario-save-btn"
               >
-                {loading ? 'Saving…' : 'Save Scenario'}
+                {loading ? 'Saving...' : 'Save Scenario'}
               </button>
             </div>
             {error && <p className="text-red-600 text-xs mt-2">{error}</p>}
@@ -213,7 +213,7 @@ export default function ScenariosDSLPage() {
             className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700"
             data-testid="scenario-load-list-btn"
           >
-            {loading ? 'Loading…' : 'Load Scenarios'}
+            {loading ? 'Loading...' : 'Load Scenarios'}
           </button>
 
           {listReady && (
@@ -231,9 +231,9 @@ export default function ScenariosDSLPage() {
                 <tbody>
                   {scenarios.map((s) => (
                     <tr key={s.scenario_id} className="border-t hover:bg-gray-50" data-testid={`scenario-row-${s.scenario_id.slice(0, 8)}`}>
-                      <td className="px-4 py-2 font-mono">{s.scenario_id.slice(0, 8)}…</td>
+                      <td className="px-4 py-2 font-mono">{s.scenario_id.slice(0, 8)}...</td>
                       <td className="px-4 py-2 font-medium">{s.name}</td>
-                      <td className="px-4 py-2 text-gray-400">{s.tags?.join(', ') || '—'}</td>
+                      <td className="px-4 py-2 text-gray-400">{s.tags?.join(', ') || '-'}</td>
                       <td className="px-4 py-2 font-mono text-gray-400">{s.output_hash}</td>
                       <td className="px-4 py-2">
                         <input
@@ -280,7 +280,7 @@ export default function ScenariosDSLPage() {
               <h3 className="text-sm font-semibold mb-3">
                 Diff: {diffResult.a_name} → {diffResult.b_name}
               </h3>
-              <p className="text-xs text-gray-500 mb-3">{diffResult.change_count} change(s) · hash: {diffResult.output_hash}</p>
+              <p className="text-xs text-gray-500 mb-3">{diffResult.change_count} change(s)   hash: {diffResult.output_hash}</p>
               {diffResult.changes.length === 0 ? (
                 <p className="text-xs text-green-600">No differences</p>
               ) : (
