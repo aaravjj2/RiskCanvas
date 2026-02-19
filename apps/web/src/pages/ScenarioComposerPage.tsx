@@ -1,5 +1,5 @@
 /**
- * ScenarioComposerPage.tsx (v5.28.0 — Wave 50)
+ * ScenarioComposerPage.tsx (v5.48.0 — Wave 50 + Wave 59 runner) (v5.28.0 — Wave 50)
  * Route: /scenario-composer
  * data-testids: scenario-composer, scenario-kind-select, scenario-validate,
  *               scenario-run, scenario-replay, scenario-preview-ready,
@@ -60,6 +60,8 @@ export default function ScenarioComposerPage() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [selected, setSelected] = useState<Scenario | null>(null);
   const [runs, setRuns] = useState<ScenarioRun[]>([]);
+  const [runnerRuns, setRunnerRuns] = useState<Record<string, unknown>[]>([]);
+  const [runnerRunning, setRunnerRunning] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Composer state
@@ -89,7 +91,14 @@ export default function ScenarioComposerPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadScenarios(); }, [loadScenarios]);
+  useEffect(() => {
+    if (!selected) { setRunnerRuns([]); return; }
+    fetch(API(`/scenario-runner/by-scenario/${selected.scenario_id}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setRunnerRuns(d?.runs ?? []))
+      .catch(() => setRunnerRuns([]));
+  }, [selected]);
+
 
   async function loadRuns(scenarioId: string) {
     try {
@@ -265,8 +274,31 @@ export default function ScenarioComposerPage() {
                 title={selected ? `Replay ${selected.scenario_id.slice(0, 8)}…` : "Select a scenario first"}
               >
                 {replaying ? "Replaying\u2026" : "Replay"}
-              </button>
-            </div>
+              </button>              <button
+                data-testid="scenario-runner-start"
+                disabled={runnerRunning || !selected}
+                onClick={async () => {
+                  if (!selected) return;
+                  setRunnerRunning(true);
+                  try {
+                    const r = await fetch(API("/scenario-runner/runs"), {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({
+                        scenario_id: selected.scenario_id,
+                        kind: selected.kind,
+                        payload: selected.payload,
+                      }),
+                    });
+                    const d = await r.json();
+                    setRunnerRuns(prev => [d.run, ...prev]);
+                  } catch { /* ignore */ } finally { setRunnerRunning(false); }
+                }}
+                className="flex-1 rounded bg-purple-700 py-2 text-sm font-semibold text-white hover:bg-purple-600 disabled:opacity-40"
+                title="Run via Scenario Runner v1"
+              >
+                {runnerRunning ? "Running…" : "▶ Runner"}
+              </button>            </div>
           </div>
 
           {/* Right: preview */}
@@ -361,6 +393,21 @@ export default function ScenarioComposerPage() {
                 ))}
               </ul>
             </div>
+
+            {/* Wave 59: Runner v1 results */}
+            {runnerRuns.length > 0 && (
+              <div data-testid="scenario-runner-results" className="rounded border border-purple-700/50 bg-purple-900/20 p-3 space-y-2">
+                <p className="text-xs uppercase tracking-widest text-purple-400 mb-1">Runner v1 Runs ({runnerRuns.length})</p>
+                {runnerRuns.slice(0, 3).map((rr, i) => (
+                  <div key={i} className="text-xs space-y-0.5">
+                    <p className="font-mono text-gray-300">{(rr.run_id as string) ?? ""}</p>
+                    <p className="text-gray-500 break-all">inputs: {((rr.inputs_hash as string) ?? "").slice(0, 24)}…</p>
+                    <p className="text-gray-500 break-all">outputs: {((rr.outputs_hash as string) ?? "").slice(0, 24)}…</p>
+                    <p className={`${ (rr.status as string) === "completed" ? "text-green-400" : "text-yellow-400"}`}>{(rr.status as string) ?? ""}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </RightDrawer>
