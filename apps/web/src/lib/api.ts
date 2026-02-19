@@ -1435,3 +1435,137 @@ export async function judgeV2ListPacks() {
 export async function judgeV2Definitions() {
   return apiFetch<any>('/judge/v2/definitions');
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 49 — Dataset Ingestion (v5.22.0-v5.25.0)
+// ═══════════════════════════════════════════════════════════════
+export async function datasetsList(kind?: string, limit = 100) {
+  const params = new URLSearchParams();
+  if (kind) params.set('kind', kind);
+  params.set('limit', String(limit));
+  return apiFetch<any>(`/datasets?${params.toString()}`);
+}
+export async function datasetsGet(datasetId: string) {
+  return apiFetch<any>(`/datasets/${datasetId}`);
+}
+export async function datasetsIngest(kind: string, name: string, payload: unknown, createdBy = 'api@riskcanvas.io') {
+  return apiFetch<any>('/datasets/ingest', {
+    method: 'POST',
+    body: JSON.stringify({ kind, name, payload, created_by: createdBy }),
+  });
+}
+export async function datasetsValidate(kind: string, name: string, payload: unknown) {
+  return apiFetch<any>('/datasets/validate', {
+    method: 'POST',
+    body: JSON.stringify({ kind, name, payload }),
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 50 — Scenarios v2 (v5.26.0-v5.29.0)
+// ═══════════════════════════════════════════════════════════════
+export async function scenariosV2List(kind?: string) {
+  const qs = kind ? `?kind=${kind}` : '';
+  return apiFetch<any>(`/scenarios-v2${qs}`);
+}
+export async function scenariosV2Create(name: string, kind: string, payload: unknown, createdBy = 'api@riskcanvas.io') {
+  return apiFetch<any>('/scenarios-v2', {
+    method: 'POST',
+    body: JSON.stringify({ name, kind, payload, created_by: createdBy }),
+  });
+}
+export async function scenariosV2Get(scenarioId: string) {
+  return apiFetch<any>(`/scenarios-v2/${scenarioId}`);
+}
+export async function scenariosV2Run(scenarioId: string, triggeredBy = 'api@riskcanvas.io') {
+  return apiFetch<any>(`/scenarios-v2/${scenarioId}/run`, {
+    method: 'POST',
+    body: JSON.stringify({ triggered_by: triggeredBy }),
+  });
+}
+export async function scenariosV2Replay(scenarioId: string, triggeredBy = 'api@riskcanvas.io') {
+  return apiFetch<any>(`/scenarios-v2/${scenarioId}/replay`, {
+    method: 'POST',
+    body: JSON.stringify({ triggered_by: triggeredBy }),
+  });
+}
+export async function scenariosV2Runs(scenarioId: string) {
+  return apiFetch<any>(`/scenarios-v2/${scenarioId}/runs`);
+}
+export async function scenariosV2Templates() {
+  return apiFetch<any>('/scenarios-v2/templates/all');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 51 — Reviews & Decision Packets (v5.30.0-v5.33.0)
+// ═══════════════════════════════════════════════════════════════
+export async function reviewsList(status?: string, subjectType?: string) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (subjectType) params.set('subject_type', subjectType);
+  const qs = params.toString();
+  return apiFetch<any>(`/reviews${qs ? '?' + qs : ''}`);
+}
+export async function reviewsCreate(subjectType: string, subjectId: string, requestedBy: string, notes = '') {
+  return apiFetch<any>('/reviews', {
+    method: 'POST',
+    body: JSON.stringify({ subject_type: subjectType, subject_id: subjectId, requested_by: requestedBy, notes }),
+  });
+}
+export async function reviewsGet(reviewId: string) {
+  return apiFetch<any>(`/reviews/${reviewId}`);
+}
+export async function reviewsSubmit(reviewId: string) {
+  return apiFetch<any>(`/reviews/${reviewId}/submit`, { method: 'POST' });
+}
+export async function reviewsDecide(reviewId: string, decision: 'APPROVED' | 'REJECTED', decidedBy: string) {
+  return apiFetch<any>(`/reviews/${reviewId}/decide`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, decided_by: decidedBy }),
+  });
+}
+export async function decisionPacketGenerate(tenantId: string, subjectType: string, subjectId: string, requestedBy = 'api@riskcanvas.io') {
+  return apiFetch<any>('/exports/decision-packet', {
+    method: 'POST',
+    body: JSON.stringify({ tenant_id: tenantId, subject_type: subjectType, subject_id: subjectId, requested_by: requestedBy }),
+  });
+}
+export async function decisionPacketsList(tenantId?: string) {
+  const qs = tenantId ? `?tenant_id=${tenantId}` : '';
+  return apiFetch<any>(`/exports/decision-packets${qs}`);
+}
+export async function decisionPacketGet(packetId: string) {
+  return apiFetch<any>(`/exports/decision-packets/${packetId}`);
+}
+export async function decisionPacketVerify(packetId: string) {
+  return apiFetch<any>(`/exports/decision-packets/${packetId}/verify`, { method: 'POST' });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 53 — Deploy Validator (v5.38.0-v5.39.0)
+// ═══════════════════════════════════════════════════════════════
+export async function deployValidateAzure(env: Record<string, string>) {
+  return apiFetch<any>('/deploy/validate-azure', { method: 'POST', body: JSON.stringify({ env }) });
+}
+export async function deployValidateDO(env: Record<string, string>) {
+  return apiFetch<any>('/deploy/validate-do', { method: 'POST', body: JSON.stringify({ env }) });
+}
+export async function deployValidateAll(env: Record<string, string>) {
+  return apiFetch<any>('/deploy/validate-all', { method: 'POST', body: JSON.stringify({ env }) });
+}
+export async function deployLintTemplate(template: string, templateType: 'do_compose' | 'nginx') {
+  return apiFetch<any>('/deploy/lint-template', { method: 'POST', body: JSON.stringify({ template, template_type: templateType }) });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 54 — Judge Mode v3 (v5.40.0-v5.41.0)
+// ═══════════════════════════════════════════════════════════════
+export async function judgeV3Generate(target = 'all') {
+  return apiFetch<any>('/judge/v3/generate', { method: 'POST', body: JSON.stringify({ target }) });
+}
+export async function judgeV3ListPacks() {
+  return apiFetch<any>('/judge/v3/packs');
+}
+export async function judgeV3Definitions() {
+  return apiFetch<any>('/judge/v3/definitions');
+}
