@@ -755,57 +755,42 @@
 - `workspaces-list`
 - `workspaces-page`
 
----
+## `apps/web/src/pages/DatasetsPage.tsx` (Wave 49 — v5.22.0-v5.25.0)
 
-## Wave 41-48 Enterprise Layer (v4.98.0-v5.21.0)
+- `dataset-drawer-ready`
+- `dataset-ingest-open`
+- `dataset-kind-filter`
+- `dataset-row-{i}`
+- `dataset-save-btn`
+- `dataset-validate-btn`
+- `datasets-page`
+- `datasets-table-ready`
 
-### `apps/web/src/pages/AdminPage.tsx`
+## `apps/web/src/pages/ScenarioComposerPage.tsx` (Wave 50 — v5.26.0-v5.29.0)
 
-- `admin-page`
-- `admin-audit-tab`
-- `audit-list-ready`
-- `audit-row-{i}`
-- `invite-btn`
-- `member-row-{i}`
-- `members-table-ready`
-- `tenant-row-{i}`
-- `tenants-table-ready`
+- `scenario-action-log`
+- `scenario-composer`
+- `scenario-kind-select`
+- `scenario-list-ready`
+- `scenario-preview-ready`
+- `scenario-replay`
+- `scenario-row-{i}`
+- `scenario-run`
+- `scenario-validate`
 
-### `apps/web/src/pages/ArtifactsPage.tsx`
+## `apps/web/src/pages/ReviewsPage.tsx` (Wave 51 — v5.30.0-v5.33.0)
 
-- `artifact-drawer-ready`
-- `artifact-row-{i}`
-- `artifact-verify-btn`
-- `artifacts-page`
+- `review-approve`
+- `review-decision-hash`
+- `review-drawer-ready`
+- `review-reject`
+- `review-row-{i}`
+- `review-submit`
+- `reviews-page`
+- `reviews-table-ready`
 
-### `apps/web/src/pages/AttestationsPage.tsx`
+## AppLayout.tsx nav additions (Wave 49-56)
 
-- `attestation-drawer-ready`
-- `attestation-prev-link`
-- `attestation-row-{i}`
-- `attestations-page`
-
-### `apps/web/src/pages/CompliancePage.tsx`
-
-- `compliance-generate-btn`
-- `compliance-pack-row-{i}`
-- `compliance-packs-ready`
-- `compliance-page`
-- `compliance-verify-btn`
-
-### `apps/web/src/components/ui/TenantSwitcher.tsx`
-
-- `tenant-current`
-- `tenant-option-{tenant_id}`
-- `tenant-switcher`
-
-### `apps/web/src/components/ui/PermissionBadge.tsx`
-
-- `perm-badge-{action}`
-- `perm-explain-drawer`
-
-### `apps/web/src/components/ui/EvidenceBadge.tsx`
-
-- `evidence-badge`
-- `evidence-hash`
-- `evidence-verified`
+- `nav-datasets`
+- `nav-reviews`
+- `nav-scenario-composer`
