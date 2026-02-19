@@ -64,6 +64,11 @@ import JudgeModePage from '@/pages/JudgeModePage';
 // Wave 33-40 Pages (v4.74-v4.97)
 import ExportsHubPage from '@/pages/ExportsHubPage';
 import WorkbenchPage from '@/pages/WorkbenchPage';
+// Wave 41-48 Pages (v4.98-v5.21)
+import AdminPage from '@/pages/AdminPage';
+import ArtifactsPage from '@/pages/ArtifactsPage';
+import AttestationsPage from '@/pages/AttestationsPage';
+import CompliancePage from '@/pages/CompliancePage';
 import { AppProvider } from '@/lib/context';
 import { ToastProvider } from '@/components/ui/ToastCenter';
 import { PresentationProvider } from '@/components/ui/PresentationMode';
@@ -141,6 +146,11 @@ export default function App() {
             {/* Wave 33-40 Routes (v4.74-v4.97) */}
             <Route path="/exports" element={<ExportsHubPage />} />
             <Route path="/workbench" element={<WorkbenchPage />} />
+            {/* Wave 41-48 Routes (v4.98-v5.21) */}
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/artifacts" element={<ArtifactsPage />} />
+            <Route path="/attestations" element={<AttestationsPage />} />
+            <Route path="/compliance" element={<CompliancePage />} />
           </Routes>
             </AppLayout>
           </PresentationProvider>
