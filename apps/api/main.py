@@ -474,6 +474,14 @@ app.include_router(search_v2_router)
 # Judge Mode W26-32 (v4.72+, Wave 32)
 app.include_router(judge_mode_w26_32_router)
 
+# Exports Hub (v4.80+, Wave 34)
+from exports_hub import router as exports_hub_router
+app.include_router(exports_hub_router)
+
+# Judge Mode Wave 33-40 (v4.94+, Wave 40)
+from judge_mode_w33_40 import router as judge_w33_40_router
+app.include_router(judge_w33_40_router)
+
 # ===== Error handlers =====
 
 
