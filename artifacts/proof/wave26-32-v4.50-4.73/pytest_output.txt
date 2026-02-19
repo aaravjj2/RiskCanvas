@@ -1,0 +1,78 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.3.3, pluggy-1.6.0
+rootdir: /home/aarav/Aarav/RiskCanvas/apps/api
+configfile: pytest.ini
+testpaths: tests
+plugins: asyncio-0.23.8, cov-7.0.0, dash-3.3.0, typeguard-4.4.4, mock-3.15.1, anyio-4.12.1, playwright-0.7.2, httpx-0.36.0, base-url-2.1.0
+asyncio: mode=auto
+collected 872 items
+
+tests/test_activity_stream.py ...............                            [  1%]
+tests/test_api_v2.py ...............                                     [  3%]
+tests/test_approvals.py ...................                              [  5%]
+tests/test_artifacts_gitignore.py ..                                     [  5%]
+tests/test_audit_v2.py .......................                           [  8%]
+tests/test_auth_entra.py .............................                   [ 11%]
+tests/test_cache_v2.py .........................                         [ 14%]
+tests/test_ci_intel.py ....................                              [ 16%]
+tests/test_construction_engine.py ..................                     [ 19%]
+tests/test_credit.py .................                                   [ 20%]
+tests/test_decision_memo.py ................                             [ 22%]
+tests/test_determinism_v1.py .......                                     [ 23%]
+tests/test_devops_automations.py ....................                    [ 25%]
+tests/test_devops_policy.py ..............................               [ 29%]
+tests/test_devops_pro.py ....................                            [ 31%]
+tests/test_devsecops.py ............................                     [ 34%]
+tests/test_eval_harness_v2.py ..................                         [ 36%]
+tests/test_fx.py ...................                                     [ 39%]
+tests/test_gitlab_adapter.py ..................                          [ 41%]
+tests/test_hedge_v2.py ......................                            [ 43%]
+tests/test_incident_drills.py ...............                            [ 45%]
+tests/test_jobs.py ..................                                    [ 47%]
+tests/test_judge_mode_w26_32.py .............                            [ 48%]
+tests/test_liquidity.py ................                                 [ 50%]
+tests/test_live_run.py ..................                                [ 52%]
+tests/test_llm_providers.py ............                                 [ 54%]
+tests/test_main.py ....                                                  [ 54%]
+tests/test_market_data.py ......................                         [ 57%]
+tests/test_mr_review_agents.py .................                         [ 59%]
+tests/test_multi_agent.py ...........                                    [ 60%]
+tests/test_multi_agent_orchestrator.py ..........................        [ 63%]
+tests/test_orchestrator.py ...........                                   [ 64%]
+tests/test_persistence.py ..............                                 [ 66%]
+tests/test_platform_health.py ..........................                 [ 69%]
+tests/test_pnl_attribution.py ..........                                 [ 70%]
+tests/test_policy_engine.py .......................                      [ 73%]
+tests/test_policy_registry_v2.py ................                        [ 74%]
+tests/test_portfolio_options.py .                                        [ 75%]
+tests/test_presence.py ............                                      [ 76%]
+tests/test_pricing.py ..................                                 [ 78%]
+tests/test_rates_curve.py ................                               [ 80%]
+tests/test_release_readiness.py .............                            [ 81%]
+tests/test_replay_store.py ................                              [ 83%]
+tests/test_repo_invariants.py .....                                      [ 84%]
+tests/test_scenario_dsl.py ...................                           [ 86%]
+tests/test_search_index.py .....................                         [ 88%]
+tests/test_search_v2.py ................                                 [ 90%]
+tests/test_sre_playbook.py ............                                  [ 91%]
+tests/test_sse.py .......                                                [ 92%]
+tests/test_storage.py ..............                                     [ 94%]
+tests/test_stress_compare.py ........................                    [ 97%]
+tests/test_var.py ..........                                             [ 98%]
+tests/test_workflow_studio.py ...............                            [100%]
+
+=============================== warnings summary ===============================
+../../../../.venv/lib/python3.10/site-packages/starlette/formparsers.py:12
+  /home/aarav/.venv/lib/python3.10/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+../../../../.venv/lib/python3.10/site-packages/pydantic/_internal/_config.py:295
+  /home/aarav/.venv/lib/python3.10/site-packages/pydantic/_internal/_config.py:295: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.10/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+devops_automations.py:194
+  /home/aarav/Aarav/RiskCanvas/apps/api/devops_automations.py:194: PytestCollectionWarning: cannot collect test class 'TestHarness' because it has a __init__ constructor (from: tests/test_devops_automations.py)
+    class TestHarness:
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 872 passed, 3 warnings in 7.70s ========================

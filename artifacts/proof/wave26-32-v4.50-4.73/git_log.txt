@@ -1,0 +1,48 @@
+d9c84c1 feat(wave32): v4.73.0 — JudgeModePage + mega demo + v4.73 release [872 pytest | 25 Playwright]
+cf2e92f feat(wave32): v4.72.0 — Judge Mode W26-32 pack generator
+abcb64a feat(wave31): v4.71.0 — SearchV2Page + query engine + E2E
+684ce19 feat(wave31): v4.70.0 — Search V2 16-doc index (6 types)
+bec82d1 feat(wave30): v4.69.0 — PoliciesV2Page + E2E tests
+b4e6b77 feat(wave30): v4.68.0 — Policy rollback + sha256 hash chain
+aa00013 feat(wave30): v4.67.0 — Policy create + publish lifecycle
+82d2d79 feat(wave30): v4.66.0 — Policy Registry V2 versioned schema
+8b3c8b1 feat(wave29): v4.65.0 — WorkflowStudioPage + E2E tests
+28471ff feat(wave29): v4.64.0 — Workflow Activator + Simulator
+92ed856 feat(wave29): v4.63.0 — Workflow Generator + in-memory store
+6aca421 feat(wave29): v4.62.0 — Workflow Studio DSL v2 schema
+36e8810 feat(wave28): v4.61.0 — ReleaseReadinessPage + E2E tests
+130f09d feat(wave28): v4.60.0 — Release Readiness SHIP/CONDITIONAL/BLOCK verdict
+091bb5a feat(wave28): v4.59.0 — Release Readiness weighted scorer
+986a1c4 feat(wave28): v4.58.0 — Release Readiness 8-gate schema
+d465528 feat(wave27): v4.57.0 — IncidentDrillsPage + E2E tests
+b1ae23a feat(wave27): v4.56.0 — Incident Drill runbook engine
+baba4f8 feat(wave27): v4.55.0 — Incident Drill runner + timeline
+323cb9d feat(wave27): v4.54.0 — Incident Drills scenarios
+1af20b8 feat(wave26): v4.53.0 — MRReviewPage + E2E tests
+b641503 feat(wave26): v4.52.0 — MR Review RecommenderAgent + verdicts
+ef331c1 feat(wave26): v4.51.0 — MR Review ScannerAgent patterns
+3800cec feat(wave26): v4.50.0 — MR Review PlannerAgent
+v4.50.0
+v4.51.0
+v4.52.0
+v4.53.0
+v4.54.0
+v4.55.0
+v4.56.0
+v4.57.0
+v4.58.0
+v4.59.0
+v4.60.0
+v4.61.0
+v4.62.0
+v4.63.0
+v4.64.0
+v4.65.0
+v4.66.0
+v4.67.0
+v4.68.0
+v4.69.0
+v4.70.0
+v4.71.0
+v4.72.0
+v4.73.0
