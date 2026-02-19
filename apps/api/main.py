@@ -359,6 +359,9 @@ app.include_router(policy_router)
 
 # AuditV2 + Provenance (v3.3+)
 app.include_router(audit_v2_router)
+# Wave 58 dataset provenance routes registered BEFORE generic /{kind}/{resource_id}
+from dataset_provenance import router as dataset_provenance_router  # noqa: E402
+app.include_router(dataset_provenance_router)
 app.include_router(provenance_router)
 
 # Rates curve (v3.4+)
@@ -528,6 +531,38 @@ app.include_router(deploy_validator_router)
 # Wave 54 — Judge Mode v3 (v5.40.0)
 from judge_mode_v3 import router as judge_v3_router
 app.include_router(judge_v3_router)
+
+# ─── Wave 57-64: Hardening + Provenance Layer (v5.46.0 → v5.52.0) ────────────
+
+# Wave 57 — Decision Packet Signing (v5.46.0)
+from packet_signing import router as packet_signing_router
+app.include_router(packet_signing_router)
+
+# Wave 58 — Dataset Provenance router moved to line ~362 (before generic provenance route)
+
+# Wave 59 — Scenario Runner v1 (v5.48.0)
+from scenario_runner import router as scenario_runner_router
+app.include_router(scenario_runner_router)
+
+# Wave 60 — Reviews Assignment + SLA (v5.49.0)
+from reviews_sla import router as reviews_sla_router
+app.include_router(reviews_sla_router)
+
+# Wave 61 — Deploy Validator Structured Findings (v5.50.0)
+from deploy_validator_v2 import router as deploy_validator_v2_router
+app.include_router(deploy_validator_v2_router)
+
+# Wave 62 — Judge Mode v4 (v5.51.0)
+from judge_mode_v4 import router as judge_v4_router
+app.include_router(judge_v4_router)
+
+# Wave 63 — SearchProvider (v5.52.0)
+from search_provider import router as search_provider_router
+app.include_router(search_provider_router)
+
+# Wave 64 — LLMProvider / Nova Assist stub (v5.53.0)
+from llm_provider import router as llm_provider_router
+app.include_router(llm_provider_router)
 
 # ===== Error handlers =====
 
