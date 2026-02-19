@@ -846,3 +846,135 @@ export async function exportHedgeDecisionPack(params: {
     body: JSON.stringify(params),
   });
 }
+
+// ===== PnL Attribution (v4.10.0) =====
+
+export async function postPnLAttribution(params: {
+  base_run_id: string;
+  compare_run_id: string;
+  portfolio_id?: string;
+}) {
+  return apiFetch<any>('/pnl/attribution', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function getPnLDriverPresets() {
+  return apiFetch<any>('/pnl/drivers/presets', { method: 'GET' });
+}
+
+export async function exportPnLAttributionPack(params: {
+  base_run_id: string;
+  compare_run_id: string;
+  portfolio_id?: string;
+  format?: 'json' | 'md';
+}) {
+  return apiFetch<any>('/exports/pnl-attribution-pack', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+// ===== Scenario DSL (v4.14.0) =====
+
+export async function postScenarioValidate(scenario: Record<string, any>) {
+  return apiFetch<any>('/scenarios/validate', {
+    method: 'POST',
+    body: JSON.stringify({ scenario }),
+  });
+}
+
+export async function postScenarioCreate(scenario: Record<string, any>) {
+  return apiFetch<any>('/scenarios/create', {
+    method: 'POST',
+    body: JSON.stringify({ scenario }),
+  });
+}
+
+export async function getScenarioList() {
+  return apiFetch<any>('/scenarios/list', { method: 'GET' });
+}
+
+export async function getScenarioById(scenarioId: string) {
+  return apiFetch<any>(`/scenarios/${encodeURIComponent(scenarioId)}`, { method: 'GET' });
+}
+
+export async function postScenarioDiff(aId: string, bId: string) {
+  return apiFetch<any>('/scenarios/diff', {
+    method: 'POST',
+    body: JSON.stringify({ a_id: aId, b_id: bId }),
+  });
+}
+
+export async function exportScenarioPack(scenarioIds: string[]) {
+  return apiFetch<any>('/exports/scenario-pack', {
+    method: 'POST',
+    body: JSON.stringify({ scenario_ids: scenarioIds }),
+  });
+}
+
+// ===== Replay Store (v4.18.0) =====
+
+export async function postReplayStore(params: {
+  endpoint: string;
+  request_payload: Record<string, any>;
+  response_payload: Record<string, any>;
+}) {
+  return apiFetch<any>('/replay/store', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function postReplayVerify(replayId: string) {
+  return apiFetch<any>('/replay/verify', {
+    method: 'POST',
+    body: JSON.stringify({ replay_id: replayId }),
+  });
+}
+
+export async function getReplaySuites() {
+  return apiFetch<any>('/replay/suites/list', { method: 'GET' });
+}
+
+export async function postReplayRunSuite(suiteId: string) {
+  return apiFetch<any>('/replay/run-suite', {
+    method: 'POST',
+    body: JSON.stringify({ suite_id: suiteId }),
+  });
+}
+
+export async function exportReproPack(suiteId: string) {
+  return apiFetch<any>('/exports/repro-report-pack', {
+    method: 'POST',
+    body: JSON.stringify({ suite_id: suiteId }),
+  });
+}
+
+// ===== Construction Engine (v4.22.0) =====
+
+export async function postConstructionSolve(params: {
+  current_weights: Record<string, number>;
+  constraints: Record<string, any>;
+  objective?: string;
+}) {
+  return apiFetch<any>('/construct/solve', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function postConstructionCompare(before: any, after: any) {
+  return apiFetch<any>('/construct/compare', {
+    method: 'POST',
+    body: JSON.stringify({ before, after }),
+  });
+}
+
+export async function exportConstructionPack(solveResult: any) {
+  return apiFetch<any>('/exports/construction-decision-pack', {
+    method: 'POST',
+    body: JSON.stringify({ solve_result: solveResult }),
+  });
+}
