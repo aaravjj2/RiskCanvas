@@ -1334,3 +1334,23 @@ export async function judgeW26W32GetFiles() {
   return apiFetch<any>('/judge/w26-32/files');
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 34 — Exports Hub (v4.80.0)
+// ═══════════════════════════════════════════════════════════════
+export async function exportsGetRecent() {
+  return apiFetch<any>('/exports/recent');
+}
+export async function exportsVerify(packId: string) {
+  return apiFetch<any>(`/exports/verify/${packId}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 40 — Judge Pack W33-40 (v4.97.0)
+// ═══════════════════════════════════════════════════════════════
+export async function judgeW33W40GeneratePack() {
+  return apiFetch<any>('/judge/w33-40/generate-pack', { method: 'POST' });
+}
+export async function judgeW33W40GetFiles() {
+  return apiFetch<any>('/judge/w33-40/files');
+}
