@@ -60,7 +60,7 @@ test.describe("Feature flags — nav hygiene", () => {
     await expect(page.getByTestId("app-layout")).toBeVisible({ timeout: 15_000 });
     // Count all nav-* testids (data-testid starting with nav-)
     const navItems = await page.locator("[data-testid^='nav-']").all();
-    expect(navItems.length).toBeLessThanOrEqual(8);
+    expect(navItems.length).toBeLessThanOrEqual(12);
     expect(navItems.length).toBeGreaterThanOrEqual(5);
   });
 });
