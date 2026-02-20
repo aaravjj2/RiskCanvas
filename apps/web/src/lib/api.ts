@@ -1569,3 +1569,19 @@ export async function judgeV3ListPacks() {
 export async function judgeV3Definitions() {
   return apiFetch<any>('/judge/v3/definitions');
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Wave 62/71 — Judge Mode v4 (v5.50.0-v5.61.0)
+// ═══════════════════════════════════════════════════════════════
+export async function judgeV4Generate(generatedBy = 'api@riskcanvas.io') {
+  return apiFetch<any>('/judge/v4/generate', { method: 'POST', body: JSON.stringify({ generated_by: generatedBy }) });
+}
+export async function judgeV4ListPacks(limit = 50) {
+  return apiFetch<any>(`/judge/v4/packs?limit=${limit}`);
+}
+export async function judgeV4GetPack(packId: string) {
+  return apiFetch<any>(`/judge/v4/packs/${packId}`);
+}
+export async function judgeV4PackSummary(packId: string) {
+  return apiFetch<any>(`/judge/v4/packs/${packId}/summary`);
+}

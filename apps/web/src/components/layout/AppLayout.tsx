@@ -43,11 +43,15 @@ import {
   Link2,
   Layers,
   FileCheck2,
+  GitGraph,
+  DoorOpen,
+  PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
 import { usePresentationMode, ALL_RAILS, PresentationStepCard } from "@/components/ui/PresentationMode";
 import TenantSwitcher from "@/components/ui/TenantSwitcher";
+import EvidenceBar from "@/components/ui/EvidenceBar";
 
 const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard", testid: "dashboard" },
@@ -117,6 +121,9 @@ const navItems = [
   { path: "/datasets", icon: Database, label: "Datasets", testid: "datasets" },
   { path: "/scenario-composer", icon: Layers, label: "Scenario Composer", testid: "scenario-composer" },
   { path: "/reviews", icon: FileCheck2, label: "Reviews", testid: "reviews" },
+  { path: "/evidence", icon: GitGraph, label: "Evidence Graph", testid: "evidence" },
+  { path: "/rooms", icon: DoorOpen, label: "Decision Rooms", testid: "rooms" },
+  { path: "/runbooks", icon: PlayCircle, label: "Runbooks", testid: "runbooks" },
 ];
 
 function PresentationToggle() {
@@ -173,7 +180,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-xl font-bold text-primary" data-testid="app-title">
               RiskCanvas
             </h1>
-            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v5.45.0</p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="version-badge">v5.61.0</p>
             <div className="mt-2">
               <TenantSwitcher />
             </div>
@@ -216,7 +223,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto flex flex-col">
+        <EvidenceBar />
         <div className="container mx-auto p-6" data-testid="main-content">
           {children}
         </div>

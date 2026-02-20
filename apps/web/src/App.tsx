@@ -73,6 +73,10 @@ import CompliancePage from '@/pages/CompliancePage';
 import DatasetsPage from '@/pages/DatasetsPage';
 import ScenarioComposerPage from '@/pages/ScenarioComposerPage';
 import ReviewsPage from '@/pages/ReviewsPage';
+// Wave 65-67 Pages (v5.54.0-v5.56.0)
+import EvidencePage from '@/pages/EvidencePage';
+import RoomsPage from '@/pages/RoomsPage';
+import RunbooksPage from '@/pages/RunbooksPage';
 import { AppProvider } from '@/lib/context';
 import { ToastProvider } from '@/components/ui/ToastCenter';
 import { PresentationProvider } from '@/components/ui/PresentationMode';
@@ -159,6 +163,10 @@ export default function App() {
             <Route path="/datasets" element={<DatasetsPage />} />
             <Route path="/scenario-composer" element={<ScenarioComposerPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />
+            {/* Wave 65-67 Routes (v5.54.0-v5.56.0) */}
+            <Route path="/evidence" element={<EvidencePage />} />
+            <Route path="/rooms" element={<RoomsPage />} />
+            <Route path="/runbooks" element={<RunbooksPage />} />
           </Routes>
             </AppLayout>
           </PresentationProvider>
