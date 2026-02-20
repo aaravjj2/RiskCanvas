@@ -52,79 +52,73 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { usePresentationMode, ALL_RAILS, PresentationStepCard } from "@/components/ui/PresentationMode";
 import TenantSwitcher from "@/components/ui/TenantSwitcher";
 import EvidenceBar from "@/components/ui/EvidenceBar";
+import { isEnabled } from "@/lib/featureFlags";
 
-const navItems = [
-  { path: "/", icon: LayoutDashboard, label: "Dashboard", testid: "dashboard" },
-  { path: "/portfolio", icon: Briefcase, label: "Portfolio", testid: "portfolio" },
-  { path: "/scenarios", icon: Zap, label: "Scenarios", testid: "scenarios" },
-  { path: "/agent", icon: Bot, label: "Agent", testid: "agent" },
-  { path: "/reports", icon: FileText, label: "Reports", testid: "reports" },
-  { path: "/history", icon: History, label: "Run History", testid: "history" },
-  { path: "/library", icon: Library, label: "Library", testid: "library" },
-  { path: "/jobs", icon: Jobs, label: "Jobs", testid: "jobs" },
-  { path: "/devops", icon: Wrench, label: "DevOps", testid: "devops" },
-  { path: "/platform", icon: Activity, label: "Platform", testid: "platform" },
-  { path: "/rates", icon: TrendingUp, label: "Rates", testid: "rates" },
-  { path: "/stress", icon: FlameKindling, label: "Stress", testid: "stress" },
-  { path: "/governance", icon: ShieldCheck, label: "Governance", testid: "governance" },
-  { path: "/sre", icon: ShieldCheck, label: "SRE Playbooks", testid: "sre" },
-  { path: "/activity", icon: Radio, label: "Activity", testid: "activity" },
-  { path: "/search", icon: Search, label: "Search", testid: "search" },
-  { path: "/settings", icon: SettingsIcon, label: "Settings", testid: "settings" },
-  { path: "/market", icon: BarChart2, label: "Market Data", testid: "market" },
-  // Wave 15
-  { path: "/pnl", icon: LineChart, label: "PnL Attribution", testid: "pnl" },
-  // Wave 16
-  { path: "/scenarios-dsl", icon: Code2, label: "Scenario DSL", testid: "scenarios-dsl" },
-  // Wave 17
-  { path: "/replay", icon: RefreshCw, label: "Replay", testid: "replay" },
-  // Wave 18
-  { path: "/construction", icon: Building2, label: "Construction", testid: "construction" },
-  // Wave 19
-  { path: "/fx", icon: DollarSign, label: "FX Risk", testid: "fx" },
-  // Wave 20
-  { path: "/credit", icon: CreditCard, label: "Credit Risk", testid: "credit" },
-  // Wave 21
-  { path: "/liquidity", icon: Droplets, label: "Liquidity", testid: "liquidity" },
-  // Wave 22
-  { path: "/approvals", icon: ClipboardCheck, label: "Approvals", testid: "approvals" },
-  // Wave 23
-  { path: "/gitlab", icon: GitMerge, label: "GitLab MR", testid: "gitlab" },
-  // Wave 24
-  { path: "/ci", icon: Cpu, label: "CI Intel", testid: "ci" },
-  // Wave 25
-  { path: "/security", icon: Lock, label: "Security", testid: "security" },
-  // Wave 26
-  { path: "/mr-review", icon: FileDiff, label: "MR Review", testid: "mr-review" },
-  // Wave 27
-  { path: "/incidents", icon: AlertTriangle, label: "Incident Drills", testid: "incidents" },
-  // Wave 28
-  { path: "/readiness", icon: Rocket, label: "Readiness", testid: "readiness" },
-  // Wave 29
-  { path: "/workflows", icon: GitBranch, label: "Workflows", testid: "workflows" },
-  // Wave 30
-  { path: "/policies-v2", icon: BookOpen, label: "Policies V2", testid: "policies-v2" },
-  // Wave 31
-  { path: "/search-v2", icon: Database, label: "Search V2", testid: "search-v2" },
-  // Wave 32
-  { path: "/judge-mode", icon: Scale, label: "Judge Mode", testid: "judge-mode" },
-  // Wave 34
-  { path: "/exports", icon: Package, label: "Exports Hub", testid: "exports" },
-  // Wave 37
-  { path: "/workbench", icon: MonitorPlay, label: "Workbench", testid: "workbench" },
-  // Wave 41-48: Enterprise Layer
-  { path: "/admin", icon: Users, label: "Admin", testid: "admin" },
-  { path: "/artifacts", icon: Archive, label: "Artifacts", testid: "artifacts" },
-  { path: "/attestations", icon: Link2, label: "Attestations", testid: "attestations" },
-  { path: "/compliance", icon: ClipboardCheck, label: "Compliance", testid: "compliance" },
-  // Wave 49-56: Dataset & Scenario & Review Layer
-  { path: "/datasets", icon: Database, label: "Datasets", testid: "datasets" },
-  { path: "/scenario-composer", icon: Layers, label: "Scenario Composer", testid: "scenario-composer" },
-  { path: "/reviews", icon: FileCheck2, label: "Reviews", testid: "reviews" },
-  { path: "/evidence", icon: GitGraph, label: "Evidence Graph", testid: "evidence" },
-  { path: "/rooms", icon: DoorOpen, label: "Decision Rooms", testid: "rooms" },
-  { path: "/runbooks", icon: PlayCircle, label: "Runbooks", testid: "runbooks" },
+/**
+ * ALL_NAV_ITEMS — each item carries a `flag` key.
+ * Items are shown in the sidebar only when isEnabled(flag) is true.
+ * Default safe flags: dashboard, datasets, scenario_composer, reviews, exports, harness.
+ * All routes remain accessible via direct URL regardless of flag state.
+ * v5.53.1
+ */
+const ALL_NAV_ITEMS = [
+  // ── Always-visible core ──────────────────────────────────────────────────
+  { path: "/", icon: LayoutDashboard, label: "Dashboard", testid: "dashboard", flag: "dashboard" },
+  // ── Flow A: Dataset loop ──────────────────────────────────────────────────
+  { path: "/datasets", icon: Database, label: "Datasets", testid: "datasets", flag: "datasets" },
+  // ── Flow B: Scenario loop ─────────────────────────────────────────────────
+  { path: "/scenario-composer", icon: Layers, label: "Scenario Composer", testid: "scenario-composer", flag: "scenario_composer" },
+  // ── Flow C: Approval / Export loop ───────────────────────────────────────
+  { path: "/reviews", icon: FileCheck2, label: "Reviews", testid: "reviews", flag: "reviews" },
+  { path: "/exports", icon: Package, label: "Exports Hub", testid: "exports", flag: "exports" },
+  // ── Behind feature flags (not shown by default) ───────────────────────────
+  { path: "/portfolio", icon: Briefcase, label: "Portfolio", testid: "portfolio", flag: "portfolio" },
+  { path: "/scenarios", icon: Zap, label: "Scenarios", testid: "scenarios", flag: "scenarios_legacy" },
+  { path: "/agent", icon: Bot, label: "Agent", testid: "agent", flag: "agent" },
+  { path: "/reports", icon: FileText, label: "Reports", testid: "reports", flag: "reports" },
+  { path: "/history", icon: History, label: "Run History", testid: "history", flag: "run_history" },
+  { path: "/library", icon: Library, label: "Library", testid: "library", flag: "library" },
+  { path: "/jobs", icon: Jobs, label: "Jobs", testid: "jobs", flag: "jobs" },
+  { path: "/devops", icon: Wrench, label: "DevOps", testid: "devops", flag: "devops" },
+  { path: "/platform", icon: Activity, label: "Platform", testid: "platform", flag: "platform" },
+  { path: "/rates", icon: TrendingUp, label: "Rates", testid: "rates", flag: "rates" },
+  { path: "/stress", icon: FlameKindling, label: "Stress", testid: "stress", flag: "stress" },
+  { path: "/governance", icon: ShieldCheck, label: "Governance", testid: "governance", flag: "governance" },
+  { path: "/sre", icon: ShieldCheck, label: "SRE Playbooks", testid: "sre", flag: "sre" },
+  { path: "/activity", icon: Radio, label: "Activity", testid: "activity", flag: "activity" },
+  { path: "/search", icon: Search, label: "Search", testid: "search", flag: "search" },
+  { path: "/settings", icon: SettingsIcon, label: "Settings", testid: "settings", flag: "settings" },
+  { path: "/market", icon: BarChart2, label: "Market Data", testid: "market", flag: "market" },
+  { path: "/pnl", icon: LineChart, label: "PnL Attribution", testid: "pnl", flag: "pnl" },
+  { path: "/scenarios-dsl", icon: Code2, label: "Scenario DSL", testid: "scenarios-dsl", flag: "scenarios_dsl" },
+  { path: "/replay", icon: RefreshCw, label: "Replay", testid: "replay", flag: "replay" },
+  { path: "/construction", icon: Building2, label: "Construction", testid: "construction", flag: "construction" },
+  { path: "/fx", icon: DollarSign, label: "FX Risk", testid: "fx", flag: "fx" },
+  { path: "/credit", icon: CreditCard, label: "Credit Risk", testid: "credit", flag: "credit" },
+  { path: "/liquidity", icon: Droplets, label: "Liquidity", testid: "liquidity", flag: "liquidity" },
+  { path: "/approvals", icon: ClipboardCheck, label: "Approvals", testid: "approvals", flag: "approvals" },
+  { path: "/gitlab", icon: GitMerge, label: "GitLab MR", testid: "gitlab", flag: "gitlab" },
+  { path: "/ci", icon: Cpu, label: "CI Intel", testid: "ci", flag: "ci" },
+  { path: "/security", icon: Lock, label: "Security", testid: "security", flag: "security" },
+  { path: "/mr-review", icon: FileDiff, label: "MR Review", testid: "mr-review", flag: "mr_review" },
+  { path: "/incidents", icon: AlertTriangle, label: "Incident Drills", testid: "incidents", flag: "incidents" },
+  { path: "/readiness", icon: Rocket, label: "Readiness", testid: "readiness", flag: "readiness" },
+  { path: "/workflows", icon: GitBranch, label: "Workflows", testid: "workflows", flag: "workflows" },
+  { path: "/policies-v2", icon: BookOpen, label: "Policies V2", testid: "policies-v2", flag: "policies_v2" },
+  { path: "/search-v2", icon: Database, label: "Search V2", testid: "search-v2", flag: "search_v2" },
+  { path: "/judge-mode", icon: Scale, label: "Judge Mode", testid: "judge-mode", flag: "judge_mode" },
+  { path: "/workbench", icon: MonitorPlay, label: "Workbench", testid: "workbench", flag: "workbench" },
+  { path: "/admin", icon: Users, label: "Admin", testid: "admin", flag: "admin" },
+  { path: "/artifacts", icon: Archive, label: "Artifacts", testid: "artifacts", flag: "artifacts" },
+  { path: "/attestations", icon: Link2, label: "Attestations", testid: "attestations", flag: "attestations" },
+  { path: "/compliance", icon: ClipboardCheck, label: "Compliance", testid: "compliance", flag: "compliance" },
+  { path: "/evidence", icon: GitGraph, label: "Evidence Graph", testid: "evidence", flag: "evidence" },
+  { path: "/rooms", icon: DoorOpen, label: "Decision Rooms", testid: "rooms", flag: "rooms" },
+  { path: "/runbooks", icon: PlayCircle, label: "Runbooks", testid: "runbooks", flag: "runbooks" },
 ];
+
+// Only show items whose feature flag is enabled
+const navItems = ALL_NAV_ITEMS.filter(item => isEnabled(item.flag));
 
 function PresentationToggle() {
   const { enabled, toggle, rail, setRailId } = usePresentationMode();
