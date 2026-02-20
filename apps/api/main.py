@@ -584,6 +584,32 @@ app.include_router(policy_decision_gate_router)
 from exports_room_snapshot import router as exports_room_snapshot_router
 app.include_router(exports_room_snapshot_router)
 
+# ─── Depth Wave v5.56.1-v5.60.0 ──────────────────────────────────────────────
+
+# v5.56.1 — Run Outcomes: quality + risk metrics per run
+from run_outcomes import router as run_outcomes_router
+app.include_router(run_outcomes_router)
+
+# v5.57.0 — Eval Harness v3: calibration + drift + stability
+from eval_harness_v3 import router as eval_v3_router
+app.include_router(eval_v3_router)
+
+# v5.57.1 — Explainability: "Why this verdict?"
+from explainability import router as explainability_router
+app.include_router(explainability_router)
+
+# v5.58.0 — Policy Engine v3: enterprise gates
+from policy_engine_v3 import router as policy_v3_router
+app.include_router(policy_v3_router)
+
+# v5.59.0 — MCP Tools v2: deterministic agent tool surface
+from mcp_tools_v2 import router as mcp_v2_router
+app.include_router(mcp_v2_router)
+
+# v5.59.1 — DevOps Offline MR Review → Policy Gate → Export
+from devops_offline_review import router as devops_offline_router
+app.include_router(devops_offline_router)
+
 # ===== Error handlers =====
 
 
