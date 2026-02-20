@@ -2,6 +2,47 @@
 
 All notable changes to RiskCanvas are documented in this file.
 
+## [5.61.0] – 2026-02-19 — Wave 65-72 Mega-Delivery
+
+### Added (Wave 72 — Proof Automation, v5.61.0)
+
+- **`e2e/phase72-judge-demo.spec.ts`** — 51-test judge demo spec covering all Wave 65-72 APIs and UI; retries=0, workers=1; 200+ screenshots; TOUR.webm 565s
+- **`apps/api/tests/test_wave65_72.py`** — 89 pytest unit tests; deterministic: same input → same output
+
+### Added (Wave 71 — Judge Mode v4, v5.60.0)
+
+- **`apps/web/src/pages/JudgeModePage.tsx`** — v4 section with three-vendor launch rail; `data-testid` ids: `judge-mode-page`, `judge-mode-v4-section`, `launch-azure`, `launch-gitlab`, `launch-digitalocean`
+
+### Added (Wave 70 — Exports Hub v2 Room Snapshot, v5.59.0)
+
+- **`apps/api/exports_room_snapshot.py`** — `POST /exports/room-snapshot` → `{snapshot_id, manifest_hash(24)}` deterministic per room state; tamper-evident manifest
+
+### Added (Wave 69 — UX Polish, v5.58.0)
+
+- **`apps/web/src/lib/api.ts`** — Evidence graph, decision rooms, runbooks, policy gate, snapshot API helpers
+- **`apps/web/src/App.tsx`** — New routes: `/evidence`, `/rooms`, `/runbooks`
+- **`apps/web/src/components/layout/AppLayout.tsx`** — Nav items for all Wave 65-72 pages
+
+### Added (Wave 68 — Policy Decision Gate, v5.57.0)
+
+- **`apps/api/policy_decision_gate.py`** — `POST /policy/decision-gate` → `{verdict: ALLOW|BLOCK|CONDITIONAL, gate_hash(16), reasons}`; deterministic by policy_id+context
+
+### Added (Wave 67 — Agent Runbooks, v5.56.0)
+
+- **`apps/api/agent_runbooks.py`** — `GET /runbooks`, `GET /runbooks/{id}`, `POST /runbooks/{id}/execute` → `{execution_id, outputs_hash(16), step_results, status}`; seed rb-demo-001 (3 steps)
+- **`apps/web/src/pages/RunbooksPage.tsx`** — Runbook list, drawer, execute button; `runbook-progress-ready` renders on result; testids: `runbooks-page`, `runbook-row-0`, `runbook-drawer-ready`, `runbook-execute-btn`, `runbook-progress-ready`, `runbook-outputs-hash`
+
+### Added (Wave 66 — Decision Rooms, v5.55.0)
+
+- **`apps/api/decision_rooms.py`** — OPEN→LOCKED→ARCHIVED lifecycle; idempotent lock returns attestation even for already-locked rooms; `GET /rooms`, `POST /rooms`, `GET /rooms/{id}`, `POST /rooms/{id}/lock`, `POST /rooms/{id}/archive`; deterministic room_id = `sha256(name+tenant)[:12]`
+- **`apps/web/src/pages/RoomsPage.tsx`** — Room list with status badges, lock/archive actions, entity pins, notes; testids: `rooms-page`, `room-row-{i}`, `room-drawer-ready`, `room-lock-btn`, `room-archive-btn`, `room-locked-badge`, `room-pin-entity`, `room-notes-input`
+
+### Added (Wave 65 — Evidence Graph, v5.54.0)
+
+- **`apps/api/evidence_graph.py`** — `GET /evidence/graph` (nodes+edges+BFS), `GET /evidence/graph/summary` → `{summary_hash(16), node_count, edge_count, tenant_id}`; 12 nodes / 11 edges seeded deterministically
+- **`apps/web/src/pages/EvidencePage.tsx`** — Evidence graph page; testids: `evidence-page`, `evidence-graph-ready`, `evidence-node-0`
+- **`apps/web/src/components/ui/EvidenceBar.tsx`** — Always-rendered bar (loading skeleton when not fetched); testid: `evidence-bar`
+
 ## [5.45.0] – 2026-02-19 — Wave 49-56 Mega-Delivery
 
 ### Added (Wave 54 — Judge Mode v3, v5.40.0-v5.43.0)
