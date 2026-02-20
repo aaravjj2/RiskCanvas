@@ -79,6 +79,15 @@ export default function RoomsPage() {
   const [creating, setCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
 
+  // v5.58.1 depth wave additions
+  const [policyV3, setPolicyV3] = useState<any>(null);
+  const [policyV3Loading, setPolicyV3Loading] = useState(false);
+  const [explainOpen, setExplainOpen] = useState(false);
+  const [explanation, setExplanation] = useState<any>(null);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedResult, setSeedResult] = useState<{ dataset_id: string; scenario_id: string; run_id: string; eval_id: string; review_id: string } | null>(null);
+
   const { addToast } = useToast();
   const toast = (opts: { title: string; description?: string; variant?: string }) =>
     addToast(opts.description ? `${opts.title}: ${opts.description}` : opts.title,
@@ -195,6 +204,143 @@ export default function RoomsPage() {
     }
   };
 
+  const checkPolicyV3 = async (room: Room) => {
+    setPolicyV3Loading(true);
+    setPolicyV3(null);
+    try {
+      const res = await fetch(API("/policy/v3/decision"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject_type: "room",
+          subject_id: room.room_id,
+          checks: ["approved_review", "attestation_chain", "eval_stability"],
+          context: { room_id: room.room_id },
+        }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setPolicyV3(data.decision);
+    } catch (e) {
+      toast({ title: "Policy V3 check failed", description: String(e), variant: "destructive" });
+    } finally {
+      setPolicyV3Loading(false);
+    }
+  };
+
+  const loadExplanation = async (room: Room) => {
+    setExplainLoading(true);
+    setExplanation(null);
+    try {
+      const body: Record<string, string> = {};
+      if (seedResult) {
+        body.dataset_id = seedResult.dataset_id;
+        body.scenario_id = seedResult.scenario_id;
+        body.run_id = seedResult.run_id;
+        body.review_id = seedResult.review_id;
+      } else {
+        body.dataset_id = room.room_id; // fallback: use room_id as subject
+      }
+      const res = await fetch(API("/explain/verdict"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setExplanation(data.explanation);
+      setExplainOpen(true);
+    } catch (e) {
+      toast({ title: "Explain failed", description: String(e), variant: "destructive" });
+    } finally {
+      setExplainLoading(false);
+    }
+  };
+
+  const demoQuickStart = async () => {
+    setSeedLoading(true);
+    setSeedResult(null);
+    try {
+      // 1. Ingest dataset
+      const dsRes = await fetch(API("/datasets/ingest"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "portfolio", name: "Rooms Demo Portfolio",
+          payload: { positions: [
+            { ticker: "AAPL", quantity: 100, cost_basis: 178.5 },
+            { ticker: "MSFT", quantity: 50,  cost_basis: 415.0 },
+          ]},
+          created_by: "demo@rc.io",
+        }),
+      });
+      const dsData = await dsRes.json();
+      const datasetId = dsData.dataset?.dataset_id;
+
+      // 2. Create scenario
+      const scRes = await fetch(API("/scenarios-v2"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Rooms Demo Stress", kind: "stress",
+          payload: { shock_pct: 0.15, apply_to: ["equity"] },
+          created_by: "demo@rc.io",
+        }),
+      });
+      const scData = await scRes.json();
+      const scenarioId = scData.scenario?.scenario_id;
+
+      // 3. Run scenario
+      const runRes = await fetch(API(`/scenarios-v2/${scenarioId}/run`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ triggered_by: "demo@rc.io" }),
+      });
+      const runData = await runRes.json();
+      const runId = runData.run?.run_id;
+
+      // 4. Run eval
+      const evalRes = await fetch(API("/eval/v3/run"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ run_ids: [runId ?? "demo-run-seed"] }),
+      });
+      const evalData = await evalRes.json();
+      const evalId = evalData.eval?.eval_id;
+
+      // 5. Create review draft
+      const rvRes = await fetch(API("/reviews"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject_type: "dataset", subject_id: datasetId ?? "demo-ds",
+          created_by: "demo@rc.io", notes: "Demo Quick Start review",
+        }),
+      });
+      const rvData = await rvRes.json();
+      const reviewId = rvData.review?.review_id;
+
+      // 6. Create a room
+      const rmRes = await fetch(API("/rooms"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Demo Quick Start Room" }),
+      });
+      const rmData = await rmRes.json();
+
+      setSeedResult({ dataset_id: datasetId, scenario_id: scenarioId, run_id: runId, eval_id: evalId, review_id: reviewId });
+      toast({ title: "Quick Start seeded", description: "Dataset → Scenario → Run → Eval → Review created", variant: "success" });
+      await loadRooms();
+
+      // Open the new room
+      if (rmData.room) openRoom(rmData.room);
+    } catch (e) {
+      toast({ title: "Quick Start failed", description: String(e), variant: "destructive" });
+    } finally {
+      setSeedLoading(false);
+    }
+  };
+
   const createRoom = async () => {
     if (!newRoomName.trim()) return;
     try {
@@ -216,7 +362,7 @@ export default function RoomsPage() {
   return (
     <PageShell
       title="Decision Rooms"
-      subtitle="Wave 66 — v5.55.0"
+      subtitle="v5.58.1 — Home"
       actions={
         <>
           <button
@@ -225,6 +371,14 @@ export default function RoomsPage() {
             data-testid="rooms-refresh-btn"
           >
             Refresh
+          </button>
+          <button
+            onClick={demoQuickStart}
+            disabled={seedLoading}
+            className="px-3 py-1.5 text-xs rounded bg-green-700/80 hover:bg-green-600 text-white transition disabled:opacity-50"
+            data-testid="rooms-demo-quickstart"
+          >
+            {seedLoading ? "Seeding…" : "Demo Quick Start"}
           </button>
           <button
             onClick={() => setCreating(true)}
@@ -443,7 +597,61 @@ export default function RoomsPage() {
               </div>
             )}
 
-            {/* Policy Decision Gate */}
+            {/* Policy Gate v3 (Depth Wave) */}
+            <div data-testid="policy-v3-card">
+              <h3 className="text-sm font-semibold mb-2">Policy Gate v3</h3>
+              <button
+                onClick={() => checkPolicyV3(selectedRoom)}
+                disabled={policyV3Loading}
+                className="px-3 py-1.5 text-xs rounded bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition disabled:opacity-50"
+                data-testid="policy-v3-check-btn"
+              >
+                {policyV3Loading ? "Checking…" : "Check Policy v3"}
+              </button>
+              {policyV3 && (
+                <div className="mt-2 space-y-2">
+                  <div
+                    data-testid="policy-v3-verdict"
+                    className={`text-sm font-bold px-3 py-2 rounded ${
+                      policyV3.verdict === "SHIP" ? "bg-green-900/30 text-green-300" :
+                      policyV3.verdict === "CONDITIONAL" ? "bg-yellow-900/30 text-yellow-300" :
+                      "bg-red-900/30 text-red-300"
+                    }`}
+                  >
+                    {policyV3.verdict}
+                    <span className="text-xs font-normal ml-2 opacity-60">
+                      {policyV3.checks_passed}/{policyV3.checks_run} checks passed
+                    </span>
+                  </div>
+                  {policyV3.reasons?.map((r: any, i: number) => (
+                    <div
+                      key={i}
+                      data-testid={`policy-v3-reason-${i}`}
+                      className={`text-xs px-2 py-1.5 rounded border ${
+                        r.passed ? "border-green-700/30 bg-green-900/10 text-green-300" : "border-red-700/30 bg-red-900/10 text-red-300"
+                      }`}
+                    >
+                      <span className="font-medium">{r.check}:</span> {r.reason}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Explain drawer trigger */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2">Explainability</h3>
+              <button
+                onClick={() => loadExplanation(selectedRoom)}
+                disabled={explainLoading}
+                className="px-3 py-1.5 text-xs rounded bg-blue-700/30 hover:bg-blue-700/50 text-blue-300 border border-blue-700/30 transition disabled:opacity-50"
+                data-testid="explain-open"
+              >
+                {explainLoading ? "Loading…" : "Why this verdict?"}
+              </button>
+            </div>
+
+            {/* Policy Decision Gate (legacy) */}
             <div>
               <h3 className="text-sm font-semibold mb-2">Policy Decision Gate</h3>
               <div className="flex gap-2 mb-2">
@@ -496,6 +704,64 @@ export default function RoomsPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+      </RightDrawer>
+
+      {/* Explanation Drawer */}
+      <RightDrawer
+        open={explainOpen}
+        onClose={() => { setExplainOpen(false); setExplanation(null); }}
+        title="Why this verdict?"
+      >
+        {explanation && (
+          <div className="space-y-4 p-4">
+            <div className="text-xs font-mono text-muted-foreground break-all">
+              {explanation.explain_id}
+            </div>
+            <div className="text-xs text-muted-foreground italic">
+              {explanation.note}
+            </div>
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Reasons ({explanation.reason_count})
+              </div>
+              {explanation.reasons?.map((r: any, i: number) => (
+                <div
+                  key={i}
+                  data-testid={`explain-reason-${i}`}
+                  className="bg-muted/20 rounded p-2 border border-border/30 space-y-1"
+                >
+                  <div className="text-xs font-medium text-white">{r.title}</div>
+                  <div className="text-xs text-muted-foreground">{r.text}</div>
+                  {r.node_ref && (
+                    <div
+                      data-testid={`explain-link-${i}`}
+                      className="text-xs font-mono text-blue-400"
+                    >
+                      ↗ {r.node_ref}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {explanation.evidence_refs?.length > 0 && (
+              <div>
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  Evidence Links
+                </div>
+                {explanation.evidence_refs.map((ref: any, i: number) => (
+                  <div
+                    key={i}
+                    data-testid={`explain-link-${i + (explanation.reasons?.length ?? 0)}`}
+                    className="text-xs font-mono text-blue-400 bg-muted/20 rounded px-2 py-1 mb-1"
+                  >
+                    {ref.entity_type}: {ref.entity_id?.slice(0, 20)}…
+                    <span className="text-muted-foreground ml-2">→ {ref.node_id}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

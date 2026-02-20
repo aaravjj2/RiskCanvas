@@ -77,6 +77,8 @@ import ReviewsPage from '@/pages/ReviewsPage';
 import EvidencePage from '@/pages/EvidencePage';
 import RoomsPage from '@/pages/RoomsPage';
 import RunbooksPage from '@/pages/RunbooksPage';
+// Depth Wave (v5.56.1-v5.60.0)
+import EvalsPage from '@/pages/EvalsPage';
 import { AppProvider } from '@/lib/context';
 import { ToastProvider } from '@/components/ui/ToastCenter';
 import { PresentationProvider } from '@/components/ui/PresentationMode';
@@ -167,6 +169,8 @@ export default function App() {
             <Route path="/evidence" element={<EvidencePage />} />
             <Route path="/rooms" element={<RoomsPage />} />
             <Route path="/runbooks" element={<RunbooksPage />} />
+            {/* Depth Wave Routes (v5.56.1-v5.60.0) */}
+            <Route path="/evals" element={<EvalsPage />} />
           </Routes>
             </AppLayout>
           </PresentationProvider>

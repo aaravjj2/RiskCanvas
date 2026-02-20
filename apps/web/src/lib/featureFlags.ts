@@ -17,7 +17,13 @@ export type FeatureFlag =
   | "scenario_composer"
   | "reviews"
   | "exports"
-  | "harness";
+  | "harness"
+  | "rooms"
+  | "devops"
+  | "microsoft"
+  | "evals"
+  | "evidence"
+  | "runbooks";
 
 /**
  * Default SAFE flags — minimum surface for 3 core judge flows.
@@ -30,6 +36,12 @@ const DEFAULT_FLAGS: Record<string, boolean> = {
   reviews: true,            // Flow C: Approval/export loop
   exports: true,            // Flow C: Export dependency
   harness: true,            // /__harness — System Checks
+  rooms: true,              // Depth Wave: Decision Rooms (home UX)
+  devops: true,             // Depth Wave: DevOps + offline MR review
+  microsoft: true,          // Depth Wave: MCP v2 Microsoft mode
+  evals: true,              // Depth Wave: Eval harness v3
+  evidence: true,            // Wave 65-72: Evidence Graph
+  runbooks: true,            // Wave 65-72: Runbooks
 };
 
 /** Returns true if the given feature flag is enabled */

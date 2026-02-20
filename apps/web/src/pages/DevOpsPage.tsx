@@ -165,6 +165,63 @@ export default function DevOpsPage() {
     setArtifactLoading(false);
   };
 
+  // ── v5.59.1 Offline MR Review Pipeline ───────────────────────────────────
+  const [offlineDiff, setOfflineDiff] = useState(
+    `+def evaluate_portfolio(positions):\n+    # TODO: replace with engine call\n+    return {"pnl": sum(p["quantity"] * p["cost_basis"] for p in positions)}\n`
+  );
+  const [offlineResult, setOfflineResult] = useState<any>(null);
+  const [offlineLoading, setOfflineLoading] = useState(false);
+  const [offlinePacket, setOfflinePacket] = useState<any>(null);
+  const [offlinePacketLoading, setOfflinePacketLoading] = useState(false);
+
+  const handleOfflineReview = async () => {
+    setOfflineLoading(true);
+    setOfflineResult(null);
+    try {
+      const res = await fetch('/api/devops/mr/offline/review-and-open', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          diff: offlineDiff,
+          mr_title: 'Portfolio evaluator update',
+          mr_iid: '42',
+          reviewer: 'reviewer@demo',
+          tenant_id: 'demo-tenant',
+        }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setOfflineResult(data.result);
+    } catch (e) {
+      console.error('Offline review failed', e);
+    } finally {
+      setOfflineLoading(false);
+    }
+  };
+
+  const handleOfflineExport = async () => {
+    if (!offlineResult?.review?.review_id) return;
+    setOfflinePacketLoading(true);
+    try {
+      const res = await fetch('/api/exports/decision-packet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject_type: 'policy_check',
+          subject_id: offlineResult.subject_id,
+          requested_by: 'devops@demo',
+        }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setOfflinePacket(data.packet);
+    } catch (e) {
+      console.error('Offline export failed', e);
+    } finally {
+      setOfflinePacketLoading(false);
+    }
+  };
+
   return (
     <div data-testid="devops-page" className="p-6">
       <div className="mb-6">
@@ -182,6 +239,7 @@ export default function DevOpsPage() {
           <TabsTrigger value="mr-review" data-testid="devops-tab-mr">MR Review</TabsTrigger>
           <TabsTrigger value="pipeline" data-testid="devops-tab-pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="artifacts" data-testid="devops-tab-artifacts">Artifacts</TabsTrigger>
+          <TabsTrigger value="offline-review" data-testid="devops-tab-offline">Offline MR Review</TabsTrigger>
         </TabsList>
 
         {/* Risk-Bot Report Tab */}
@@ -604,6 +662,85 @@ export default function DevOpsPage() {
                 >
                   Download Pack
                 </Button>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* ── v5.59.1 Offline MR Review ─────────────────────────────────── */}
+        <TabsContent value="offline-review" data-testid="devops-panel-offline">
+          <Card className="p-4 space-y-4">
+            <h2 className="text-lg font-semibold">Offline MR Review → Policy Gate → Export</h2>
+            <p className="text-sm text-muted-foreground">
+              Paste a Git diff to scan for risk patterns, run a policy gate, open an approval review,
+              and export a signed evidence packet — entirely offline, no GitLab connection required.
+            </p>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Diff to review</label>
+              <textarea
+                data-testid="devops-offline-diff"
+                className="w-full font-mono text-xs border rounded-md p-2 h-40 bg-background resize-y"
+                value={offlineDiff}
+                onChange={(e) => setOfflineDiff(e.target.value)}
+              />
+            </div>
+
+            <Button
+              data-testid="devops-review-open"
+              onClick={handleOfflineReview}
+              disabled={offlineLoading}
+              className="w-full"
+            >
+              {offlineLoading ? 'Running offline review…' : 'Paste diff → Review → Open approval → Export packet'}
+            </Button>
+
+            {offlineResult && (
+              <div className="space-y-3 border rounded-md p-3 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm">Verdict:</span>
+                  <span
+                    data-testid="devops-offline-verdict"
+                    className={`text-sm font-bold ${offlineResult.policy_verdict === 'SHIP' ? 'text-green-600' : offlineResult.policy_verdict === 'CONDITIONAL' ? 'text-yellow-600' : 'text-red-600'}`}
+                  >
+                    {offlineResult.policy_verdict ?? '—'}
+                  </span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium">Review ID:</span>{' '}
+                  <span data-testid="devops-offline-review-id">{offlineResult.review?.review_id ?? '—'}</span>
+                </div>
+                {offlineResult.risk_findings?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Risk findings ({offlineResult.risk_findings.length})</p>
+                    <ul className="text-xs space-y-0.5">
+                      {offlineResult.risk_findings.slice(0, 5).map((f: any, i: number) => (
+                        <li key={i} data-testid={`devops-offline-finding-${i}`} className="flex items-center gap-1">
+                          <span className={`inline-block w-2 h-2 rounded-full ${f.severity === 'high' ? 'bg-red-500' : f.severity === 'medium' ? 'bg-yellow-500' : 'bg-blue-400'}`} />
+                          <span className="text-muted-foreground">{f.pattern}</span>
+                          <span className="text-xs text-muted-foreground/60">— {f.severity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <Button
+                  data-testid="devops-export-packet"
+                  variant="outline"
+                  size="sm"
+                  disabled={offlinePacketLoading}
+                  onClick={handleOfflineExport}
+                  className="w-full"
+                >
+                  {offlinePacketLoading ? 'Exporting…' : 'Export evidence packet'}
+                </Button>
+
+                {offlinePacket && (
+                  <div className="text-xs font-mono bg-background border rounded p-2 max-h-40 overflow-auto">
+                    <pre data-testid="devops-offline-packet">{JSON.stringify(offlinePacket, null, 2)}</pre>
+                  </div>
+                )}
               </div>
             )}
           </Card>

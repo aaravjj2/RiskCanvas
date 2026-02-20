@@ -115,6 +115,9 @@ const ALL_NAV_ITEMS = [
   { path: "/evidence", icon: GitGraph, label: "Evidence Graph", testid: "evidence", flag: "evidence" },
   { path: "/rooms", icon: DoorOpen, label: "Decision Rooms", testid: "rooms", flag: "rooms" },
   { path: "/runbooks", icon: PlayCircle, label: "Runbooks", testid: "runbooks", flag: "runbooks" },
+  // ── Depth Wave (v5.56.1-v5.60.0) ────────────────────────────────────────
+  { path: "/evals", icon: BarChart2, label: "Eval Harness v3", testid: "evals", flag: "evals" },
+  { path: "/microsoft", icon: Cpu, label: "Microsoft Mode", testid: "microsoft", flag: "microsoft" },
 ];
 
 // Only show items whose feature flag is enabled
