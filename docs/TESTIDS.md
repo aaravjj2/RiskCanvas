@@ -4,7 +4,7 @@
 > Wave 36 · v4.87.0
 
 **Total files with testids:** 73
-**Total testid values:** 634
+**Total testid values:** 664
 
 ---
 
@@ -270,11 +270,13 @@
 
 ## `apps/web/src/pages/DatasetsPage.tsx`
 
+- `dataset-demo-quickstart`
 - `dataset-drawer-ready`
 - `dataset-ingest-open`
 - `dataset-kind-filter`
 - `dataset-provenance-badge`
 - `dataset-save-btn`
+- `dataset-sha256-display`
 - `dataset-validate-btn`
 - `datasets-page`
 - `datasets-table-ready`
@@ -352,7 +354,17 @@
 
 - `export-drawer-sha256`
 - `export-drawer-verify-btn`
+- `export-generate-packet-btn`
+- `export-generate-packet-form`
+- `export-generate-packet-submit-btn`
+- `export-last-packet`
+- `export-packet-hash`
+- `export-packet-verify-btn`
+- `export-packet-verify-status`
 - `export-refresh-btn`
+- `export-requested-by-input`
+- `export-subject-id-input`
+- `export-subject-type-select`
 - `exports-list-ready`
 - `exports-page`
 
@@ -465,8 +477,17 @@
 - `judge-files-btn`
 - `judge-files-ready`
 - `judge-generate-btn`
+- `judge-launch-rail`
 - `judge-mode-page`
 - `judge-pack-ready`
+- `judge-v4-error`
+- `judge-v4-generate-btn`
+- `judge-v4-grade`
+- `judge-v4-list-btn`
+- `judge-v4-pack-ready`
+- `judge-v4-packs-list`
+- `judge-v4-score`
+- `judge-v4-section`
 
 ## `apps/web/src/pages/LiquidityPage.tsx`
 
@@ -657,7 +678,9 @@
 ## `apps/web/src/pages/ReviewsPage.tsx`
 
 - `review-approve`
+- `review-attestation-id`
 - `review-decision-hash`
+- `review-demo-quickstart`
 - `review-drawer-ready`
 - `review-reject`
 - `review-sla-breached`
@@ -734,6 +757,7 @@
 
 - `scenario-action-log`
 - `scenario-composer`
+- `scenario-demo-quickstart`
 - `scenario-kind-select`
 - `scenario-list-ready`
 - `scenario-preview-ready`
@@ -817,8 +841,14 @@
 
 ## `apps/web/src/pages/TestHarnessPage.tsx`
 
+- `harness-api-info`
+- `harness-api-version`
+- `harness-flags-list`
 - `harness-page`
 - `harness-ready`
+- `harness-reset-seed-btn`
+- `harness-reset-status`
+- `harness-system-panel`
 
 ## `apps/web/src/pages/WorkbenchPage.tsx`
 
