@@ -104,6 +104,9 @@ class HealthResponse(BaseModel):
     """Health check response"""
     status: str
     version: str
+    demo_mode: bool = False
+    storage_backend: str = "memory"
+    job_backend: str = "sync"
 
 
 class VersionResponse(BaseModel):

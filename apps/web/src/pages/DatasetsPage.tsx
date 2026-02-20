@@ -1,8 +1,9 @@
 /**
- * DatasetsPage.tsx (v5.47.0 — Wave 49 + Wave 58 provenance)
+ * DatasetsPage.tsx (v5.54.0 — Wave 49 + Wave 58 provenance + v5.54.0 Demo Quick Start)
  * Route: /datasets
  * data-testids: datasets-page, dataset-row-{i}, dataset-ingest-open, dataset-validate-btn,
- *               dataset-save-btn, datasets-table-ready, dataset-drawer-ready, dataset-kind-filter
+ *               dataset-save-btn, datasets-table-ready, dataset-drawer-ready, dataset-kind-filter,
+ *               dataset-demo-quickstart, dataset-sha256-display
  */
 import { useState, useCallback, useEffect } from "react";
 import PageShell from "@/components/ui/PageShell";
@@ -86,6 +87,24 @@ export default function DatasetsPage() {
       .then(d => setProvenance(d?.dataset ?? null))
       .catch(() => setProvenance(null));
   }, [selected]);
+
+  const DEMO_PAYLOAD = JSON.stringify({
+    positions: [
+      { ticker: "AAPL", quantity: 100, cost_basis: 178.5 },
+      { ticker: "MSFT", quantity: 50,  cost_basis: 415.0 },
+      { ticker: "GOOGL", quantity: 25, cost_basis: 175.0 },
+    ]
+  }, null, 2);
+
+  function openDemoQuickStart() {
+    setIngestKind("portfolio");
+    setIngestName("Demo Portfolio Q1 2026");
+    setIngestCreatedBy("demo@riskcanvas.io");
+    setIngestPayload(DEMO_PAYLOAD);
+    setIngestErrors([]);
+    setIngestOpen(true);
+    setSelected(null);
+  }
 
   async function handleValidate() {
     setValidating(true);
@@ -190,6 +209,13 @@ export default function DatasetsPage() {
           </select>
           <div className="flex-1" />
           <button
+            data-testid="dataset-demo-quickstart"
+            onClick={openDemoQuickStart}
+            className="rounded border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-300 hover:bg-teal-900/30"
+          >
+            ✦ Demo Quick Start
+          </button>
+          <button
             data-testid="dataset-ingest-open"
             onClick={() => { setIngestOpen(true); setSelected(null); }}
             className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
@@ -223,7 +249,7 @@ export default function DatasetsPage() {
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Row Count</p><p className="text-gray-200">{selected.row_count}</p></div>
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Schema Version</p><p className="text-gray-200">{selected.schema_version}</p></div>
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Verified</p><p className={selected.verified ? "text-green-400" : "text-red-400"}>{selected.verified ? "\u2713 Verified" : "\u2717 Unverified"}</p></div>
-            <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">SHA-256</p><p className="font-mono text-xs break-all text-gray-400">{selected.sha256}</p></div>
+            <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">SHA-256</p><p data-testid="dataset-sha256-display" className="font-mono text-xs break-all text-gray-400">{selected.sha256}</p></div>
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Created By</p><p className="text-gray-200">{selected.created_by}</p></div>
             <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Created At</p><p className="text-gray-200">{selected.created_at}</p></div>
             {provenance && (
@@ -244,7 +270,7 @@ export default function DatasetsPage() {
 
       {/* Ingest drawer */}
       <RightDrawer open={ingestOpen} onClose={() => { setIngestOpen(false); setIngestErrors([]); }} title="Ingest Dataset">
-        <div className="space-y-4 text-sm">
+        <div data-testid="dataset-ingest-form" className="space-y-4 text-sm">
           <div>
             <label className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Kind</label>
             <select
@@ -258,6 +284,7 @@ export default function DatasetsPage() {
           <div>
             <label className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Name</label>
             <input
+              data-testid="dataset-ingest-name"
               value={ingestName}
               onChange={e => setIngestName(e.target.value)}
               placeholder="e.g. Q1 2026 Portfolio"

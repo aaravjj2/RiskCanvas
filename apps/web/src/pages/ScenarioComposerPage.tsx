@@ -1,9 +1,10 @@
 /**
- * ScenarioComposerPage.tsx (v5.48.0 — Wave 50 + Wave 59 runner) (v5.28.0 — Wave 50)
+ * ScenarioComposerPage.tsx (v5.54.0 — Wave 50 + Wave 59 runner + v5.54.0 Demo Quick Start)
  * Route: /scenario-composer
  * data-testids: scenario-composer, scenario-kind-select, scenario-validate,
  *               scenario-run, scenario-replay, scenario-preview-ready,
- *               scenario-action-log, scenario-list-ready, scenario-row-{i}
+ *               scenario-action-log, scenario-list-ready, scenario-row-{i},
+ *               scenario-demo-quickstart, scenario-output-hash
  */
 import { useState, useCallback, useEffect } from "react";
 import PageShell from "@/components/ui/PageShell";
@@ -74,6 +75,15 @@ export default function ScenarioComposerPage() {
   const [actionLog, setActionLog] = useState<ActionLog[]>([]);
 
   const { addToast } = useToast();
+
+  function openScenarioDemoQuickStart() {
+    setScenarioName("Demo Stress Test Q1 2026");
+    setScenarioKind("stress");
+    setPayloadText(KIND_DEFAULTS.stress);
+    setPreviewData(null);
+    setActionLog([]);
+    addToast("Demo Quick Start: stress scenario prefilled", "success");
+  }
 
   function log(type: ActionLog["type"], message: string) {
     setActionLog(prev => [
@@ -219,7 +229,16 @@ export default function ScenarioComposerPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Left: editor */}
           <div className="rounded-lg border border-gray-700 bg-gray-900 p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-200">Composer</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-200">Composer</h3>
+              <button
+                data-testid="scenario-demo-quickstart"
+                onClick={openScenarioDemoQuickStart}
+                className="text-xs rounded border border-teal-600 px-3 py-1 text-teal-300 hover:bg-teal-900/30"
+              >
+                ✦ Demo Quick Start
+              </button>
+            </div>
             <div>
               <label className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Name</label>
               <input
@@ -381,11 +400,15 @@ export default function ScenarioComposerPage() {
               <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Runs ({runs.length})</p>
               {runs.length === 0 && <p className="text-gray-500 text-xs">No runs yet.</p>}
               <ul className="space-y-1.5">
-                {runs.map(run => (
+                {runs.map((run, runIdx) => (
                   <li key={run.run_id} className="text-xs rounded border border-gray-700 p-2 space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${run.replay ? "bg-emerald-400" : "bg-blue-400"}`} />
-                      <span className="font-mono text-gray-300">{run.output_hash.slice(0, 16)}&hellip;</span>
+                      <span
+                        data-testid={runIdx === 0 ? "scenario-output-hash" : undefined}
+                        data-hash={run.output_hash}
+                        className="font-mono text-gray-300"
+                      >{run.output_hash.slice(0, 16)}&hellip;</span>
                       {run.replay && <span className="text-emerald-400 text-xs">replay</span>}
                     </div>
                     <p className="text-gray-500">Artifact: <span className="font-mono">{run.artifact_id.slice(0, 12)}&hellip;</span></p>

@@ -1344,6 +1344,23 @@ export async function exportsGetRecent() {
 export async function exportsVerify(packId: string) {
   return apiFetch<any>(`/exports/verify/${packId}`);
 }
+export async function exportsGenerateDecisionPacket(
+  subjectType: string,
+  subjectId: string,
+  requestedBy = 'demo@riskcanvas.io',
+  tenantId = 'demo-tenant',
+) {
+  return apiFetch<any>('/exports/decision-packet', {
+    method: 'POST',
+    body: JSON.stringify({ subject_type: subjectType, subject_id: subjectId, requested_by: requestedBy, tenant_id: tenantId }),
+  });
+}
+export async function exportsListDecisionPackets(tenantId = 'demo-tenant') {
+  return apiFetch<any>(`/exports/decision-packets?tenant_id=${tenantId}`);
+}
+export async function exportsVerifyDecisionPacket(packetId: string) {
+  return apiFetch<any>(`/exports/decision-packets/${packetId}/verify`, { method: 'POST' });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // Wave 40 — Judge Pack W33-40 (v4.97.0)

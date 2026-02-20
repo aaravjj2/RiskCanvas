@@ -1,8 +1,9 @@
 /**
- * ReviewsPage.tsx (v5.49.0 — Wave 51 + Wave 60 SLA) (v5.31.0 — Wave 51)
+ * ReviewsPage.tsx (v5.54.0 — Wave 51 + Wave 60 SLA + v5.54.0 Demo Quick Start)
  * Route: /reviews
  * data-testids: reviews-page, review-row-{i}, reviews-table-ready, review-submit,
- *               review-approve, review-reject, review-drawer-ready, review-decision-hash
+ *               review-approve, review-reject, review-drawer-ready, review-decision-hash,
+ *               review-demo-quickstart, review-attestation-id
  */
 import { useState, useCallback, useEffect } from "react";
 import PageShell from "@/components/ui/PageShell";
@@ -136,6 +137,15 @@ export default function ReviewsPage() {
     if (decision === "APPROVED") setApproving(false); else setRejecting(false);
   }
 
+  function openReviewDemoQuickStart() {
+    setSubjectType("dataset");
+    setSubjectId("demo-dataset-001");
+    setRequestedBy("demo@riskcanvas.io");
+    setNotes("Approval required — demonstrate end-to-end review and attestation flow");
+    setCreateOpen(true);
+    setSelected(null);
+  }
+
   const columns: ColumnDef<Review>[] = [
     { key: "subject_type", header: "Subject Type", width: "w-36" },
     { key: "subject_id", header: "Subject ID", width: "w-48",
@@ -188,6 +198,13 @@ export default function ReviewsPage() {
             <option value="REJECTED">REJECTED</option>
           </select>
           <div className="flex-1" />
+          <button
+            data-testid="review-demo-quickstart"
+            onClick={openReviewDemoQuickStart}
+            className="rounded border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-300 hover:bg-teal-900/30"
+          >
+            ✦ Demo Quick Start
+          </button>
           <button
             onClick={() => { setCreateOpen(true); setSelected(null); }}
             className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
@@ -249,7 +266,7 @@ export default function ReviewsPage() {
               </div>
             )}
             {selected.attestation_id && (
-              <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Attestation ID</p><p className="font-mono text-xs break-all text-blue-400">{selected.attestation_id}</p></div>
+              <div><p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Attestation ID</p><p data-testid="review-attestation-id" className="font-mono text-xs break-all text-blue-400">{selected.attestation_id}</p></div>
             )}
 
             {/* Decided-by field */}
@@ -306,7 +323,7 @@ export default function ReviewsPage() {
 
       {/* Create drawer */}
       <RightDrawer open={createOpen} onClose={() => setCreateOpen(false)} title="New Review">
-        <div className="space-y-4 text-sm">
+        <div data-testid="review-create-form" className="space-y-4 text-sm">
           <div>
             <label className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Subject Type</label>
             <select
@@ -344,6 +361,7 @@ export default function ReviewsPage() {
             />
           </div>
           <button
+            data-testid="review-create-submit"
             disabled={creating || !subjectId.trim()}
             onClick={handleCreate}
             className="w-full rounded bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-40"

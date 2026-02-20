@@ -1,14 +1,18 @@
 /**
- * ExportsHubPage.tsx (v4.80.0 — Wave 34)
+ * ExportsHubPage.tsx (v5.54.0 — Wave 34 + Decision Packet Generation)
  *
  * Browse, verify, and inspect recent export packs.
+ * v5.54.0: Added decision packet generation — POST /exports/decision-packet
  * Uses: PageShell, DataTable, RightDrawer, ToastCenter
  *
  * Routes: /exports
  *
  * data-testids:
  *   exports-page, exports-list-ready, export-row-{i}, export-verify-btn-{i},
- *   export-drawer-open-{i}, export-detail-drawer, export-refresh-btn
+ *   export-drawer-open-{i}, export-detail-drawer, export-refresh-btn,
+ *   export-generate-packet-btn, export-generate-packet-form,
+ *   export-subject-type-select, export-subject-id-input,
+ *   export-packet-hash, export-packet-verify-status
  */
 import { useState, useCallback, useEffect } from "react";
 import PageShell from "@/components/ui/PageShell";
@@ -17,8 +21,8 @@ import RightDrawer from "@/components/ui/RightDrawer";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { ErrorPanel } from "@/components/ui/ErrorPanel";
 import { useToast } from "@/components/ui/ToastCenter";
-import { exportsGetRecent, exportsVerify } from "@/lib/api";
-import { CheckCircle2, RefreshCw } from "lucide-react";
+import { exportsGetRecent, exportsVerify, exportsGenerateDecisionPacket, exportsVerifyDecisionPacket } from "@/lib/api";
+import { CheckCircle2, RefreshCw, FilePlus2 } from "lucide-react";
 
 interface PackRow {
   pack_id: string;
@@ -63,6 +67,15 @@ export default function ExportsHubPage() {
   const [verifying, setVerifying] = useState<string | null>(null);
   const { addToast } = useToast();
 
+  // Decision packet generation (v5.54.0)
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [genSubjectType, setGenSubjectType] = useState("dataset");
+  const [genSubjectId, setGenSubjectId] = useState("demo-dataset-001");
+  const [genRequestedBy, setGenRequestedBy] = useState("demo@riskcanvas.io");
+  const [generating, setGenerating] = useState(false);
+  const [lastPacket, setLastPacket] = useState<Record<string, unknown> | null>(null);
+  const [verifyingPacket, setVerifyingPacket] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -87,6 +100,39 @@ export default function ExportsHubPage() {
       addToast(`Verification failed for ${pack.pack_id}`, "error");
     }
   }, [addToast]);
+
+  async function handleGeneratePacket() {
+    if (!genSubjectId.trim()) { addToast("Subject ID required", "error"); return; }
+    setGenerating(true);
+    try {
+      const data = await exportsGenerateDecisionPacket(genSubjectType, genSubjectId, genRequestedBy);
+      if (data?.packet) {
+        setLastPacket(data.packet);
+        setGenerateOpen(false);
+        addToast(`Decision packet generated — ${String(data.packet.manifest_hash ?? "").slice(0, 12)}…`, "success");
+        await load();
+      } else {
+        addToast("Generation failed", "error");
+      }
+    } catch { addToast("Network error", "error"); }
+    setGenerating(false);
+  }
+
+  async function handleVerifyLastPacket() {
+    if (!lastPacket?.packet_id) return;
+    setVerifyingPacket(true);
+    try {
+      const data = await exportsVerifyDecisionPacket(lastPacket.packet_id as string);
+      if (data?.verified) {
+        setLastPacket(prev => prev ? { ...prev, verify_status: "PASS" } : prev);
+        addToast("Packet verification PASS ✓", "success");
+      } else {
+        setLastPacket(prev => prev ? { ...prev, verify_status: "FAIL" } : prev);
+        addToast("Packet verification FAIL", "error");
+      }
+    } catch { addToast("Verify error", "error"); }
+    setVerifyingPacket(false);
+  }
 
   const columnsWithActions: ColumnDef<PackRow>[] = [
     ...COLUMNS,
@@ -122,14 +168,24 @@ export default function ExportsHubPage() {
         title="Exports Hub"
         subtitle="Wave 34 · v4.80.0 — Browse and verify recent export packs"
         actions={
-          <button
-            data-testid="export-refresh-btn"
-            onClick={load}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              data-testid="export-generate-packet-btn"
+              onClick={() => setGenerateOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              <FilePlus2 className="h-4 w-4" />
+              Generate Packet
+            </button>
+            <button
+              data-testid="export-refresh-btn"
+              onClick={load}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </button>
+          </div>
         }
         statusBar={<>DEMO mode · {packs.length} packs loaded · deterministic fixtures</>}
       >
@@ -150,7 +206,97 @@ export default function ExportsHubPage() {
             />
           </div>
         )}
+        {lastPacket && (
+          <div
+            data-testid="export-last-packet"
+            className="mt-4 p-4 border border-border rounded-md bg-muted/40 flex flex-col gap-2 text-sm"
+          >
+            <p className="font-medium">Last Generated Packet</p>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Manifest Hash:</span>
+              <span
+                data-testid="export-packet-hash"
+                data-hash={lastPacket.manifest_hash}
+                className="font-mono text-xs break-all"
+              >
+                {String(lastPacket.manifest_hash).slice(0, 16)}…
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                data-testid="export-packet-verify-btn"
+                onClick={handleVerifyLastPacket}
+                disabled={verifyingPacket}
+                className="px-3 py-1 text-xs border border-border rounded-md hover:bg-muted disabled:opacity-50"
+              >
+                {verifyingPacket ? "Verifying…" : "Verify Hash"}
+              </button>
+              {!!(lastPacket.verify_status as string) && (
+                <span
+                  data-testid="export-packet-verify-status"
+                  className={(lastPacket.verify_status as string) === "PASS" ? "text-green-600 font-medium" : "text-red-600 font-medium"}
+                >
+                  {(lastPacket.verify_status as string) === "PASS" ? "✓ PASS" : "✗ FAIL"}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </PageShell>
+
+      {/* Generate Packet drawer */}
+      <RightDrawer
+        open={generateOpen}
+        onClose={() => setGenerateOpen(false)}
+        title="Generate Decision Packet"
+      >
+        <div data-testid="export-generate-packet-form" className="flex flex-col gap-4 text-sm">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-medium text-muted-foreground">Subject Type</label>
+            <select
+              data-testid="export-subject-type-select"
+              value={genSubjectType}
+              onChange={e => setGenSubjectType(e.target.value)}
+              className="border border-border rounded-md px-2 py-1.5 bg-background text-sm"
+            >
+              <option value="dataset">Dataset</option>
+              <option value="scenario">Scenario</option>
+              <option value="review">Review</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-medium text-muted-foreground">Subject ID</label>
+            <input
+              data-testid="export-subject-id-input"
+              type="text"
+              value={genSubjectId}
+              onChange={e => setGenSubjectId(e.target.value)}
+              placeholder="e.g. demo-dataset-001"
+              className="border border-border rounded-md px-2 py-1.5 bg-background text-sm font-mono"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-medium text-muted-foreground">Requested By</label>
+            <input
+              data-testid="export-requested-by-input"
+              type="text"
+              value={genRequestedBy}
+              onChange={e => setGenRequestedBy(e.target.value)}
+              placeholder="e.g. judge@riskcanvas.io"
+              className="border border-border rounded-md px-2 py-1.5 bg-background text-sm"
+            />
+          </div>
+          <button
+            data-testid="export-generate-packet-submit-btn"
+            onClick={handleGeneratePacket}
+            disabled={generating || !genSubjectId.trim()}
+            className="w-full px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md disabled:opacity-50"
+          >
+            <FilePlus2 className="h-4 w-4 inline mr-1" />
+            {generating ? "Generating…" : "Generate Packet"}
+          </button>
+        </div>
+      </RightDrawer>
 
       {/* Detail drawer */}
       <RightDrawer

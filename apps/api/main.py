@@ -721,7 +721,13 @@ async def export_report():
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    return HealthResponse(status="healthy", version=API_VERSION)
+    return HealthResponse(
+        status="healthy",
+        version=API_VERSION,
+        demo_mode=DEMO_MODE,
+        storage_backend="memory",
+        job_backend="sync",
+    )
 
 
 @app.get("/version", response_model=VersionResponse)
