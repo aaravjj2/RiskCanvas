@@ -564,6 +564,26 @@ app.include_router(search_provider_router)
 from llm_provider import router as llm_provider_router
 app.include_router(llm_provider_router)
 
+# Wave 65 — Evidence Graph v1 (v5.54.0)
+from evidence_graph import router as evidence_graph_router
+app.include_router(evidence_graph_router)
+
+# Wave 66 — Decision Rooms v1 (v5.55.0)
+from decision_rooms import router as decision_rooms_router
+app.include_router(decision_rooms_router)
+
+# Wave 67 — Agent Runbooks v1 (v5.56.0)
+from agent_runbooks import router as agent_runbooks_router
+app.include_router(agent_runbooks_router)
+
+# Wave 68 — Policy Decision Gate (v5.57.0)
+from policy_decision_gate import router as policy_decision_gate_router
+app.include_router(policy_decision_gate_router)
+
+# Wave 70 — Exports Room Snapshot (v5.59.0)
+from exports_room_snapshot import router as exports_room_snapshot_router
+app.include_router(exports_room_snapshot_router)
+
 # ===== Error handlers =====
 
 
